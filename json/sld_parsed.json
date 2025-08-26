@@ -1,0 +1,4266 @@
+{
+  "types": [
+    {
+      "name": "AcClassificationGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity which holds a exam result for a subject semester and user / student",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "date",
+          "description": "datetime of classification"
+        },
+        {
+          "attribute": "order",
+          "description": "ORDER OF CLASSI"
+        },
+        {
+          "attribute": "student",
+          "description": "User"
+        },
+        {
+          "attribute": "semester",
+          "description": "Semester"
+        },
+        {
+          "attribute": "level",
+          "description": "Level"
+        }
+      ]
+    },
+    {
+      "name": "AcClassificationLevelGQLModel",
+      "kind": "OBJECT",
+      "description": "Mark which student could get as an exam evaluation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        }
+      ]
+    },
+    {
+      "name": "AcClassificationTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Classification at the end of semester",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        }
+      ]
+    },
+    {
+      "name": "AcLessonGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity which represents single lesson included in a topic",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "type",
+          "description": "Lesson type"
+        },
+        {
+          "attribute": "count",
+          "description": "Number of hour of this lesson in the topic"
+        },
+        {
+          "attribute": "topic",
+          "description": "The topic which owns this lesson"
+        }
+      ]
+    },
+    {
+      "name": "AcLessonTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "P, C, LC, S, ...",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        }
+      ]
+    },
+    {
+      "name": "AcProgramFormTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Program form type (Present, distant, ...)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        }
+      ]
+    },
+    {
+      "name": "AcProgramGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing acredited study programs",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "type",
+          "description": "Bachelor, ..."
+        },
+        {
+          "attribute": "subjects",
+          "description": "subjects in the program"
+        },
+        {
+          "attribute": "students",
+          "description": "subjects in the program"
+        },
+        {
+          "attribute": "grantsGroup",
+          "description": "group defining grants of this program"
+        },
+        {
+          "attribute": "licencedGroup",
+          "description": "group which has got licence to teach this program (faculty or university)"
+        }
+      ]
+    },
+    {
+      "name": "AcProgramLanguageTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Study program language",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        }
+      ]
+    },
+    {
+      "name": "AcProgramLevelTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "bachelor, ...",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        }
+      ]
+    },
+    {
+      "name": "AcProgramMessageGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing acredited study programs",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "description",
+          "description": "extended content of the message"
+        },
+        {
+          "attribute": "date",
+          "description": "datetime of the message"
+        },
+        {
+          "attribute": "student",
+          "description": "student of the program"
+        },
+        {
+          "attribute": "program",
+          "description": "student of the program"
+        }
+      ]
+    },
+    {
+      "name": "AcProgramStudentGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity which links program and student",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "semester",
+          "description": "semester which student of the program is in"
+        },
+        {
+          "attribute": "student",
+          "description": "student of the program"
+        },
+        {
+          "attribute": "messages",
+          "description": "messages sent to the student regarding the program"
+        },
+        {
+          "attribute": "state",
+          "description": "student state in this program"
+        },
+        {
+          "attribute": "program",
+          "description": "program"
+        }
+      ]
+    },
+    {
+      "name": "AcProgramStudentStateGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity which links program and student",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        }
+      ]
+    },
+    {
+      "name": "AcProgramTitleTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Bc., Ing., ...",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        }
+      ]
+    },
+    {
+      "name": "AcProgramTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Encapsulation of language, level, type etc. of program. This is intermediate entity for acredited program and its types",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "level",
+          "description": "Bachelor, ..."
+        },
+        {
+          "attribute": "form",
+          "description": "Present, Distant, ..."
+        },
+        {
+          "attribute": "language",
+          "description": "Czech, ..."
+        },
+        {
+          "attribute": "title",
+          "description": "Bc., Ing., ..."
+        }
+      ]
+    },
+    {
+      "name": "AcSemesterGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing each semester in study subject",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "order",
+          "description": "semester number"
+        },
+        {
+          "attribute": "subject",
+          "description": "Subject related to the semester (semester owner)"
+        },
+        {
+          "attribute": "classificationType",
+          "description": "Subject related to the semester (semester owner)"
+        },
+        {
+          "attribute": "classifications",
+          "description": "Final classification of the semester"
+        },
+        {
+          "attribute": "topics",
+          "description": "topics"
+        },
+        {
+          "attribute": "plans",
+          "description": "Plans"
+        }
+      ]
+    },
+    {
+      "name": "AcSubjectGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity which connects programs and semesters, includes informations about subjects (divided into semesters)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "program",
+          "description": "Program owing this subjects"
+        },
+        {
+          "attribute": "semesters",
+          "description": "Semesters which the subjects in divided into"
+        },
+        {
+          "attribute": "grants",
+          "description": "group defining grants of this subject"
+        },
+        {
+          "attribute": "publication",
+          "description": "linked publications"
+        }
+      ]
+    },
+    {
+      "name": "AcTopicGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity which represents a theme included in semester of subject",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "order",
+          "description": "order (1)"
+        },
+        {
+          "attribute": "semester",
+          "description": "Semester of subject which owns the topic"
+        },
+        {
+          "attribute": "lessons",
+          "description": "Lessons for a topic"
+        }
+      ]
+    },
+    {
+      "name": "AnswerGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing an access to information",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "value",
+          "description": "answer content / value"
+        },
+        {
+          "attribute": "aswered",
+          "description": "is the survey already answered?"
+        },
+        {
+          "attribute": "expired",
+          "description": "is the survey still available?"
+        },
+        {
+          "attribute": "user",
+          "description": "is the survey still available?"
+        },
+        {
+          "attribute": "question",
+          "description": "is the survey still available?"
+        }
+      ]
+    },
+    {
+      "name": "AnswerResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "answer",
+          "description": "Result of answer operation"
+        }
+      ]
+    },
+    {
+      "name": "AuthorResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "author",
+          "description": "Result of publication operation"
+        }
+      ]
+    },
+    {
+      "name": "ClassificationResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "classification",
+          "description": "Result of classification operation"
+        }
+      ]
+    },
+    {
+      "name": "ClassificationTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "classificationType",
+          "description": "Result of classificationtype operation"
+        }
+      ]
+    },
+    {
+      "name": "EventGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing an event (calendar item)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "duration",
+          "description": "Event duration, implicitly in minutes"
+        },
+        {
+          "attribute": "description",
+          "description": "Event description"
+        },
+        {
+          "attribute": "place",
+          "description": "Place"
+        },
+        {
+          "attribute": "placeId",
+          "description": "Place id"
+        },
+        {
+          "attribute": "startdate",
+          "description": "Date&time of event begin"
+        },
+        {
+          "attribute": "enddate",
+          "description": "Date&time of event end"
+        },
+        {
+          "attribute": "groups",
+          "description": "Groups of users linked to the event"
+        },
+        {
+          "attribute": "presences",
+          "description": "Participants of the event and if they were absent or so..."
+        },
+        {
+          "attribute": "eventType",
+          "description": "Type of the event"
+        },
+        {
+          "attribute": "masterEvent",
+          "description": "event which contains this event (aka semester of this lesson)"
+        },
+        {
+          "attribute": "subEvents",
+          "description": "events which are contained by this event (aka all lessons for the semester)"
+        },
+        {
+          "attribute": "externalIds",
+          "description": "All related external ids"
+        }
+      ]
+    },
+    {
+      "name": "EventResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of event operation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "event",
+          "description": "Result of event operation"
+        }
+      ]
+    },
+    {
+      "name": "EventTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Represents an event type",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "events",
+          "description": "Related events"
+        }
+      ]
+    },
+    {
+      "name": "EventTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of event type operation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "eventType",
+          "description": "Event type"
+        }
+      ]
+    },
+    {
+      "name": "ExternalIdCategoryGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing an external category id ()",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "changedBy",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "createdBy",
+          "description": "Who created entity"
+        }
+      ]
+    },
+    {
+      "name": "ExternalIdCategoryResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Primary key of table row"
+        },
+        {
+          "attribute": "msg",
+          "description": "result of operation, should be \"ok\" or \"fail\" "
+        },
+        {
+          "attribute": "externalidcategory",
+          "description": "Result of insert operation"
+        }
+      ]
+    },
+    {
+      "name": "ExternalIdGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing an external type id (like SCOPUS identification / id)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "changedBy",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "createdBy",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "innerId",
+          "description": "Inner id"
+        },
+        {
+          "attribute": "outerId",
+          "description": "Outer id"
+        },
+        {
+          "attribute": "type",
+          "description": "Type of id"
+        },
+        {
+          "attribute": "typeName",
+          "description": "Type name of id"
+        },
+        {
+          "attribute": "link",
+          "description": "html link"
+        }
+      ]
+    },
+    {
+      "name": "ExternalIdResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Primary key of table row"
+        },
+        {
+          "attribute": "msg",
+          "description": "result of operation, should be \"ok\" or \"fail\" "
+        },
+        {
+          "attribute": "externalid",
+          "description": "Result of drone operation"
+        }
+      ]
+    },
+    {
+      "name": "ExternalIdTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing an external type id (like SCOPUS identification / id)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "changedBy",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "createdBy",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "category",
+          "description": "Category which belongs to"
+        }
+      ]
+    },
+    {
+      "name": "ExternalIdTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Primary key of table row"
+        },
+        {
+          "attribute": "msg",
+          "description": "result of operation, should be \"ok\" or \"fail\" "
+        },
+        {
+          "attribute": "externaltypeid",
+          "description": "Result of insert operation"
+        }
+      ]
+    },
+    {
+      "name": "FacilityEventStateTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a facility type",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        }
+      ]
+    },
+    {
+      "name": "FacilityGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a Facility",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "externalIds",
+          "description": "All related external ids"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "label",
+          "description": "Facility full name assigned by an administrator"
+        },
+        {
+          "attribute": "address",
+          "description": "Facility address"
+        },
+        {
+          "attribute": "valid",
+          "description": "is the facility still valid"
+        },
+        {
+          "attribute": "capacity",
+          "description": "Facility's capacity"
+        },
+        {
+          "attribute": "geometry",
+          "description": "Facility geometry (SVG)"
+        },
+        {
+          "attribute": "geolocation",
+          "description": "Facility geo address (WGS84+zoom)"
+        },
+        {
+          "attribute": "type",
+          "description": "Facility type"
+        },
+        {
+          "attribute": "eventState",
+          "description": "Intermediate entity linking the event and facility"
+        },
+        {
+          "attribute": "masterFacility",
+          "description": "Facility above this"
+        },
+        {
+          "attribute": "subFacilities",
+          "description": "Facilities inside facility (like buildings in an areal)"
+        },
+        {
+          "attribute": "group",
+          "description": "Facility management group"
+        },
+        {
+          "attribute": "plannedLessons",
+          "description": "planned items"
+        }
+      ]
+    },
+    {
+      "name": "FacilityResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "facility",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "FacilityTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a facility type",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        }
+      ]
+    },
+    {
+      "name": "FinanceCategoryGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a finance category",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "Entity english name"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "userId",
+          "description": "User ID "
+        }
+      ]
+    },
+    {
+      "name": "FinanceCategoryResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of a mutation for a finance category",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "The ID of the finance category"
+        },
+        {
+          "attribute": "msg",
+          "description": "Result of the operation (OK/Fail)"
+        },
+        {
+          "attribute": "project",
+          "description": "Returns the finance category"
+        }
+      ]
+    },
+    {
+      "name": "FinanceGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a finance",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "amount",
+          "description": "Entity amount"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "valid",
+          "description": "Validity of event"
+        },
+        {
+          "attribute": "project",
+          "description": "Project of finance"
+        },
+        {
+          "attribute": "financeType",
+          "description": "Finance type of finance"
+        }
+      ]
+    },
+    {
+      "name": "FinanceResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of a financial data operation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "The ID of the financial data"
+        },
+        {
+          "attribute": "msg",
+          "description": "Result of the operation (OK/Fail)"
+        },
+        {
+          "attribute": "finance",
+          "description": "Returns the financial data"
+        }
+      ]
+    },
+    {
+      "name": "FinanceTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a finance type",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "Entity english name"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "valid",
+          "description": "Validity of event"
+        },
+        {
+          "attribute": "finances",
+          "description": "List of finances, related to finance type"
+        },
+        {
+          "attribute": "category",
+          "description": "List of category Id's, related to finance type"
+        }
+      ]
+    },
+    {
+      "name": "FinanceTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of a mutation result of finance type",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "The ID of the finance type"
+        },
+        {
+          "attribute": "msg",
+          "description": "Result of the operation (OK/Fail)"
+        },
+        {
+          "attribute": "finance",
+          "description": "Returns the finance type"
+        }
+      ]
+    },
+    {
+      "name": "FormCategoryGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a category of form types",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "formTypes",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "FormCategoryResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations on FormCategory",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "category",
+          "description": "subject of operation"
+        }
+      ]
+    },
+    {
+      "name": "FormGQLModel",
+      "kind": "OBJECT",
+      "description": "# Reason\n\nEntity representing a form, form is digitalized A4 sheet\n\n## Structure\n\nform -> sections -> parts -> items",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "valid",
+          "description": "Form's validity"
+        },
+        {
+          "attribute": "status",
+          "description": "Form's status"
+        },
+        {
+          "attribute": "sections",
+          "description": "Retrieves the sections related to this form (form has several sections), form->section->part->item"
+        },
+        {
+          "attribute": "creator",
+          "description": "Retrieves the user who has initiated this request"
+        },
+        {
+          "attribute": "type",
+          "description": "Retrieves the type of form"
+        }
+      ]
+    },
+    {
+      "name": "FormItemCategoryGQLModel",
+      "kind": "OBJECT",
+      "description": "Type representing an item category",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "types",
+          "description": "Returns all type for this category"
+        }
+      ]
+    },
+    {
+      "name": "FormItemCategoryResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "category",
+          "description": "Object of CU operation, final version"
+        }
+      ]
+    },
+    {
+      "name": "FormItemGQLModel",
+      "kind": "OBJECT",
+      "description": "Type representing an item in the form",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "order",
+          "description": "Item's order"
+        },
+        {
+          "attribute": "value",
+          "description": "Item's value "
+        },
+        {
+          "attribute": "part",
+          "description": "Retrieves the part owning the item"
+        },
+        {
+          "attribute": "type",
+          "description": "Retrieves the item type"
+        }
+      ]
+    },
+    {
+      "name": "FormItemResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "item",
+          "description": "Result of item operation"
+        }
+      ]
+    },
+    {
+      "name": "FormItemTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Type representing an item type",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "category",
+          "description": "Type category"
+        },
+        {
+          "attribute": "items",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "FormItemTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "itemType",
+          "description": "Object of CU operation, final version"
+        }
+      ]
+    },
+    {
+      "name": "FormPartGQLModel",
+      "kind": "OBJECT",
+      "description": "Type representing a part in the section",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "order",
+          "description": "Part's order"
+        },
+        {
+          "attribute": "section",
+          "description": "Retrieves the section owning this part"
+        },
+        {
+          "attribute": "items",
+          "description": "Retrieves the items related to this part"
+        }
+      ]
+    },
+    {
+      "name": "FormPartResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "part",
+          "description": "Object of CU operation, final version"
+        }
+      ]
+    },
+    {
+      "name": "FormRequestResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "request",
+          "description": "Object of CU operation, final version"
+        }
+      ]
+    },
+    {
+      "name": "FormResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "form",
+          "description": "Result of form operation"
+        }
+      ]
+    },
+    {
+      "name": "FormSectionGQLModel",
+      "kind": "OBJECT",
+      "description": "Type representing a section in the form",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "order",
+          "description": "Section's order"
+        },
+        {
+          "attribute": "parts",
+          "description": "Retrieves the parts related to this section"
+        },
+        {
+          "attribute": "form",
+          "description": "Retrieves the form owing this section"
+        }
+      ]
+    },
+    {
+      "name": "FormTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a category of form types",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "category",
+          "description": "Request's time of last update"
+        },
+        {
+          "attribute": "forms",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "FormTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "type",
+          "description": "Object of CU operation, final version"
+        }
+      ]
+    },
+    {
+      "name": "GroupCategoryGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a group type (like Faculty)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "GroupCategoryResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "groupCategory",
+          "description": "Result of groupcategory operation"
+        }
+      ]
+    },
+    {
+      "name": "GroupGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a group",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "events",
+          "description": "events of the group"
+        },
+        {
+          "attribute": "externalIds",
+          "description": "All related external ids"
+        },
+        {
+          "attribute": "plannedLessons",
+          "description": "planned items"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "email",
+          "description": "Group's email"
+        },
+        {
+          "attribute": "abbreviation",
+          "description": "Group's name abbreviation"
+        },
+        {
+          "attribute": "valid",
+          "description": "Group's validity (still exists?)"
+        },
+        {
+          "attribute": "grouptype",
+          "description": "Group's type (like Department)"
+        },
+        {
+          "attribute": "subgroups",
+          "description": "Directly commanded groups"
+        },
+        {
+          "attribute": "mastergroup",
+          "description": "Commanding group"
+        },
+        {
+          "attribute": "memberships",
+          "description": "List of users who are member of the group"
+        },
+        {
+          "attribute": "roles",
+          "description": "List of roles in the group"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "rbacobject represents an user or a group which allows to derive needed roles for CRUD operations"
+        }
+      ]
+    },
+    {
+      "name": "GroupResultGQLModel",
+      "kind": "OBJECT",
+      "description": "represents the result of CUD op on GroupGQLModel",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "group",
+          "description": "Result of group operation"
+        }
+      ]
+    },
+    {
+      "name": "GroupTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a group type (like Faculty)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "groups",
+          "description": "Groups which has this type"
+        },
+        {
+          "attribute": "category",
+          "description": "Group category which this type belongs to"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "GroupTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "groupType",
+          "description": "Result of grouptype operation"
+        }
+      ]
+    },
+    {
+      "name": "HistoryResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "history",
+          "description": "Object of CU operation, final version"
+        }
+      ]
+    },
+    {
+      "name": "InvitationTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Represents if an user has been invited to the event ot whatever",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        }
+      ]
+    },
+    {
+      "name": "InvitationTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of event type operation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "invitationType",
+          "description": "Presence type"
+        }
+      ]
+    },
+    {
+      "name": "LessonResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "lesson",
+          "description": "Result of lesson operation"
+        }
+      ]
+    },
+    {
+      "name": "LessonTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "lessonType",
+          "description": "Result of lessontype operation"
+        }
+      ]
+    },
+    {
+      "name": "MembershipGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a relation between an user and a group",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "user",
+          "description": "user"
+        },
+        {
+          "attribute": "group",
+          "description": "group"
+        },
+        {
+          "attribute": "valid",
+          "description": "is the membership is still valid"
+        },
+        {
+          "attribute": "startdate",
+          "description": "date when the membership begins"
+        },
+        {
+          "attribute": "enddate",
+          "description": "date when the membership ends"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "MembershipResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "membership",
+          "description": "Result of membership operation"
+        }
+      ]
+    },
+    {
+      "name": "MilestoneGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a milestone",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "startdate",
+          "description": "Entity start date"
+        },
+        {
+          "attribute": "enddate",
+          "description": "Entity end date"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "valid",
+          "description": "Validity of event"
+        },
+        {
+          "attribute": "project",
+          "description": "Project of milestone"
+        },
+        {
+          "attribute": "previous",
+          "description": "Milestones which has this one as follower"
+        },
+        {
+          "attribute": "nexts",
+          "description": "Milestone which follow this milestone"
+        }
+      ]
+    },
+    {
+      "name": "MilestoneResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of a user operation on a milestone",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "The ID of the milestone"
+        },
+        {
+          "attribute": "msg",
+          "description": "Result of the operation (OK/Fail)"
+        },
+        {
+          "attribute": "milestone",
+          "description": "Returns the milestone"
+        }
+      ]
+    },
+    {
+      "name": "PlanGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a study plan for timetable creation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "rbacObject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lessons",
+          "description": "planned lessons"
+        },
+        {
+          "attribute": "semester",
+          "description": "acredited semester"
+        }
+      ]
+    },
+    {
+      "name": "PlanResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "plan",
+          "description": "Result of lesson operation"
+        }
+      ]
+    },
+    {
+      "name": "PlannedLessonGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a planned lesson for timetable creation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "rbacObject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "order",
+          "description": "order"
+        },
+        {
+          "attribute": "length",
+          "description": "primary key"
+        },
+        {
+          "attribute": "type",
+          "description": "type of lesson (lecture, ...)"
+        },
+        {
+          "attribute": "linkedTo",
+          "description": "planned lesson linked to (aka master planned lesson)"
+        },
+        {
+          "attribute": "linkedWith",
+          "description": "planned lessons linked with, even trought master, excluding self"
+        },
+        {
+          "attribute": "users",
+          "description": "teachers"
+        },
+        {
+          "attribute": "groups",
+          "description": "study groups"
+        },
+        {
+          "attribute": "facilities",
+          "description": "facilities"
+        },
+        {
+          "attribute": "event",
+          "description": "linked event"
+        },
+        {
+          "attribute": "topic",
+          "description": "linked topic from accreditation"
+        },
+        {
+          "attribute": "semester",
+          "description": "linked subject semester from program (accreditation)"
+        },
+        {
+          "attribute": "plan",
+          "description": "linked subject semester from program (accreditation)"
+        }
+      ]
+    },
+    {
+      "name": "PlannedLessonResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "lesson",
+          "description": "Result of lesson operation"
+        },
+        {
+          "attribute": "plan",
+          "description": "Master of lesson - the plan"
+        }
+      ]
+    },
+    {
+      "name": "PresenceGQLModel",
+      "kind": "OBJECT",
+      "description": "Describes a relation of an user to the event by invitation (like invited) and participation (like absent)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "presenceType",
+          "description": "Present, Vacation etc."
+        },
+        {
+          "attribute": "presenceType2",
+          "description": "Present, Vacation etc."
+        },
+        {
+          "attribute": "invitationType",
+          "description": "Invited, Accepted, etc."
+        },
+        {
+          "attribute": "user",
+          "description": "The user / participant"
+        },
+        {
+          "attribute": "event",
+          "description": "The event"
+        }
+      ]
+    },
+    {
+      "name": "PresenceResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of user operation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "presence",
+          "description": "Result of presence operation"
+        }
+      ]
+    },
+    {
+      "name": "PresenceTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Represents a type of presence (like Present)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        }
+      ]
+    },
+    {
+      "name": "PresenceTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of event type operation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "presenceType",
+          "description": "Presence type"
+        }
+      ]
+    },
+    {
+      "name": "ProgramFormTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "programFormType",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "ProgramLanguageTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "programLanguageType",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "ProgramLevelTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "programLevelType",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "ProgramMessageResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "message",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "ProgramResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "program",
+          "description": "Object of operations"
+        }
+      ]
+    },
+    {
+      "name": "ProgramStudentResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "student",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "ProgramTitleTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "programTitleType",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "ProgramTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "programType",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "ProjectCategoryGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a project category",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "Entity english name"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        }
+      ]
+    },
+    {
+      "name": "ProjectCategoryResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of a mutation for a project category",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "The ID of the project category"
+        },
+        {
+          "attribute": "msg",
+          "description": "Result of the operation (OK/Fail)"
+        },
+        {
+          "attribute": "project",
+          "description": "Returns the project category"
+        }
+      ]
+    },
+    {
+      "name": "ProjectGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a project",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "startdate",
+          "description": "Entity start date"
+        },
+        {
+          "attribute": "enddate",
+          "description": "Entity end date"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "valid",
+          "description": "Validity of event"
+        },
+        {
+          "attribute": "projectType",
+          "description": "Project type of project"
+        },
+        {
+          "attribute": "finances",
+          "description": "List of finances, related to a project"
+        },
+        {
+          "attribute": "milestones",
+          "description": "List of milestones, related to a project"
+        },
+        {
+          "attribute": "group",
+          "description": "Group, related to a project"
+        },
+        {
+          "attribute": "team",
+          "description": "Team, related to a project"
+        }
+      ]
+    },
+    {
+      "name": "ProjectResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of a mutation for a project",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "The ID of the project"
+        },
+        {
+          "attribute": "msg",
+          "description": "Result of the operation (OK/Fail)"
+        },
+        {
+          "attribute": "project",
+          "description": "Returns the project"
+        }
+      ]
+    },
+    {
+      "name": "ProjectTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a project types",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "Entity english name"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "valid",
+          "description": "Validity of event"
+        },
+        {
+          "attribute": "projects",
+          "description": "List of projects, related to project type"
+        },
+        {
+          "attribute": "category",
+          "description": "Category ID of project, related to project"
+        }
+      ]
+    },
+    {
+      "name": "ProjectTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of a mutation for project type",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "The ID of the project type"
+        },
+        {
+          "attribute": "msg",
+          "description": "Result of the operation (OK/Fail)"
+        },
+        {
+          "attribute": "project",
+          "description": "Returns the project type"
+        }
+      ]
+    },
+    {
+      "name": "PublicationAuthorGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a relation between an user and a publication",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "lastchange",
+          "description": "last change"
+        },
+        {
+          "attribute": "order",
+          "description": "order in author list"
+        },
+        {
+          "attribute": "share",
+          "description": "share on publication"
+        },
+        {
+          "attribute": "user",
+          "description": "user"
+        },
+        {
+          "attribute": "publication",
+          "description": "publication"
+        },
+        {
+          "attribute": "valid",
+          "description": "If an author is valid"
+        }
+      ]
+    },
+    {
+      "name": "PublicationGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a publication",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdBy",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedBy",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "publishedDate",
+          "description": "published year"
+        },
+        {
+          "attribute": "place",
+          "description": "place"
+        },
+        {
+          "attribute": "reference",
+          "description": "reference"
+        },
+        {
+          "attribute": "valid",
+          "description": "If a publication is valid"
+        },
+        {
+          "attribute": "authors",
+          "description": "List of authors, where the author participated in publication"
+        },
+        {
+          "attribute": "publicationtype",
+          "description": "Publication type"
+        },
+        {
+          "attribute": "subjects",
+          "description": "Subjects publication is linked to"
+        }
+      ]
+    },
+    {
+      "name": "PublicationResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "publication",
+          "description": "Result of publication operation"
+        }
+      ]
+    },
+    {
+      "name": "PublicationTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a publication type",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "publications",
+          "description": "List of publications with this type"
+        }
+      ]
+    },
+    {
+      "name": "PublicationTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of mutation",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "The ID of the type"
+        },
+        {
+          "attribute": "msg",
+          "description": "Result of the operation (OK/Fail)"
+        },
+        {
+          "attribute": "publicationType",
+          "description": "Returns the project"
+        }
+      ]
+    },
+    {
+      "name": "QuestionGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing an access to information",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "order",
+          "description": "Order of questions"
+        },
+        {
+          "attribute": "answers",
+          "description": "List of answers"
+        },
+        {
+          "attribute": "survey",
+          "description": "Survey which owns this question"
+        },
+        {
+          "attribute": "type",
+          "description": "Type of question"
+        },
+        {
+          "attribute": "values",
+          "description": "List of values for closed or similar type questions"
+        }
+      ]
+    },
+    {
+      "name": "QuestionResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "question",
+          "description": "Result of question operation"
+        }
+      ]
+    },
+    {
+      "name": "QuestionTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a relation between an user and a group",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        }
+      ]
+    },
+    {
+      "name": "QuestionValueGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing an access to information",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "order",
+          "description": "order of value"
+        },
+        {
+          "attribute": "question",
+          "description": "Question which has this possible answer"
+        }
+      ]
+    },
+    {
+      "name": "RBACObjectGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "roles",
+          "description": "Roles associated with this RBAC"
+        }
+      ]
+    },
+    {
+      "name": "RequestGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a request (digital form of a paper, aka \"student request to the dean\")",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "creator",
+          "description": "Request's time of last update"
+        },
+        {
+          "attribute": "histories",
+          "description": "Request's time of last update"
+        }
+      ]
+    },
+    {
+      "name": "RequestHistoryGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity which stores a history of form evolution during a request. This allows to recall form changes.",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "request",
+          "description": "Request which history belongs to"
+        },
+        {
+          "attribute": "form",
+          "description": "History form"
+        }
+      ]
+    },
+    {
+      "name": "RoleCategoryGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a role type (like Dean)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "roleTypes",
+          "description": "List of roles with this type"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "RoleCategoryResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "roleCategory",
+          "description": "Result of role category operation"
+        }
+      ]
+    },
+    {
+      "name": "RoleGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a role of a user in a group (like user A in group B is Dean)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "valid",
+          "description": "If an user has still this role"
+        },
+        {
+          "attribute": "startdate",
+          "description": "When an user has got this role"
+        },
+        {
+          "attribute": "enddate",
+          "description": "When an user has been removed from this role"
+        },
+        {
+          "attribute": "roletype",
+          "description": "Role type (like Dean)"
+        },
+        {
+          "attribute": "user",
+          "description": "User having this role. Must be member of group?"
+        },
+        {
+          "attribute": "group",
+          "description": "Group where user has a role name"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "RoleResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "role",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "RoleTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a role type (like Dean)",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "nameEn",
+          "description": "English name"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "roles",
+          "description": "List of roles with this type"
+        },
+        {
+          "attribute": "category",
+          "description": "Get role category of this role type"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "name": "RoleTypeListResult",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "roleTypes",
+          "description": "Result of user operation"
+        }
+      ]
+    },
+    {
+      "name": "RoleTypeResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "roleType",
+          "description": "Result of role type operation"
+        }
+      ]
+    },
+    {
+      "name": "SectionResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CU operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "primary key of CU operation object"
+        },
+        {
+          "attribute": "msg",
+          "description": "Should be `ok` if descired state has been reached, otherwise `fail`.\nFor update operation fail should be also stated when bad lastchange has been entered."
+        },
+        {
+          "attribute": "section",
+          "description": "Object of CU operation, final version"
+        }
+      ]
+    },
+    {
+      "name": "SemesterResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "semester",
+          "description": "Result of semester operation"
+        }
+      ]
+    },
+    {
+      "name": "StatementOfWorkGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a SOW",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "startdate",
+          "description": "Entity start date"
+        },
+        {
+          "attribute": "enddate",
+          "description": "Entity end date"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "valid",
+          "description": "Validity of event"
+        },
+        {
+          "attribute": "project",
+          "description": "Project of statement of work"
+        },
+        {
+          "attribute": "event",
+          "description": "Event, related to a statement of work"
+        }
+      ]
+    },
+    {
+      "name": "StatementOfWorkResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of a mutation for statement of work",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "The ID of the statement of work"
+        },
+        {
+          "attribute": "msg",
+          "description": "Result of the operation (OK/Fail)"
+        },
+        {
+          "attribute": "statementofwork",
+          "description": "Returns the statement of work"
+        }
+      ]
+    },
+    {
+      "name": "StudentStateResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "studentState",
+          "description": "Result of studentstate operation"
+        }
+      ]
+    },
+    {
+      "name": "SubjectResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "subject",
+          "description": "Result of subject operation"
+        }
+      ]
+    },
+    {
+      "name": "SurveyGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a relation between an user and a group",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "questions",
+          "description": "List"
+        }
+      ]
+    },
+    {
+      "name": "SurveyResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "survey",
+          "description": "Result of survey operation"
+        }
+      ]
+    },
+    {
+      "name": "SurveyTypeGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a relation between an user and a group",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "name",
+          "description": "Entity name "
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        }
+      ]
+    },
+    {
+      "name": "TopicResultGQLModel",
+      "kind": "OBJECT",
+      "description": "Result of CUD operations",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "topic",
+          "description": "Result of topic operation"
+        }
+      ]
+    },
+    {
+      "name": "UserGQLModel",
+      "kind": "OBJECT",
+      "description": "Entity representing a user",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": "Entity primary key"
+        },
+        {
+          "attribute": "events",
+          "description": "events of the user"
+        },
+        {
+          "attribute": "presences",
+          "description": "presences of the user"
+        },
+        {
+          "attribute": "externalIds",
+          "description": "All related external ids"
+        },
+        {
+          "attribute": "studies",
+          "description": "Program owing this subjects"
+        },
+        {
+          "attribute": "classifications",
+          "description": "user classifications"
+        },
+        {
+          "attribute": "plannedLessons",
+          "description": "planned items"
+        },
+        {
+          "attribute": "authorPublications",
+          "description": "List of authors"
+        },
+        {
+          "attribute": "answers",
+          "description": "List"
+        },
+        {
+          "attribute": "name",
+          "description": "Name "
+        },
+        {
+          "attribute": "changedby",
+          "description": "Who made last change"
+        },
+        {
+          "attribute": "created",
+          "description": "Time of entity introduction"
+        },
+        {
+          "attribute": "lastchange",
+          "description": "Time of last update"
+        },
+        {
+          "attribute": "createdby",
+          "description": "Who created entity"
+        },
+        {
+          "attribute": "surname",
+          "description": "User's family name (like Obama)"
+        },
+        {
+          "attribute": "email",
+          "description": "User's email"
+        },
+        {
+          "attribute": "valid",
+          "description": "If the user is still valid"
+        },
+        {
+          "attribute": "memberships",
+          "description": "List of mmeberships associated with the user"
+        },
+        {
+          "attribute": "membership",
+          "description": "List of mmeberships associated with the user"
+        },
+        {
+          "attribute": "roles",
+          "description": "User's roles (like Dean)"
+        },
+        {
+          "attribute": "fullname",
+          "description": "User's family name (like Obama)"
+        },
+        {
+          "attribute": "memberOf",
+          "description": "List of groups given type, where the user is member"
+        },
+        {
+          "attribute": "rbacobject",
+          "description": "Who made last change"
+        }
+      ]
+    },
+    {
+      "name": "UserResultGQLModel",
+      "kind": "OBJECT",
+      "description": "",
+      "fields": [
+        {
+          "attribute": "id",
+          "description": ""
+        },
+        {
+          "attribute": "msg",
+          "description": ""
+        },
+        {
+          "attribute": "user",
+          "description": "Result of user operation"
+        }
+      ]
+    }
+  ]
+}

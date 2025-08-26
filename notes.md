@@ -37,4 +37,16 @@ query GetServiceSDL {
 }
 ```
 
+3. Extract desc from graphql
+
+```python
+from sdl.sdl_parser import extractor as parser
+from sdl.sdl_extract_object import extractor
+import json
+
+if __name__ == "__main__":
+    sdl_file = "sdl\schema.graphql"
+    pass
+```
+
 **SIGN IN**

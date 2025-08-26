@@ -756,9 +756,9 @@ input EventInsertGQLModel @join__type(graph: EVENTS) {
   place: String = null
   placeId: UUID = null
   """start date of event"""
-  startdate: DateTime = "2025-08-25T16:11:44.887168"
+  startdate: DateTime = "2025-08-26T06:20:55.712713"
   """end date of event"""
-  enddate: DateTime = "2025-08-25T16:41:44.887190"
+  enddate: DateTime = "2025-08-26T06:50:55.712731"
 }
 
 """Result of event operation"""
@@ -1281,8 +1281,8 @@ input FacilityInsertGQLModel @join__type(graph: FACILITIES) {
   name: String!
   facilitytypeId: UUID = null
   id: UUID = null
-  startdate: DateTime = "2025-08-25T16:11:44.280592"
-  enddate: DateTime = "2025-08-25T16:41:44.280599"
+  startdate: DateTime = "2025-08-26T06:20:55.431090"
+  enddate: DateTime = "2025-08-26T06:50:55.431096"
   nameEn: String = ""
   label: String = ""
   address: String = ""
@@ -2542,7 +2542,7 @@ input GroupInsertGQLModel @join__type(graph: UG) {
   name: String!
   grouptypeId: UUID!
   """primary key"""
-  id: UUID = "31870afa-81ce-11f0-b782-622ad622eda4"
+  id: UUID = "d25687fa-8244-11f0-9f79-82572fcac335"
   nameEn: String = null
   mastergroupId: UUID = null
   valid: Boolean = null
@@ -2977,7 +2977,7 @@ input MembershipInsertGQLModel @join__type(graph: UG) {
   userId: UUID!
   groupId: UUID!
   """Primary key of entity"""
-  id: UUID = "3142eb2c-81ce-11f0-b782-622ad622eda4"
+  id: UUID = "d229588e-8244-11f0-9f79-82572fcac335"
   valid: Boolean = true
   startdate: DateTime = null
   enddate: DateTime = null
@@ -3037,9 +3037,9 @@ input MilestoneInsertGQLModel @join__type(graph: PROJECTS) {
   """The ID of the associated project"""
   projectId: UUID!
   """Start date of the milestone"""
-  startdate: DateTime = "2025-08-25T16:11:43.537262"
+  startdate: DateTime = "2025-08-26T06:20:54.505754"
   """End date of the milestone"""
-  enddate: DateTime = "2025-09-24T16:11:43.537279"
+  enddate: DateTime = "2025-09-25T06:20:54.505771"
   """The ID of the milestone"""
   id: UUID = null
 }
@@ -4544,9 +4544,9 @@ input ProjectInsertGQLModel @join__type(graph: PROJECTS) {
   """The ID of the project"""
   id: UUID = null
   """Moment when the project starts"""
-  startdate: DateTime = "2025-08-25T16:11:43.483821"
+  startdate: DateTime = "2025-08-26T06:20:54.438181"
   """Moment when the project ends"""
-  enddate: DateTime = "2025-08-25T16:11:43.483836"
+  enddate: DateTime = "2025-08-26T06:20:54.438195"
   """The ID of the group associated with the project"""
   groupId: UUID = null
   """The ID of the content associated with the project """
@@ -4684,9 +4684,9 @@ input ProjectUpdateGQLModel @join__type(graph: PROJECTS) {
   """The ID of the project type"""
   projecttypeId: UUID = null
   """Moment when the project starts"""
-  startdate: DateTime = "2025-08-25T16:11:43.488626"
+  startdate: DateTime = "2025-08-26T06:20:54.456987"
   """Moment when the project ends"""
-  enddate: DateTime = "2025-08-25T16:11:43.488640"
+  enddate: DateTime = "2025-08-26T06:20:54.457003"
   """The ID of the group associated with the project"""
   groupId: UUID = null
 }
@@ -5551,7 +5551,7 @@ input RoleCategoryInputWhereFilterOr @join__type(graph: UG) {
 """Initial data structure for C operation"""
 input RoleCategoryInsertGQLModel @join__type(graph: UG) {
   """primary key"""
-  id: UUID = "3199242e-81ce-11f0-b782-622ad622eda4"
+  id: UUID = "d279f24e-8244-11f0-9f79-82572fcac335"
   name: String = null
   nameEn: String = null
 }
@@ -5670,10 +5670,10 @@ input RoleInsertGQLModel @join__type(graph: UG) {
   groupId: UUID!
   roletypeId: UUID!
   """primary key"""
-  id: UUID = "315baa2c-81ce-11f0-b782-622ad622eda4"
+  id: UUID = "d23d7c6a-8244-11f0-9f79-82572fcac335"
   valid: Boolean = true
   """start datetime of role"""
-  startdate: DateTime = "2025-08-25T16:11:43.982288"
+  startdate: DateTime = "2025-08-26T06:20:54.511771"
   enddate: DateTime = null
 }
 
@@ -5912,9 +5912,9 @@ input StatementOfWorkInsertGQLModel @join__type(graph: PROJECTS) {
   """The ID of the project data"""
   projectId: UUID!
   """Start date of the statement of work"""
-  startdate: DateTime = "2025-08-25T16:11:43.758684"
+  startdate: DateTime = "2025-08-26T06:20:54.887256"
   """End date of the statement of work"""
-  enddate: DateTime = "2025-09-24T16:11:43.758698"
+  enddate: DateTime = "2025-09-25T06:20:54.887272"
   """Indicates whether the statement of work data is valid or not"""
   valid: Boolean = true
   """The ID of the statement of work data"""
@@ -6513,7 +6513,7 @@ input UserInputWhereFilterOr @join__type(graph: UG) {
 """Describes initial values for C operation on UserGQLModel"""
 input UserInsertGQLModel @join__type(graph: UG) {
   """primary key"""
-  id: UUID = "316c160a-81ce-11f0-b782-622ad622eda4"
+  id: UUID = "d249c308-8244-11f0-9f79-82572fcac335"
   name: String = null
   surname: String = null
   email: String = null
