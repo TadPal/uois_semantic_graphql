@@ -1,4 +1,5 @@
 import psycopg2
+from pgvector.psycopg2 import register_vector
 
 
 def connect_to_postgres(env):
@@ -14,6 +15,8 @@ def connect_to_postgres(env):
             password=env["DBPASS"],
             port=env["DBPORT"],
         )
+
+        register_vector(connection)
 
         print("Successfully connected to database")
         return connection

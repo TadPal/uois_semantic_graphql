@@ -16,7 +16,19 @@ env = {
 token = env["TOKEN"]
 gql_url = "http://localhost:33001/api/gql"
 
-if __name__ == "__main__":
+
+def init_db(extracted_types):
+    from postgresql.initialize_table import initialize_embedding_table
+    from postgresql.ollama_embed_gql import generate_embedding
+
+    # 1. If table doesn't exist initialize it
+    initialize_embedding_table(conn=connection)
+
+    # 2. Generate embeddings and fill pgvector table
+    generate_embedding(conn=connection, types=extracted_types)
+
+
+def extract_schema(token, url):
 
     from sdl.sdl_parser import extractor as parser
     from sdl.sdl_extract_object import extractor
@@ -58,20 +70,22 @@ if __name__ == "__main__":
 
     extracted_types = extractor(parsed["types"])
 
-    # 4. Connect to pgvector and handle connection
+    return extracted_types
+
+
+if __name__ == "__main__":
+
+    # extrated_types = extract_schema(token, gql_url)
+
+    # Connect to pgvector and handle connection
     from postgresql.connection import connect_to_postgres
-    from postgresql.initialize_table import initialize_embedding_table
-    from postgresql.ollama_embed_gql import generate_embedding
+    from postgresql.ollama_search import search_index
 
     connection = connect_to_postgres(env=env)
 
     if connection:
-        # 1. If table doesn't exist initialize it
-        initialize_embedding_table(conn=connection)
-
-        # 2. Generate embeddings and fill pgvector table
-        generate_embedding(conn=connection, types=extracted_types)
-
+        # init_db(extracted_types)
+        search_index(conn=connection)
         connection.close()
 
     # with open("schema.graphql", "w", encoding="utf-8") as f:
