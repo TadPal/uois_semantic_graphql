@@ -1,24 +1,84 @@
-from sdl.sdl_parser import extractor as parser
-from sdl.sdl_extract_object import extractor
-from sdl.sdl_fetch import fetch_sdl
 import json
+import os
+from dotenv import load_dotenv, dotenv_values
 
-token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiQmVhcmVyIiwiYWNjZXNzX3Rva2VuIjoiQUNDVC1GSkcwWks1VTc5YTJ4M1JtQWhud3ZIdXRzQ2dBSGxlWCIsImV4cGlyZXNfaW4iOjM2MDAsInJlZnJlc2hfdG9rZW4iOiJSRUZULTZjdGhqNVBVYUc1cVlzQUFSMnB4MlJKclZRWEdxamFWIiwidXNlcl9pZCI6IjUxZDEwMWEwLTgxZjEtNDRjYS04MzY2LTZjZjUxNDMyZThkNiJ9.HAteHUkGLPJZfM3k2V130LSOXAkSbAlUAGBjpXqG4_FAMvnqnxBTif-W0dpb26_3NKopbfDQBdffLCmqzEocALHtdGl9oajFxngKXnsPVvyvNtO_8eOt-VyvfxTEvtHu6O7i80gFLn5lfnu2P4c8R3WgDsLdjAIes_T2C1WM1jULCAMPJTfNktJhj4U0HLAmtHTEZOXU_zg0jiAJic_E9Q8pXfBTlLGURiPhnNNzKjrQg3hrHveiBbkuU5zDp8OKbHUWEC3h9dZtK9ctdOlMFgFhHKhuq4ndAaLm90sK99mMZRwQpSoQYCKZqB67XJm_pZ4pPBDQQsekn9Nw4VfepQ"
-url = "http://localhost:33001/api/gql"
+load_dotenv()
+
+env = {
+    "DBNAME": os.environ.get("DBNAME"),
+    "DBUSERNAME": os.environ.get("DBUSERNAME"),
+    "DBPASS": os.environ.get("DBPASS"),
+    "DBHOSTNAME": os.environ.get("DBHOSTNAME"),
+    "DBPORT": os.environ.get("DBPORT"),
+    "TOKEN": os.environ.get("TOKEN"),
+}
+
+token = env["TOKEN"]
+gql_url = "http://localhost:33001/api/gql"
 
 if __name__ == "__main__":
+
+    from sdl.sdl_parser import extractor as parser
+    from sdl.sdl_extract_object import extractor
+    from sdl.sdl_fetch import fetch_sdl
+
     # 1. Fetch sdl from graphql
-    schema = fetch_sdl(token=token, url=url)
+    schema = fetch_sdl(token=token, url=gql_url)
+
     # 2. Parse schema
+    #     {
+    #       "types": [
+    #       {
+    #           "name": "AcClassificationGQLModel",
+    #           "kind": "OBJECT",
+    #           "description": "Entity which holds a exam result for a subject semester and user / student",
+    #           "fields": [
+    #                {
+    #                   "attribute": "id",
+    #                   "description": "Entity primary key"
+    #                }, ...
+
     parsed = parser(schema)
+
     # 3. Extracted desired format
-    extracted = extractor(parsed["types"])
+    # [
+    #     {
+    #     "name": "AcClassificationGQLModel",
+    #     "description": "Entity which holds a exam result for a subject semester and user / student"
+    #     },
+    #     {
+    #     "name": "AcClassificationLevelGQLModel",
+    #     "description": "Mark which student could get as an exam evaluation"
+    #     },
+    #     {
+    #     "name": "AcClassificationTypeGQLModel",
+    #     "description": "Classification at the end of semester"
+    #     }, ...
+    # ]
 
-    with open("schema.graphql", "w", encoding="utf-8") as f:
-        f.write(schema)
+    extracted_types = extractor(parsed["types"])
 
-    with open("json\\sld_parsed.json", "w", encoding="utf-8") as f:
-        f.write(json.dumps(parsed, indent=2, ensure_ascii=False))
+    # 4. Connect to pgvector and handle connection
+    from postgresql.connection import connect_to_postgres
+    from postgresql.initialize_table import initialize_embedding_table
+    from postgresql.ollama_embed_gql import generate_embedding
 
-    with open("json\\sld_extracted.json", "w", encoding="utf-8") as f:
-        f.write(json.dumps(extracted, indent=2, ensure_ascii=False))
+    connection = connect_to_postgres(env=env)
+
+    if connection:
+        # 1. If table doesn't exist initialize it
+        initialize_embedding_table(conn=connection)
+
+        # 2. Generate embeddings and fill pgvector table
+        generate_embedding(conn=connection, types=extracted_types)
+
+        connection.close()
+
+    # with open("schema.graphql", "w", encoding="utf-8") as f:
+    #     f.write(schema)
+
+    # with open("json\\sld_parsed.json", "w", encoding="utf-8") as f:
+    #     f.write(json.dumps(parsed, indent=2, ensure_ascii=False))
+
+    # with open("json\\sld_extracted.json", "w", encoding="utf-8") as f:
+    #     f.write(json.dumps(extracted_types, indent=2, ensure_ascii=False))
