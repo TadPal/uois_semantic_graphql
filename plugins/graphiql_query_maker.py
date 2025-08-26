@@ -1,13 +1,16 @@
 from semantic_kernel import Kernel
 from semantic_kernel.functions import kernel_function
-from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, AzureChatPromptExecutionSettings
+from semantic_kernel.connectors.ai.open_ai import (
+    AzureChatCompletion,
+    AzureChatPromptExecutionSettings,
+)
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.contents import ChatHistory
 from semantic_kernel.functions import KernelArguments
 
 from typing import Annotated, List, Optional, Dict
 
-CHAIN = ["EventGQLModel","UserGQLModel","PresenceGQLModel","PresenceTypeGQLModel"]
+CHAIN = ["EventGQLModel", "UserGQLModel", "PresenceGQLModel", "PresenceTypeGQLModel"]
 
 #! Simulace modelů
 FIELD_MAP = {
@@ -20,8 +23,12 @@ FIELD_MAP = {
 #! Simulace vazeb mezi modely
 LINK_MAP = {
     "EventGQLModel": [("presences", "PresenceGQLModel")],
-    "PresenceGQLModel": [("user","UserGQLModel"), ("presenceType","PresenceTypeGQLModel")],
+    "PresenceGQLModel": [
+        ("user", "UserGQLModel"),
+        ("presenceType", "PresenceTypeGQLModel"),
+    ],
 }
+
 
 class QueryBuilder:
     def _block(name: str, inner_lines: List[str], indent: int = 2) -> str:
@@ -31,11 +38,13 @@ class QueryBuilder:
     {pad}  {inner}
     {pad}}}"""
 
-    #? nahradit funkcí, přistupující do DB
+    # ? nahradit funkcí, přistupující do DB
     def _selection_for_type(type_name: str) -> List[str]:
         return FIELD_MAP.get(type_name, ["id"])
 
-    def _build_nested(parent_type: str, requested: set[str], seen: set[tuple]) -> List[str]:
+    def _build_nested(
+        parent_type: str, requested: set[str], seen: set[tuple]
+    ) -> List[str]:
         out: List[str] = []
         for field_name, child_type in LINK_MAP.get(parent_type, []):
             if child_type not in requested:
@@ -50,16 +59,17 @@ class QueryBuilder:
             out.append(QueryBuilder._block(field_name, lines, indent=4))
         return out
 
+
 class GraphQLQueryPlugin:
     """Return queries"""
 
     @kernel_function(
         name="buildVectorQuery",
-        description="Vrátí GraphQL dotaz podle CHAIN (Event→User→Presence→PresenceType)."
+        description="Vrátí GraphQL dotaz podle CHAIN (Event→User→Presence→PresenceType).",
     )
     async def build_vector_query(
         self,
-        graphql_types: Annotated[List[str], "Seznam GraphQL typů. První je kořen."]
+        graphql_types: Annotated[List[str], "Seznam GraphQL typů. První je kořen."],
     ) -> str:
         if not graphql_types:
             raise ValueError("graphql_types must not be empty")
@@ -79,13 +89,20 @@ class GraphQLQueryPlugin:
           {root_block}
         }}"""
         return query
-    
+
 
 if __name__ == "__main__":
     import asyncio
 
     plugin = GraphQLQueryPlugin()
     q = asyncio.run(
-        plugin.build_vector_query(["EventGQLModel","UserGQLModel","PresenceGQLModel","PresenceTypeGQLModel"])
+        plugin.build_vector_query(
+            [
+                "EventGQLModel",
+                "UserGQLModel",
+                "PresenceGQLModel",
+                "PresenceTypeGQLModel",
+            ]
+        )
     )
     print("\n[RETURNED]:\n", q)

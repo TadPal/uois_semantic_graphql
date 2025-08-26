@@ -1,5 +1,9 @@
 import psycopg2
 from psycopg2 import sql
+import os
+from dotenv import load_dotenv, dotenv_values
+
+load_dotenv()
 
 
 def connect_to_postgres():
@@ -9,11 +13,11 @@ def connect_to_postgres():
     try:
         # Connection parameters
         connection = psycopg2.connect(
-            host="localhost",  # Your PostgreSQL host
-            database="data",  # Your database name
-            user="postgres",  # Your username
-            password="example",  # Your password
-            port="5434",  # PostgreSQL port (default is 5432)
+            host=os.getenv("DBHOSTNAME"),
+            database=os.getenv("DBNAME"),
+            user=os.getenv("DBUSERNAME"),
+            password=os.getenv("DBPASS"),
+            port=os.getenv("DBPORT"),
         )
 
         print("Successfully connected to PostgreSQL")
@@ -40,22 +44,6 @@ def execute_command(connection, command):
         connection.rollback()
 
 
-def create_empty_table(connection):
-    """
-    Create an empty table with basic structure
-    """
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS empty_table (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100),
-        email VARCHAR(100),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """
-
-    execute_command(connection, create_table_query)
-
-
 # Main execution
 if __name__ == "__main__":
     # Connect to database
@@ -64,12 +52,14 @@ if __name__ == "__main__":
     command = """
     CREATE EXTENSION IF NOT EXISTS vector;
 
-    CREATE TABLE IF NOT EXISTS graphql_types (
+    DROP TABLE IF EXISTS graphql_types;
+
+    CREATE TABLE graphql_types (
         id SERIAL PRIMARY KEY,
-        name TEXT UNIQUE NOT NULL,
-        description TEXT NOT NULL,
-        embedding VECTOR(1536) NOT NULL
-        );
+        name TEXT UNIQUE,
+        description TEXT,
+        embedding vector(1024)
+    );
 
     CREATE INDEX IF NOT EXISTS idx_graphql_types_embedding
         ON graphql_types
