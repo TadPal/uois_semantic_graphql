@@ -48,5 +48,3 @@ if __name__ == "__main__":
     sdl_file = "sdl\schema.graphql"
     pass
 ```
-
-**SIGN IN**
