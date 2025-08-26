@@ -1,0 +1,3 @@
+requests
+graphql-core
+logging
