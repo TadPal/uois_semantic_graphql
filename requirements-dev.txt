@@ -1,3 +1,4 @@
 requests
 graphql-core
 logging
+semantic_kernel
