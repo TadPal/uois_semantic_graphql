@@ -1,4 +1,7 @@
-requests
-graphql-core
-logging
-semantic_kernel
+requests==2.32.5
+graphql-core==3.2.6
+logging==0.4.9.6
+semantic-kernel==1.35.3
+pgvector==0.4.1
+psycopg2-binary==2.9.10
+ollama==0.5.3

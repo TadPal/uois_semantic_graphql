@@ -1,7 +1,5 @@
 import psycopg2
-import json
 import ollama
-import os
 
 MODEL = "mxbai-embed-large"
 
