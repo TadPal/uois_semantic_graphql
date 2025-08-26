@@ -9,7 +9,7 @@ def get_embeddings(query: str):
 
 
 def search_index(conn):
-    query = "Show me the lessons and their types"
+    query = "Show me all planned lessons for this semester"
 
     embedding = get_embeddings(query=query)
 

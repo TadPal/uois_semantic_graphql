@@ -4,38 +4,15 @@ from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
 
-env = {
-    "DBNAME": os.environ.get("DBNAME"),
-    "DBUSERNAME": os.environ.get("DBUSERNAME"),
-    "DBPASS": os.environ.get("DBPASS"),
-    "DBHOSTNAME": os.environ.get("DBHOSTNAME"),
-    "DBPORT": os.environ.get("DBPORT"),
-    "TOKEN": os.environ.get("TOKEN"),
-}
 
-token = env["TOKEN"]
-gql_url = "http://localhost:33001/api/gql"
+def extract_schema(env):
 
-
-def init_db(extracted_types):
-    from postgresql.initialize_table import initialize_embedding_table
-    from postgresql.ollama_embed_gql import generate_embedding
-
-    # 1. If table doesn't exist initialize it
-    initialize_embedding_table(conn=connection)
-
-    # 2. Generate embeddings and fill pgvector table
-    generate_embedding(conn=connection, types=extracted_types)
-
-
-def extract_schema(token, url):
-
-    from sdl.sdl_parser import extractor as parser
-    from sdl.sdl_extract_object import extractor
+    from sdl.sdl_parser import extractor as sql_parser
+    from sdl.sdl_extract_object import extractor as sdl_types_extractor
     from sdl.sdl_fetch import fetch_sdl
 
     # 1. Fetch sdl from graphql
-    schema = fetch_sdl(token=token, url=gql_url)
+    schema = fetch_sdl(token=env["token"], url=env["GQL_API_URL"])
 
     # 2. Parse schema
     #     {
@@ -50,7 +27,7 @@ def extract_schema(token, url):
     #                   "description": "Entity primary key"
     #                }, ...
 
-    parsed = parser(schema)
+    parsed = sql_parser(schema)["types"]
 
     # 3. Extracted desired format
     # [
@@ -68,25 +45,11 @@ def extract_schema(token, url):
     #     }, ...
     # ]
 
-    extracted_types = extractor(parsed["types"])
+    extracted_types = sdl_types_extractor(parsed)
 
-    return extracted_types
-
-
-if __name__ == "__main__":
-
-    # extrated_types = extract_schema(token, gql_url)
-
-    # Connect to pgvector and handle connection
-    from postgresql.connection import connect_to_postgres
-    from postgresql.ollama_search import search_index
-
-    connection = connect_to_postgres(env=env)
-
-    if connection:
-        # init_db(extracted_types)
-        search_index(conn=connection)
-        connection.close()
+    ###########################################
+    #            SAVE TO FILES                #
+    ###########################################
 
     # with open("schema.graphql", "w", encoding="utf-8") as f:
     #     f.write(schema)
@@ -96,3 +59,49 @@ if __name__ == "__main__":
 
     # with open("json\\sld_extracted.json", "w", encoding="utf-8") as f:
     #     f.write(json.dumps(extracted_types, indent=2, ensure_ascii=False))
+
+    return extracted_types
+
+
+def init_db(env):
+    from postgresql.initialize_table import initialize_embedding_table
+    from postgresql.ollama_embed_gql import generate_embedding
+
+    extracted_types = extract_schema(env)
+
+    # 1. If table doesn't exist initialize it
+    initialize_embedding_table(conn=connection)
+
+    # 2. Generate embeddings and fill pgvector table
+    generate_embedding(conn=connection, types=extracted_types)
+
+
+if __name__ == "__main__":
+    ###########################################
+    #               VARIABLES                 #
+    ###########################################
+
+    env = {
+        "DBNAME": os.environ.get("DBNAME"),
+        "DBUSERNAME": os.environ.get("DBUSERNAME"),
+        "DBPASS": os.environ.get("DBPASS"),
+        "DBHOSTNAME": os.environ.get("DBHOSTNAME"),
+        "DBPORT": os.environ.get("DBPORT"),
+        "TOKEN": os.environ.get("TOKEN"),
+        "GQL_API_URL": "http://localhost:33001/api/gql",
+    }
+
+    ###########################################
+    #               DATABASE                  #
+    ###########################################
+
+    # Connect to pgvector and handle connection
+    from postgresql.connection import connect_to_postgres
+    from postgresql.ollama_search import search_index
+
+    connection = connect_to_postgres(env=env)
+
+    if connection:
+        # init_db(env)
+        search_index(conn=connection)
+        connection.close()
