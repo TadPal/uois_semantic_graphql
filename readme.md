@@ -48,3 +48,36 @@ if __name__ == "__main__":
     sdl_file = "sdl\schema.graphql"
     pass
 ```
+
+4. Run Ollama and local embedding model
+
+```bash
+ollama pull mxbai-embed-large
+```
+
+5. Embed types
+
+```python
+ def get_embedding(text: str):
+        response = ollama.embeddings(model=MODEL, prompt=text)
+        return response["embedding"]
+```
+
+6. Embed queries and search
+
+```python
+ def get_embedding(text: str):
+        response = ollama.embeddings(model=MODEL, prompt=text)
+        return response["embedding"]
+
+  query = "Show me all planned lessons for this semester"
+
+  embedding = get_embeddings(query=query)
+```
+
+```sql
+SELECT name, description
+FROM graphql_types
+ORDER BY embedding <-> %s::vector
+LIMIT 5; (embedding,)
+```
