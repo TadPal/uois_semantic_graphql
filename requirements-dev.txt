@@ -11,7 +11,7 @@ gunicorn
 
 asyncpg
 aiohttp
-
+strawberry-graphql[fastapi]
 prometheus-client
 nicegui
 
