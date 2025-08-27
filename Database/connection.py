@@ -16,7 +16,7 @@ def connect_to_postgres(env):
             port=env["DBPORT"],
         )
 
-        register_vector(connection)
+        # register_vector(connection)
 
         print("Successfully connected to database")
         return connection

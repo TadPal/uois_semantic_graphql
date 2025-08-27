@@ -103,5 +103,5 @@ if __name__ == "__main__":
 
     if connection:
         # init_db(env)
-        search_index(conn=connection)
+        # search_index(conn=connection)
         connection.close()

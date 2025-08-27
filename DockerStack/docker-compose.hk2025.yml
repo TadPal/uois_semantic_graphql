@@ -77,7 +77,7 @@ services:
     # vnejsi port : port, kde sluzbu poskytuje kontejner
     # - 33000:3000
     deploy:
-      replicas: 3
+      replicas: 1
     depends_on:
       - gql_ug
       - gql_forms
@@ -90,7 +90,7 @@ services:
       - gql_externalids
 
   gql_ug:
-    image: hrbolek/gql_ug:0.8.6 #   image: kavic/ug
+    image: hrbolek/gql_ug:latest
     environment:
       # link na db mimo stack
       # - POSTGRES_HOST=host.docker.internal:5432
@@ -141,7 +141,7 @@ services:
       start_period: 60s
       timeout: 10s
     deploy:
-      replicas: 3
+      replicas: 1
     restart: on-failure:3 # nedojde k restartu pokud je kontejner "unhealthy", maximalne 3 pokusy
     # ports:
     #   - 33331:8000

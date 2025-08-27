@@ -1,7 +1,35 @@
 import requests
 
 
-def fetch_sdl(token: str, url: str):
+def getToken(
+    url: str = "http://localhost:33001/api/gql", username: str = "", password: str = ""
+):
+    authurl = url.replace("/api/gql", "/oauth/login3")
+
+    # First GET to fetch initial JSON
+    resp = requests.get(authurl)
+    resp.raise_for_status()
+    data = resp.json()
+
+    # Add username & password to payload
+    payload = {**data, "username": username, "password": password}
+
+    # POST with payload
+    resp = requests.post(authurl, json=payload)
+    resp.raise_for_status()
+    data = resp.json()
+
+    token = data["token"]
+    return token
+
+
+def fetch_sdl(token: str = "", url: str = "http://localhost:33001/api/gql"):
+
+    if not token:
+        token = getToken(
+            url, username="john.newbie@world.com", password="john.newbie@world.com"
+        )
+
     query = """
       query GetServiceSDL {
         _service {

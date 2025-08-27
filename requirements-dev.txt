@@ -5,3 +5,4 @@ semantic-kernel==1.35.3
 pgvector==0.4.1
 psycopg2-binary==2.9.10
 ollama==0.5.3
+strawberry-graphql
