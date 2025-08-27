@@ -672,4 +672,4 @@ def explain_graphql_query():
 # explain_graphql_query()
 # create_graphql_detection_skill(kernel=kernel)
 
-asyncio.run(main())
+# asyncio.run(main())

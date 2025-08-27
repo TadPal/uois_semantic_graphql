@@ -81,3 +81,9 @@ FROM graphql_types
 ORDER BY embedding <-> %s::vector
 LIMIT 5; (embedding,)
 ```
+
+7. Start message server
+
+```bash
+uvicorn main:app
+```

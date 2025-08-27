@@ -1,12 +1,57 @@
 import asyncio
+
+# FastAPI part
+
+import asyncio
 from fastapi import FastAPI, Request, Response
 
+from SemanticKernel import (
+    kernel,
+    azure_chat,
+    KernelArguments,
+    createGQLClient,
+    ChatHistory,
+    AzureChatPromptExecutionSettings,
+    FunctionChoiceBehavior,
+    AutoFunctionInvocationContext,
+    FilterTypes,
+)
+
+gqlClient = None
+
+
+async def startup_gql_client():
+    global gqlClient
+    gqlClient = await createGQLClient(
+        username="john.newbie@world.com", password="john.newbie@world.com"
+    )
+
+
+skills = []
+for plugin in kernel.plugins.values():
+    skills.extend(plugin.functions.keys())
+    print(skills)
+
+# for pname, plugin in kernel.plugins.items():
+#     print(f"Plugin: {pname}")
+#     print("  Functions:", list(plugin.functions))
+
+history = ChatHistory()
+execution_settings = AzureChatPromptExecutionSettings()
+execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
+
+
+async def inject_gql_client(context: AutoFunctionInvocationContext, next):
+    context.arguments["gqlclient"] = gqlClient
+    await next(context)
+
+
+kernel.add_filter(FilterTypes.AUTO_FUNCTION_INVOCATION, inject_gql_client)
 
 from nicegui import core
 import nicegui
 
-
-app = FastAPI()
+app = FastAPI(on_startup=[startup_gql_client])
 
 from nicegui import ui, app as nicegui_app, storage, core
 from starlette.middleware.sessions import SessionMiddleware
@@ -32,65 +77,58 @@ async def index_page():
                 text=question,
                 name="You",
                 sent=True,
-            )
+            ).props("bg-color=primary text-color=white")
             response_message = ui.chat_message(
                 name="Assistant", sent=False, avatar="https://robohash.org/ui"
-            )
+            ).props("bg-color=grey-2 text-color=dark")
 
-        if question.strip() == "sdl":
-            response = [
-                {"type": "text", "content": f"I have responded to {question}"},
-                {
-                    "type": "md",
-                    "content": schema.as_str().replace("\\n", "\n").replace('\\"', '"'),
-                },
-            ]
-        elif question.strip() == "explain":
-            from src.Utils.explain_query import explain_graphql_query
-            from src.Utils.gql_client import createGQLClient
+        # AI stuff
+        history.add_user_message(question)
+        # print(f"history: {history.serialize()}")
+        # https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/function-calling/?pivots=programming-language-python
+        result = await azure_chat.get_chat_message_content(
+            chat_history=history,
+            settings=execution_settings,
+            kernel=kernel,
+            # context_variables={"extraContext": extra_context}
+            arguments=KernelArguments(),
+        )
 
-            client = await createGQLClient(
-                username="john.newbie@world.com", password="john.newbie@world.com"
-            )
-            sdl_query = """query __ApolloGetServiceDefinition__ { _service { sdl } }"""
-            result = await client(sdl_query, variables={})
-            sdl = result["data"]["_service"]["sdl"]
-            # sdl = schema.as_str()
-            query = """"""
-            result = explain_graphql_query(sdl, query)
-            response = [
-                {"type": "text", "content": f"I have responded to {question}"},
-                {"type": "md", "content": f"```gql\n{result}\n```"},
-            ]
-        else:
-            response = [
-                {"type": "text", "content": f"I have responded to {question}"},
-                {
-                    "type": "md",
-                    "content": """
-                            # My response
-                            ```json
-                            {
-                                "question": "{question}"
-                            }
-                            ```
-                            """,
-                },
-            ]
+        response = [{"type": "md", "content": f"{result}"}]
+
+        # for part in response:
+        #     await asyncio.sleep(1)
+        #     if part["type"] == "text":
+        #         with response_message:
+        #             ui.html(part["content"])
+        #     elif part["type"] == "md":
+        #         with message_container:
+        #             ui.markdown(part["content"])
+        # ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
+
+        # Make the UI better
         for part in response:
             await asyncio.sleep(1)
             if part["type"] == "text":
                 with response_message:
                     ui.html(part["content"])
             elif part["type"] == "md":
-                with message_container:
+                with response_message:
                     ui.markdown(part["content"])
         ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
 
-        # text.value = ''
-
     ui.add_css(
-        r"a:link, a:visited {color: inherit !important; text-decoration: none; font-weight: 500}"
+        """
+        a:link
+        a:visited {color: inherit !important; text-decoration: none; font-weight: 500},
+        /* Hide scrollbar for Chrome, Safari and Edge */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for Firefox */
+        *{
+            scrollbar-width: none;
+        }"""
     )
 
     # the queries below are used to expand the contend down to the footer (content can then use flex-grow to expand)
@@ -99,6 +137,7 @@ async def index_page():
 
     with ui.tabs().classes("w-full") as tabs:
         chat_tab = ui.tab("Chat")
+        # Use log tab
         logs_tab = ui.tab("Logs")
     with ui.tab_panels(tabs, value=chat_tab).classes(
         "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-md bg-neutral-800"
@@ -110,7 +149,8 @@ async def index_page():
                 name="Assistant",
                 sent=False,
                 avatar="https://robohash.org/ui",
-            )
+            ).props("bg-color=grey-2 text-color=dark")
+
         with ui.tab_panel(logs_tab):
             log = ui.log().classes("w-full h-full")
 
