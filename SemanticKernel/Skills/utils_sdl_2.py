@@ -1,4 +1,5 @@
 import asyncio
+
 # import pytest
 import logging
 import typing
@@ -24,6 +25,7 @@ from graphql.language import (
     ListTypeNode,
 )
 
+
 def get_scalar_names(sdl_doc: DocumentNode) -> set:
     # 1) základní GraphQL scalary
     builtin = {"Int", "Float", "String", "Boolean", "ID"}
@@ -37,6 +39,7 @@ def get_scalar_names(sdl_doc: DocumentNode) -> set:
 
     return builtin | custom
 
+
 def unwrap_type(type_node):
     """
     Unwraps NON_NULL and LIST wrappers to get the base NamedTypeNode.
@@ -48,8 +51,7 @@ def unwrap_type(type_node):
 
 
 def select_ast_by_path(
-    sdl_doc: DocumentNode,
-    path: typing.List[str]
+    sdl_doc: DocumentNode, path: typing.List[str]
 ) -> typing.Optional[typing.Union[ObjectTypeDefinitionNode, FieldDefinitionNode]]:
     """
     Traverses the GraphQL AST based on `path`:
@@ -58,16 +60,19 @@ def select_ast_by_path(
       - After selecting a field (if not at end of path), continues into that field's return type definition.
     Returns the final AST node (type or field), or None if any step fails.
     """
-    current_node: typing.Union[DocumentNode, ObjectTypeDefinitionNode, FieldDefinitionNode] = sdl_doc
+    current_node: typing.Union[
+        DocumentNode, ObjectTypeDefinitionNode, FieldDefinitionNode
+    ] = sdl_doc
     for idx, name in enumerate(path):
         if isinstance(current_node, DocumentNode):
             # Find the type definition
             type_def = next(
                 (
-                    d for d in sdl_doc.definitions
+                    d
+                    for d in sdl_doc.definitions
                     if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == name
                 ),
-                None
+                None,
             )
             if not type_def:
                 return None
@@ -75,8 +80,7 @@ def select_ast_by_path(
         elif isinstance(current_node, ObjectTypeDefinitionNode):
             # Find the field in the type
             field_def = next(
-                (f for f in current_node.fields if f.name.value == name),
-                None
+                (f for f in current_node.fields if f.name.value == name), None
             )
             if not field_def:
                 return None
@@ -86,10 +90,12 @@ def select_ast_by_path(
                 type_name = unwrap_type(field_def.type)
                 type_def = next(
                     (
-                        d for d in sdl_doc.definitions
-                        if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == type_name
+                        d
+                        for d in sdl_doc.definitions
+                        if isinstance(d, ObjectTypeDefinitionNode)
+                        and d.name.value == type_name
                     ),
-                    None
+                    None,
                 )
                 if not type_def:
                     return None
@@ -99,9 +105,10 @@ def select_ast_by_path(
             return None
     return current_node
 
+
 def get_read_scalar_values(sdl_doc: DocumentNode) -> dict:
     """
-    Extracts a mapping of GraphQL object type names to query field names 
+    Extracts a mapping of GraphQL object type names to query field names
     that return a single object by NON_NULL 'id' argument.
 
     This function analyzes the 'Query' type in the provided GraphQL SDL AST (DocumentNode).
@@ -119,7 +126,7 @@ def get_read_scalar_values(sdl_doc: DocumentNode) -> dict:
         sdl_doc (DocumentNode): Parsed GraphQL SDL document (AST).
 
     Returns:
-        dict[str, list[str]]: 
+        dict[str, list[str]]:
             Dictionary where keys are GraphQL OBJECT type names,
             and values are lists of Query field names that return this type by a single 'id' argument.
 
@@ -141,11 +148,11 @@ def get_read_scalar_values(sdl_doc: DocumentNode) -> dict:
     # Find the Query type definition node
     query_def = next(
         (
-            defn for defn in sdl_doc.definitions
-            if isinstance(defn, ObjectTypeDefinitionNode)
-            and defn.name.value == "Query"
+            defn
+            for defn in sdl_doc.definitions
+            if isinstance(defn, ObjectTypeDefinitionNode) and defn.name.value == "Query"
         ),
-        None
+        None,
     )
     if not query_def or not query_def.fields:
         return result
@@ -169,6 +176,7 @@ def get_read_scalar_values(sdl_doc: DocumentNode) -> dict:
                 result[obj_name].append(field.name.value)
 
     return result
+
 
 def get_read_vector_values(sdl_doc: DocumentNode) -> dict:
     """
@@ -207,11 +215,11 @@ def get_read_vector_values(sdl_doc: DocumentNode) -> dict:
     # najdi Query type definition v AST
     query_def = next(
         (
-            defn for defn in sdl_doc.definitions
-            if isinstance(defn, ObjectTypeDefinitionNode)
-            and defn.name.value == "Query"
+            defn
+            for defn in sdl_doc.definitions
+            if isinstance(defn, ObjectTypeDefinitionNode) and defn.name.value == "Query"
         ),
-        None
+        None,
     )
     if not query_def or not query_def.fields:
         return result
@@ -229,7 +237,7 @@ def get_read_vector_values(sdl_doc: DocumentNode) -> dict:
                     base = inner.type
                     # OBJECT represented by NamedTypeNode
                     if isinstance(base, NamedTypeNode):
-                        type_name  = base.name.value
+                        type_name = base.name.value
                         if type_name not in result:
                             result[type_name] = []
                         field_name = field.name.value
@@ -276,11 +284,12 @@ def get_insert_mutations(sdl_doc: DocumentNode) -> dict:
     # najdi Mutation type definition v AST
     mutation_def = next(
         (
-            defn for defn in sdl_doc.definitions
+            defn
+            for defn in sdl_doc.definitions
             if isinstance(defn, ObjectTypeDefinitionNode)
             and defn.name.value == "Mutation"
         ),
-        None
+        None,
     )
     if not mutation_def or not mutation_def.fields:
         return result
@@ -294,10 +303,13 @@ def get_insert_mutations(sdl_doc: DocumentNode) -> dict:
             base_arg = unwrap_type(args[0].type)
             # musí být INPUT_OBJECT
             input_def = next(
-                (d for d in sdl_doc.definitions
-                 if isinstance(d, InputObjectTypeDefinitionNode)
-                 and d.name.value == base_arg.name.value),
-                None
+                (
+                    d
+                    for d in sdl_doc.definitions
+                    if isinstance(d, InputObjectTypeDefinitionNode)
+                    and d.name.value == base_arg.name.value
+                ),
+                None,
             )
             if not input_def:
                 continue
@@ -310,10 +322,13 @@ def get_insert_mutations(sdl_doc: DocumentNode) -> dict:
             ret_base = unwrap_type(field.type)
             # musí být UNION
             union_def = next(
-                (d for d in sdl_doc.definitions
-                 if isinstance(d, UnionTypeDefinitionNode)
-                 and d.name.value == ret_base.name.value),
-                None
+                (
+                    d
+                    for d in sdl_doc.definitions
+                    if isinstance(d, UnionTypeDefinitionNode)
+                    and d.name.value == ret_base.name.value
+                ),
+                None,
             )
             if not union_def:
                 continue
@@ -324,10 +339,13 @@ def get_insert_mutations(sdl_doc: DocumentNode) -> dict:
                 if isinstance(pt, NamedTypeNode) and "Error" not in pt.name.value:
                     # ověříme, že je to skutečný ObjectTypeDefinition
                     obj_def = next(
-                        (d for d in sdl_doc.definitions
-                         if isinstance(d, ObjectTypeDefinitionNode)
-                         and d.name.value == pt.name.value),
-                        None
+                        (
+                            d
+                            for d in sdl_doc.definitions
+                            if isinstance(d, ObjectTypeDefinitionNode)
+                            and d.name.value == pt.name.value
+                        ),
+                        None,
                     )
                     if obj_def:
                         type_name = pt.name.value
@@ -337,6 +355,7 @@ def get_insert_mutations(sdl_doc: DocumentNode) -> dict:
                         result[type_name].append(field.name.value)
 
     return result
+
 
 def get_update_mutations(sdl_doc: DocumentNode) -> dict:
     """
@@ -383,11 +402,12 @@ def get_update_mutations(sdl_doc: DocumentNode) -> dict:
     # najdi Mutation type definition v AST
     mutation_def = next(
         (
-            defn for defn in sdl_doc.definitions
+            defn
+            for defn in sdl_doc.definitions
             if isinstance(defn, ObjectTypeDefinitionNode)
             and defn.name.value == "Mutation"
         ),
-        None
+        None,
     )
     if not mutation_def or not mutation_def.fields:
         return result
@@ -401,11 +421,12 @@ def get_update_mutations(sdl_doc: DocumentNode) -> dict:
             # musí být INPUT_OBJECT
             input_def = next(
                 (
-                    d for d in sdl_doc.definitions
+                    d
+                    for d in sdl_doc.definitions
                     if isinstance(d, InputObjectTypeDefinitionNode)
                     and d.name.value == base_arg.name.value
                 ),
-                None
+                None,
             )
             if not input_def:
                 continue
@@ -417,7 +438,8 @@ def get_update_mutations(sdl_doc: DocumentNode) -> dict:
 
             # musí mít povinná id & lastchange
             required = [
-                f.name.value for f in input_fields
+                f.name.value
+                for f in input_fields
                 if isinstance(f.type, NonNullTypeNode)
             ]
             if not ("id" in required and "lastchange" in required):
@@ -427,11 +449,12 @@ def get_update_mutations(sdl_doc: DocumentNode) -> dict:
             ret_base = unwrap_type(field.type)
             union_def = next(
                 (
-                    d for d in sdl_doc.definitions
+                    d
+                    for d in sdl_doc.definitions
                     if isinstance(d, UnionTypeDefinitionNode)
                     and d.name.value == ret_base.name.value
                 ),
-                None
+                None,
             )
             if not union_def:
                 continue
@@ -440,11 +463,12 @@ def get_update_mutations(sdl_doc: DocumentNode) -> dict:
                 if isinstance(pt, NamedTypeNode) and "Error" not in pt.name.value:
                     obj_def = next(
                         (
-                            d for d in sdl_doc.definitions
+                            d
+                            for d in sdl_doc.definitions
                             if isinstance(d, ObjectTypeDefinitionNode)
                             and d.name.value == pt.name.value
                         ),
-                        None
+                        None,
                     )
                     if obj_def:
                         type_name = pt.name.value
@@ -502,11 +526,12 @@ def get_delete_mutations(sdl_doc: DocumentNode) -> dict:
     # najdi Mutation type definition v AST
     mutation_def = next(
         (
-            defn for defn in sdl_doc.definitions
+            defn
+            for defn in sdl_doc.definitions
             if isinstance(defn, ObjectTypeDefinitionNode)
             and defn.name.value == "Mutation"
         ),
-        None
+        None,
     )
     if not mutation_def or not mutation_def.fields:
         return result
@@ -520,18 +545,23 @@ def get_delete_mutations(sdl_doc: DocumentNode) -> dict:
             # najdi definici INPUT_OBJECT
             input_def = next(
                 (
-                    defn for defn in sdl_doc.definitions
+                    defn
+                    for defn in sdl_doc.definitions
                     if isinstance(defn, InputObjectTypeDefinitionNode)
                     and defn.name.value == base_arg.name.value
                 ),
-                None
+                None,
             )
             if not input_def:
                 continue
 
             input_fields = input_def.fields or []
             # musí obsahovat právě id & lastchange
-            required = [f.name.value for f in input_fields if isinstance(f.type, NonNullTypeNode)]
+            required = [
+                f.name.value
+                for f in input_fields
+                if isinstance(f.type, NonNullTypeNode)
+            ]
             if set(required) != {"id", "lastchange"}:
                 continue
 
@@ -543,19 +573,19 @@ def get_delete_mutations(sdl_doc: DocumentNode) -> dict:
             # najdi definici návratového objektu
             obj_def = next(
                 (
-                    defn for defn in sdl_doc.definitions
+                    defn
+                    for defn in sdl_doc.definitions
                     if isinstance(defn, ObjectTypeDefinitionNode)
                     and defn.name.value == ret_base.name.value
                 ),
-                None
+                None,
             )
             if not obj_def or not obj_def.fields:
                 continue
 
             # najdi pole 'Entity'
             entity_field = next(
-                (f for f in obj_def.fields if f.name.value == 'Entity'),
-                None
+                (f for f in obj_def.fields if f.name.value == "Entity"), None
             )
             if not entity_field:
                 continue
@@ -619,15 +649,13 @@ def get_cruds(sdl_doc: DocumentNode) -> dict:
     """
     single = get_read_scalar_values(sdl_doc)
     vector = get_read_vector_values(sdl_doc)
-    ins    = get_insert_mutations(sdl_doc)
-    upd    = get_update_mutations(sdl_doc)
-    dele   = get_delete_mutations(sdl_doc)
+    ins = get_insert_mutations(sdl_doc)
+    upd = get_update_mutations(sdl_doc)
+    dele = get_delete_mutations(sdl_doc)
 
     cruds = {}
     for type_name, op_vector in single.items():
-        entry = {
-            "read": op_vector
-        }
+        entry = {"read": op_vector}
         cruds[type_name] = entry
     for type_name, op_vector in vector.items():
         if type_name not in cruds:
@@ -645,7 +673,7 @@ def get_cruds(sdl_doc: DocumentNode) -> dict:
         if type_name not in cruds:
             cruds[type_name] = {}
         cruds[type_name]["delete"] = op_vector
-    
+
     return cruds
 
 
@@ -656,8 +684,8 @@ query sdlQuery {
   }
 }"""
 
-def build_selection_optional(sdl_doc: DocumentNode,
-                             field_type: TypeNode) -> str:
+
+def build_selection_optional(sdl_doc: DocumentNode, field_type: TypeNode) -> str:
     """
     Builds a selection set by iterating over fields of the given object type.
     Excludes any field that has at least one NON_NULL argument.
@@ -671,10 +699,13 @@ def build_selection_optional(sdl_doc: DocumentNode,
 
     # 2) Locate the corresponding ObjectTypeDefinition in the AST
     type_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, ObjectTypeDefinitionNode)
-         and d.name.value == base.name.value),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, ObjectTypeDefinitionNode)
+            and d.name.value == base.name.value
+        ),
+        None,
     )
     if not type_def or not type_def.fields:
         return ""
@@ -731,10 +762,13 @@ def build_selection(sdl_doc: DocumentNode, field_type: TypeNode) -> str:
 
     # Try OBJECT
     obj_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, ObjectTypeDefinitionNode)
-         and d.name.value == field_type.name.value),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, ObjectTypeDefinitionNode)
+            and d.name.value == field_type.name.value
+        ),
+        None,
     )
     if obj_def:
         result = build_selection_optional(sdl_doc, field_type)
@@ -743,10 +777,13 @@ def build_selection(sdl_doc: DocumentNode, field_type: TypeNode) -> str:
 
     # Try UNION
     union_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, UnionTypeDefinitionNode)
-         and d.name.value == field_type.name.value),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, UnionTypeDefinitionNode)
+            and d.name.value == field_type.name.value
+        ),
+        None,
     )
     if union_def:
         return "{ __typename }"
@@ -754,7 +791,10 @@ def build_selection(sdl_doc: DocumentNode, field_type: TypeNode) -> str:
     # SCALAR or other kinds → no selection
     return ""
 
-def build_medium_fragment(sdl_doc: DocumentNode, type_name: str, postfix: str = "MediumFragment") -> str:
+
+def build_medium_fragment(
+    sdl_doc: DocumentNode, type_name: str, postfix: str = "MediumFragment"
+) -> str:
     """
     Constructs a GraphQL fragment for `type_name` including only fields that:
       - have no NON_NULL arguments,
@@ -764,10 +804,11 @@ def build_medium_fragment(sdl_doc: DocumentNode, type_name: str, postfix: str = 
     # Find the type definition in the AST
     type_def = next(
         (
-            d for d in sdl_doc.definitions
+            d
+            for d in sdl_doc.definitions
             if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == type_name
         ),
-        None
+        None,
     )
     if not type_def or not type_def.fields:
         return f"# Type {type_name} not found or has no fields"
@@ -780,7 +821,9 @@ def build_medium_fragment(sdl_doc: DocumentNode, type_name: str, postfix: str = 
         # Skip fields with any required arguments
         # print(f"considering field {field.name.value} / {field}")
         # print(f"considering field {field.arguments or []}")
-        if any(isinstance(arg.type, NonNullTypeNode) for arg in (field.arguments or [])):
+        if any(
+            isinstance(arg.type, NonNullTypeNode) for arg in (field.arguments or [])
+        ):
             continue
         # Unwrap return type
         base = unwrap_type(field.type)
@@ -797,10 +840,9 @@ def build_medium_fragment(sdl_doc: DocumentNode, type_name: str, postfix: str = 
     fields_str = "\n    ".join(parts)
     return f"fragment {type_name}{postfix} on {type_name} {{ {fields_str} }}"
 
+
 def build_large_fragment(
-    sdl_doc: DocumentNode,
-    type_name: str,
-    postfix: str = "LargeFragment"
+    sdl_doc: DocumentNode, type_name: str, postfix: str = "LargeFragment"
 ) -> str:
     """
     Constructs a GraphQL fragment for `type_name` including:
@@ -812,10 +854,11 @@ def build_large_fragment(
     # locate the type
     type_def = next(
         (
-            d for d in sdl_doc.definitions
+            d
+            for d in sdl_doc.definitions
             if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == type_name
         ),
-        None
+        None,
     )
     if not type_def or not type_def.fields:
         return f"# Type {type_name} not found or has no fields"
@@ -837,7 +880,12 @@ def build_large_fragment(
 
     for field in type_def.fields:  # type: FieldDefinitionNode
         # skip if any argument is NonNull
-        if any(isinstance(arg.type, NonNullTypeNode) for arg in (field.arguments or [])):
+        if any(
+            isinstance(arg.type, NonNullTypeNode) for arg in (field.arguments or [])
+        ):
+            continue
+
+        if field.name.value == "events" or field.name.value == "plannedLessons":
             continue
 
         base = unwrap_type(field.type)  # NamedTypeNode
@@ -847,7 +895,7 @@ def build_large_fragment(
             # scalar field
             parts.append(field.name.value)
 
-        elif name in object_names :
+        elif name in object_names:
             # object or union field → minimal sub-selection
             parts.append(f"{field.name.value} {{ __typename id }}")
         elif name in union_names:
@@ -858,6 +906,7 @@ def build_large_fragment(
 
     fields_str = "\n    ".join(parts)
     return f"fragment {type_name}{postfix} on {type_name} {{ {fields_str} }}"
+
 
 def print_type(type_node: TypeNode) -> str:
     """
@@ -877,10 +926,10 @@ def print_type(type_node: TypeNode) -> str:
     # fallback
     return ""
 
+
 def build_input_type_params_list(
-        sdl_doc: DocumentNode,
-        input_type_name: str
-    ) -> list[str]:
+    sdl_doc: DocumentNode, input_type_name: str
+) -> list[str]:
     """
     Builds parameter definitions string for given INPUT_OBJECT type.
     Outputs GraphQL variable signature, e.g.:
@@ -889,11 +938,12 @@ def build_input_type_params_list(
     # Najdi definici INPUT_OBJECT v AST
     input_def = next(
         (
-            d for d in sdl_doc.definitions
+            d
+            for d in sdl_doc.definitions
             if isinstance(d, InputObjectTypeDefinitionNode)
             and d.name.value == input_type_name
         ),
-        None
+        None,
     )
     # Pokud není nebo nemá žádná pole, vrať prázdný string
     if not input_def or not input_def.fields:
@@ -908,15 +958,17 @@ def build_input_type_params_list(
 
     return params
 
-def build_input_type_params(sdl_doc: DocumentNode,
-                            input_type_name: str) -> str:
+
+def build_input_type_params(sdl_doc: DocumentNode, input_type_name: str) -> str:
     """
     Builds parameter definitions string for given INPUT_OBJECT type.
     Outputs GraphQL variable signature, e.g.:
       ($field1: Type1!, $field2: Type2)
     """
 
-    params = build_input_type_params_list(sdl_doc=sdl_doc, input_type_name=input_type_name)
+    params = build_input_type_params_list(
+        sdl_doc=sdl_doc, input_type_name=input_type_name
+    )
     if not params:
         return ""
     params_str = [f"${key}: {value}" for key, value in params.items()]
@@ -924,20 +976,23 @@ def build_input_type_params(sdl_doc: DocumentNode,
     joined = ",\n   ".join(params_str)
     return f"(\n   {joined}\n)"
 
+
 def get_mutation_query_params(sdl_doc: DocumentNode, mutation_name: str) -> str:
     # 1) Najdi Mutation type v AST
     mutation_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == "Mutation"),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == "Mutation"
+        ),
+        None,
     )
     if not mutation_def or not mutation_def.fields:
         return ""
 
     # 2) Najdi konkrétní mutation field
     field = next(
-        (f for f in mutation_def.fields if f.name.value == mutation_name),
-        None
+        (f for f in mutation_def.fields if f.name.value == mutation_name), None
     )
     if not field or len(field.arguments or []) != 1:
         return ""
@@ -949,8 +1004,9 @@ def get_mutation_query_params(sdl_doc: DocumentNode, mutation_name: str) -> str:
 
     # 4) Vygeneruj definici proměnných podle INPUT_OBJECT
     # param_defs = build_input_type_params(sdl_doc, input_name) # build_input_type_params_list
-    param_defs = build_input_type_params_list(sdl_doc, input_name) # 
+    param_defs = build_input_type_params_list(sdl_doc, input_name)  #
     return param_defs
+
 
 def build_expanded_mutation(sdl_doc: DocumentNode, mutation_name: str) -> str:
     """
@@ -959,17 +1015,19 @@ def build_expanded_mutation(sdl_doc: DocumentNode, mutation_name: str) -> str:
     """
     # 1) Najdi Mutation type v AST
     mutation_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == "Mutation"),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == "Mutation"
+        ),
+        None,
     )
     if not mutation_def or not mutation_def.fields:
         return ""
 
     # 2) Najdi konkrétní mutation field
     field = next(
-        (f for f in mutation_def.fields if f.name.value == mutation_name),
-        None
+        (f for f in mutation_def.fields if f.name.value == mutation_name), None
     )
     if not field or len(field.arguments or []) != 1:
         return ""
@@ -984,9 +1042,13 @@ def build_expanded_mutation(sdl_doc: DocumentNode, mutation_name: str) -> str:
 
     # 5) Sestav call‑args z input fields
     input_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, InputObjectTypeDefinitionNode) and d.name.value == input_name),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, InputObjectTypeDefinitionNode)
+            and d.name.value == input_name
+        ),
+        None,
     )
     inputs = input_def.fields or []
     call_args = ",\n   ".join(f"{f.name.value}: ${f.name.value}" for f in inputs)
@@ -997,9 +1059,13 @@ def build_expanded_mutation(sdl_doc: DocumentNode, mutation_name: str) -> str:
 
     # 6a) Pokud je to UNION
     union_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, UnionTypeDefinitionNode) and d.name.value == ret_base.name.value),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, UnionTypeDefinitionNode)
+            and d.name.value == ret_base.name.value
+        ),
+        None,
     )
     if union_def:
         parts = []
@@ -1007,9 +1073,12 @@ def build_expanded_mutation(sdl_doc: DocumentNode, mutation_name: str) -> str:
             name = pt.name.value
             # jen OBJECT a bez „Error“
             obj_def = next(
-                (d for d in sdl_doc.definitions
-                 if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == name),
-                None
+                (
+                    d
+                    for d in sdl_doc.definitions
+                    if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == name
+                ),
+                None,
             )
             if obj_def and "Error" not in name:
                 sel = build_selection(sdl_doc, NamedTypeNode(name=pt.name))
@@ -1019,9 +1088,13 @@ def build_expanded_mutation(sdl_doc: DocumentNode, mutation_name: str) -> str:
     else:
         # 6b) Pokud je to OBJECT
         obj_def = next(
-            (d for d in sdl_doc.definitions
-             if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == ret_base.name.value),
-            None
+            (
+                d
+                for d in sdl_doc.definitions
+                if isinstance(d, ObjectTypeDefinitionNode)
+                and d.name.value == ret_base.name.value
+            ),
+            None,
         )
         if obj_def:
             sel = build_selection(sdl_doc, ret_base)
@@ -1036,6 +1109,7 @@ def build_expanded_mutation(sdl_doc: DocumentNode, mutation_name: str) -> str:
         f"}}"
     )
 
+
 def build_query_page(sdl_doc: DocumentNode, operation_name: str) -> str:
     """
     Builds a readPage query for the given operation name,
@@ -1043,16 +1117,18 @@ def build_query_page(sdl_doc: DocumentNode, operation_name: str) -> str:
     """
     # 1) Najdi Query type v AST
     query_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == "Query"),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == "Query"
+        ),
+        None,
     )
     assert query_def and query_def.fields, "Query type not found or has no fields"
 
     # 2) Najdi pole s daným jménem
     field_def = next(
-        (f for f in query_def.fields if f.name.value == operation_name),
-        None
+        (f for f in query_def.fields if f.name.value == operation_name), None
     )
     assert field_def, f"Field {operation_name} not found in Query"
 
@@ -1062,7 +1138,9 @@ def build_query_page(sdl_doc: DocumentNode, operation_name: str) -> str:
     t = t.type
     assert isinstance(t, ListTypeNode), f"{operation_name} must be a LIST"
     t = t.type
-    assert isinstance(t, NonNullTypeNode), f"{operation_name} list elements must be NON_NULL"
+    assert isinstance(
+        t, NonNullTypeNode
+    ), f"{operation_name} list elements must be NON_NULL"
 
     # 4) Vytvoření selection setu
     sel = build_selection(sdl_doc, field_def.type)
@@ -1070,25 +1148,29 @@ def build_query_page(sdl_doc: DocumentNode, operation_name: str) -> str:
     # 5) Složení finální query
     return f"query {operation_name} {{ {operation_name}{sel} }}"
 
-def build_query_scalar(sdl_doc: DocumentNode,
-                       operation_name: str) -> typing.Optional[str]:
+
+def build_query_scalar(
+    sdl_doc: DocumentNode, operation_name: str
+) -> typing.Optional[str]:
     """
     Builds a read(id) query for given operation name.
     Expects Query.<operationName>(id: ID!): OBJECT.
     """
     # 1) Najdi Query type v AST
     query_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == "Query"),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, ObjectTypeDefinitionNode) and d.name.value == "Query"
+        ),
+        None,
     )
     if not query_def or not query_def.fields:
         return None
 
     # 2) Najdi field s daným jménem
     field_def = next(
-        (f for f in query_def.fields if f.name.value == operation_name),
-        None
+        (f for f in query_def.fields if f.name.value == operation_name), None
     )
     if not field_def:
         return None
@@ -1100,10 +1182,13 @@ def build_query_scalar(sdl_doc: DocumentNode,
 
     # 4) Zjisti, že ten typ opravdu existuje jako OBJECT
     obj_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, ObjectTypeDefinitionNode)
-         and d.name.value == field_base.name.value),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, ObjectTypeDefinitionNode)
+            and d.name.value == field_base.name.value
+        ),
+        None,
     )
     if not obj_def:
         return None
@@ -1112,7 +1197,10 @@ def build_query_scalar(sdl_doc: DocumentNode,
     sel = build_selection(sdl_doc, field_def.type)
 
     # 6) Vrať finální query s proměnnou $id
-    return f"query {operation_name}Read($id: UUID!) {{ {operation_name}(id: $id){sel} }}"
+    return (
+        f"query {operation_name}Read($id: UUID!) {{ {operation_name}(id: $id){sel} }}"
+    )
+
 
 async def test_page(sdl_doc, ops, executor):
     """
@@ -1122,22 +1210,23 @@ async def test_page(sdl_doc, ops, executor):
     [operation, *_] = ops.get("readp")
     query = build_query_page(sdl_doc, operation)
     assert query, f"Query for {operation} not found in SDL"
-    logging.info(f'query for page\n{query}')
+    logging.info(f"query for page\n{query}")
     # no variables needed for page queries
     variable_values = {}
-    
+
     result = await executor(query=query, variable_values=variable_values)
     errors = result.get("errors")
     assert errors is None, f"Error during page execution: {errors}"
-    
+
     data = result.get("data")
     assert data is not None, "Empty response, check resolver for paged query"
-    
+
     page = data.get(operation)
     assert page is not None, "Paged field returned None"
     assert isinstance(page, list) and len(page) > 0, "Paged list is empty"
-    
+
     return page
+
 
 async def test_scalar(sdl_doc, ops, executor):
     """
@@ -1166,11 +1255,12 @@ async def test_scalar(sdl_doc, ops, executor):
 
     item = data.get(operation)
     assert item is not None, "Scalar field returned None"
-    assert item.get("id") == variable_values["id"], (
-        f"ID mismatch, expected {variable_values['id']} but got {item.get('id')}"
-    )
+    assert (
+        item.get("id") == variable_values["id"]
+    ), f"ID mismatch, expected {variable_values['id']} but got {item.get('id')}"
 
     return item
+
 
 async def test_insert(sdl_doc, ops, executor):
     """
@@ -1185,7 +1275,7 @@ async def test_insert(sdl_doc, ops, executor):
     # 2) Fetch a template entity from the paged query
     page = await test_page(sdl_doc, ops, executor)
     entity, *_ = page
-    
+
     # 3) Prepare variables by cloning and removing id & lastchange
     variable_values = {**entity}
     variable_values.pop("id", None)
@@ -1201,10 +1291,15 @@ async def test_insert(sdl_doc, ops, executor):
     assert data is not None, "Empty response, check resolver for insert"
     created = data.get(operation)
     assert created is not None, "Insert mutation returned None"
-    assert "Error" not in created.get("__typename", ""), f"{operation} returned error: {created}"
-    assert created.get("createdbyId", None) is not None, f"{operation} handles create createdby by wrong way"
+    assert "Error" not in created.get(
+        "__typename", ""
+    ), f"{operation} returned error: {created}"
+    assert (
+        created.get("createdbyId", None) is not None
+    ), f"{operation} handles create createdby by wrong way"
 
     return created
+
 
 async def test_update(sdl_doc, ops, executor):
     """
@@ -1223,7 +1318,7 @@ async def test_update(sdl_doc, ops, executor):
 
     params = get_mutation_query_params(sdl_doc=sdl_doc, mutation_name=operation)
     for param in params.keys():
-        if (param in ["id", "lastchange"]):
+        if param in ["id", "lastchange"]:
             continue
         # 3) Prepare variables by cloning and removing id & lastchange
         variable_values = {
@@ -1242,27 +1337,42 @@ async def test_update(sdl_doc, ops, executor):
 
         # 3) Validate response shape
         data = result.get("data")
-        assert data is not None, "Empty response of ({operation}), check resolver for update"
+        assert (
+            data is not None
+        ), "Empty response of ({operation}), check resolver for update"
         updated = data.get(operation)
-        assert updated is not None, f"Update mutation ({operation}) returned None\n{operation}"
-        assert "Error" not in updated.get("__typename", ""), f"{operation} returned error: {updated}"
-        assert updated.get("changedbyId", None) is not None, f"{operation} handles changedby by wrong way"
+        assert (
+            updated is not None
+        ), f"Update mutation ({operation}) returned None\n{operation}"
+        assert "Error" not in updated.get(
+            "__typename", ""
+        ), f"{operation} returned error: {updated}"
+        assert (
+            updated.get("changedbyId", None) is not None
+        ), f"{operation} handles changedby by wrong way"
 
-        assert param in updated, f"updated result of ({operation}) has no attribute {param}"        
-        assert f"{entity[param]}" == f"{updated[param]}", f"{param} has not been updated check ({operation})"
+        assert (
+            param in updated
+        ), f"updated result of ({operation}) has no attribute {param}"
+        assert (
+            f"{entity[param]}" == f"{updated[param]}"
+        ), f"{param} has not been updated check ({operation})"
         entity = updated
 
         assert "id" in entity, f"id not found in updated result {entity} ({operation}) "
-        assert "lastchange" in entity, f"lastchange not found in updated result {entity} ({operation}) "        
+        assert (
+            "lastchange" in entity
+        ), f"lastchange not found in updated result {entity} ({operation}) "
 
     return updated
+
 
 async def test_delete(sdl_doc, ops, executor):
     """
     Tests the delete mutation for a given type, using the entity returned by test_insert.
     """
     operation, *_ = ops.get("delete")
-    query     = build_expanded_mutation(sdl_doc, operation)
+    query = build_expanded_mutation(sdl_doc, operation)
     assert query, f"Mutation for {operation} not found in SDL"
 
     # 1) Insert a new entity so we have something to delete
@@ -1282,6 +1392,7 @@ async def test_delete(sdl_doc, ops, executor):
 
     return deleted
 
+
 def createTests(schema):
     """
     Dynamically generate pytest async tests for all CRUD operations
@@ -1289,7 +1400,8 @@ def createTests(schema):
     """
 
     import strawberry
-    s : strawberry.federation.Schema = schema
+
+    s: strawberry.federation.Schema = schema
     extensions = schema.extensions
     schema.extensions = []
 
@@ -1304,7 +1416,7 @@ def createTests(schema):
     introspection = s.execute_sync(SERVICE_SDL_QUERY)
     schema.extensions = extensions
     # 1) Fetch the federated SDL via the gateway’s _service.sdl field
-    
+
     # executor may be sync or async; detect and call appropriately
     # if asyncio.iscoroutinefunction(executor):
     #     introspection = asyncio.get_event_loop().run_until_complete(
@@ -1327,7 +1439,7 @@ def createTests(schema):
             "read": test_scalar,
             "insert": test_insert,
             "update": test_update,
-            "delete": test_delete
+            "delete": test_delete,
         }
 
         def create_particular_test(ops):
@@ -1340,9 +1452,8 @@ def createTests(schema):
                 if is_resolve:
                     return await createResolveTest(sdl_doc, {typename: []})
                 return await test(sdl_doc, ops, SchemaExecutor)
+
             return test_func
-
-
 
         stored_resolvers = ops.get(optype)
         for resolver in stored_resolvers:
@@ -1350,8 +1461,7 @@ def createTests(schema):
             test_func = create_particular_test(ops)
             test_name = f"test_{optype}_{typename}_{resolver}"
             test_func.__name__ = test_name
-            
-            
+
             yield test_func
 
         ops[optype] = stored_resolvers
@@ -1365,7 +1475,7 @@ def createTests(schema):
                 continue
             for test in create_particular_tests(sdl_doc, typename, optype, ops):
                 test_name = test.__name__
-            
+
             globals()[test_name] = test
             logging.info(f"Created test {test_name}")
             result[test_name] = test
@@ -1377,20 +1487,22 @@ def createTests(schema):
     @pytest.mark.asyncio
     async def T2():
         return await test_validate_object_descriptions(sdl_doc)
-    
+
     @pytest.mark.asyncio
     async def T3():
         return await test_validate_root_descriptions(sdl_doc)
-    
+
     @pytest.mark.asyncio
     async def T4():
         return await test_validate_relation_directives(sdl_doc)
+
     result["test_input_description"] = T1
     result["test_object_description"] = T2
     result["test_root_description"] = T3
     result["test_validate_relation_directives"] = T4
     return result
-        
+
+
 # async def createResolveTestLocals(sdl_doc: DocumentNode, ops: dict):
 #     """
 #     Dynamically builds and returns a pytest async test that queries the federated
@@ -1420,6 +1532,7 @@ def createTests(schema):
 #     test_entities.__name__ = "test_entities"
 #     return test_entities
 
+
 async def createResolveTest(sdl_doc: DocumentNode, types: dict):
     """
     Dynamically builds and returns a pytest async test that queries the federated
@@ -1433,10 +1546,11 @@ async def createResolveTest(sdl_doc: DocumentNode, types: dict):
     @pytest.mark.asyncio
     async def test_entities(SchemaExecutor):
         reps = [
-            {"__typename": tn, "id": str(i)}
-            for tn, ids in types.items() for i in ids
+            {"__typename": tn, "id": str(i)} for tn, ids in types.items() for i in ids
         ]
-        result = await SchemaExecutor(query=query, variable_values={"representations": reps})
+        result = await SchemaExecutor(
+            query=query, variable_values={"representations": reps}
+        )
         errors = result.get("errors")
         assert errors is None, f"Error during entities execution: {errors}"
         data = result.get("data")
@@ -1456,9 +1570,12 @@ def build_entities_query(sdl_doc: DocumentNode) -> str:
     """
     # 1) Locate the _Entity union in the AST
     union_def = next(
-        (d for d in sdl_doc.definitions
-         if isinstance(d, UnionTypeDefinitionNode) and d.name.value == "_Entity"),
-        None
+        (
+            d
+            for d in sdl_doc.definitions
+            if isinstance(d, UnionTypeDefinitionNode) and d.name.value == "_Entity"
+        ),
+        None,
     )
     if not union_def or not union_def.types:
         return None
@@ -1482,6 +1599,7 @@ def build_entities_query(sdl_doc: DocumentNode) -> str:
         "}"
     )
 
+
 def _get_desc(node) -> bool:
     """
     Returns True if the AST node has a non-empty description.
@@ -1503,9 +1621,12 @@ async def test_validate_input_descriptions(sdl_doc: DocumentNode) -> None:
                 errors.append(f"INPUT type '{name}' is missing a description")
             for field in defn.fields or []:
                 if not _get_desc(field):
-                    errors.append(f"Input field '{name}.{field.name.value}' is missing a description")
+                    errors.append(
+                        f"Input field '{name}.{field.name.value}' is missing a description"
+                    )
     if errors:
         raise ValueError("Missing descriptions in SDL inputs:\n" + "\n".join(errors))
+
 
 async def test_validate_object_descriptions(sdl_doc: DocumentNode) -> None:
     """
@@ -1526,9 +1647,14 @@ async def test_validate_object_descriptions(sdl_doc: DocumentNode) -> None:
                 if field.name.value.startswith("_"):
                     continue
                 if not _get_desc(field):
-                    errors.append(f"Field '{name}.{field.name.value}' is missing a description")
+                    errors.append(
+                        f"Field '{name}.{field.name.value}' is missing a description"
+                    )
     if errors:
-        raise ValueError("Missing descriptions in SDL object types:\n" + "\n".join(errors))
+        raise ValueError(
+            "Missing descriptions in SDL object types:\n" + "\n".join(errors)
+        )
+
 
 async def test_validate_root_descriptions(sdl_doc: DocumentNode) -> None:
     """
@@ -1537,22 +1663,32 @@ async def test_validate_root_descriptions(sdl_doc: DocumentNode) -> None:
     """
     errors = []
     for defn in sdl_doc.definitions:
-        if isinstance(defn, ObjectTypeDefinitionNode) and defn.name.value in ("Query", "Mutation"):
+        if isinstance(defn, ObjectTypeDefinitionNode) and defn.name.value in (
+            "Query",
+            "Mutation",
+        ):
             typename = defn.name.value
             # if not _get_desc(defn):
             #     errors.append(f"Root type '{typename}' is missing a description")
             for field in defn.fields or []:
                 fname = field.name.value
-                if fname.startswith('_'):
+                if fname.startswith("_"):
                     continue
                 if not _get_desc(field):
-                    errors.append(f"{typename} field '{fname}' is missing a description")
+                    errors.append(
+                        f"{typename} field '{fname}' is missing a description"
+                    )
                 for arg in field.arguments or []:
                     if not _get_desc(arg):
-                        errors.append(f"Argument '{typename}.{fname}({arg.name.value})' is missing a description")
+                        errors.append(
+                            f"Argument '{typename}.{fname}({arg.name.value})' is missing a description"
+                        )
     if errors:
-        raise ValueError("Missing descriptions in SDL root types:\n" + "\n".join(errors))
-    
+        raise ValueError(
+            "Missing descriptions in SDL root types:\n" + "\n".join(errors)
+        )
+
+
 async def test_validate_relation_directives(sdl_doc: DocumentNode) -> None:
     """
     Ensure that every field in INPUT_OBJECTs and OBJECTs whose name ends with 'id' or 'Id'
@@ -1571,19 +1707,26 @@ async def test_validate_relation_directives(sdl_doc: DocumentNode) -> None:
                 if field_name.lower().endswith("id") and field_name != "id":
                     # find @relation directives
                     rel_dirs = [
-                        d for d in (field.directives or [])
+                        d
+                        for d in (field.directives or [])
                         if isinstance(d, DirectiveNode) and d.name.value == "relation"
                     ]
                     if not rel_dirs:
-                        errors.append(f"{type_name}.{field_name}: missing @relation directive")
+                        errors.append(
+                            f"{type_name}.{field_name}: missing @relation directive"
+                        )
                         continue
 
                     # there may be multiple, but we check each
                     for d in rel_dirs:
                         # find 'to' argument
                         to_arg = next(
-                            (a for a in (d.arguments or []) if isinstance(a, ArgumentNode) and a.name.value == "to"),
-                            None
+                            (
+                                a
+                                for a in (d.arguments or [])
+                                if isinstance(a, ArgumentNode) and a.name.value == "to"
+                            ),
+                            None,
                         )
                         if not to_arg or not isinstance(to_arg.value, StringValueNode):
                             errors.append(
