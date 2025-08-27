@@ -7,9 +7,9 @@ load_dotenv()
 
 def extract_schema(env):
 
-    from sdl.sdl_parser import extractor as sql_parser
-    from sdl.sdl_extract_object import extractor as sdl_types_extractor
-    from sdl.sdl_fetch import fetch_sdl
+    from SDL.sdl_parser import extractor as sql_parser
+    from SDL.sdl_extract_object import extractor as sdl_types_extractor
+    from SDL.sdl_fetch import fetch_sdl
 
     # 1. Fetch sdl from graphql
     schema = fetch_sdl(token=env["token"], url=env["GQL_API_URL"])
@@ -64,8 +64,8 @@ def extract_schema(env):
 
 
 def init_db(env):
-    from postgresql.initialize_table import initialize_embedding_table
-    from postgresql.ollama_embed_gql import generate_embedding
+    from Database.initialize_table import initialize_embedding_table
+    from Database.ollama_embed_gql import generate_embedding
 
     extracted_types = extract_schema(env)
 
@@ -96,8 +96,8 @@ if __name__ == "__main__":
     ###########################################
 
     # Connect to pgvector and handle connection
-    from postgresql.connection import connect_to_postgres
-    from postgresql.ollama_search import search_index
+    from Database.connection import connect_to_postgres
+    from Database.ollama_search import search_index
 
     connection = connect_to_postgres(env=env)
 
