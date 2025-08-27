@@ -364,7 +364,7 @@ def create_graphql_detection_skill(kernel: Kernel):
 
     import json
     import graphql
-    from SDL.sdl_fetch import fetch_sdl
+    from sdl.sdl_fetch import fetch_sdl
 
     sdl = fetch_sdl()
     ast = graphql.parse(sdl)
@@ -465,7 +465,7 @@ def explain_graphql_query():
         GraphQLList,
     )
 
-    from SDL.sdl_fetch import fetch_sdl
+    from sdl.sdl_fetch import fetch_sdl
 
     sdl = fetch_sdl()
     schema_ast = parse(sdl)

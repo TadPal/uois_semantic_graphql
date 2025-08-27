@@ -44,7 +44,7 @@ except ImportError:
 class GraphQLQueryBuilder:
     def __init__(self, sdlfilename: str = None, disabled_fields: list[str] = []):
 
-        from SDL.sdl_fetch import fetch_sdl
+        from sdl.sdl_fetch import fetch_sdl
 
         sdl = fetch_sdl()
 
@@ -213,7 +213,7 @@ class GraphQLBuilderPlugin:
 
         Args:
           graphql_types: ordered list of type names, where the first element is the root field
-          arguments.sdl_doc: AST of the GraphQL SDL (DocumentNode)
+          arguments.sdl_doc: AST of the GraphQL sdl (DocumentNode)
 
         Returns:
           A nested GraphQL query string selecting each type in turn.
