@@ -41,11 +41,21 @@ nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 
 @ui.page("/")
 async def index_page():
-    # https://github.com/zauberzeug/nicegui/blob/main/examples/chat_with_ai/main.py
 
-    # print("Index page", type(request), type(response), type(unknown))
-    # ui.label("Hello, World!")
-    # ui.button("Click me", on_click=lambda: ui.notify("Clicked!"))
+    # 🔹 Přidáme CSS a JS pro light/dark mód
+    ui.add_head_html("""
+    <style>
+        body.light-mode .nicegui-content { background-color: #e5e7eb !important; } /* light grey rectangle */
+        body.light-mode .chat-message .name { color: white !important; }
+        body.dark-mode .nicegui-content { background-color: #1f2937 !important; } /* dark grey rectangle */
+        body.dark-mode .chat-message .name { color: black !important; }
+    </style>
+    <script>
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.classList.add(isDark ? 'dark-mode' : 'light-mode');
+    </script>
+    """)
+
     async def send() -> None:
         question = text.value.strip()
         if not question:
@@ -61,8 +71,26 @@ async def index_page():
                 name="Assistant", sent=False, avatar="https://robohash.org/ui"
             ).props("bg-color=grey-2 text-color=dark")
 
+        async def animate_thinking(msg):
+            dots = [".", "..", "..."]
+            i = 0
+            while True:
+                msg.clear()
+                with msg:
+                    ui.html(dots[i % len(dots)])
+                await asyncio.sleep(0.5)
+                i += 1
+
+        animation_task = asyncio.create_task(animate_thinking(thinking_message))
+
         # AI stuff
         result = await chat_hook(question)
+
+        animation_task.cancel()
+        try:
+            await animation_task
+        except asyncio.CancelledError:
+            pass
 
         response = [{"type": "md", "content": f"{result}"}]
 
@@ -79,27 +107,19 @@ async def index_page():
         # Make the UI better
         for part in response:
             await asyncio.sleep(1)
-            if part["type"] == "text":
-                with response_message:
+            thinking_message.clear()
+            with thinking_message:
+                if part["type"] == "text":
                     ui.html(part["content"])
-            elif part["type"] == "md":
-                with response_message:
+                elif part["type"] == "md":
                     ui.markdown(part["content"])
         ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
 
-    ui.add_css(
-        """
-        a:link
-        a:visited {color: inherit !important; text-decoration: none; font-weight: 500},
-        /* Hide scrollbar for Chrome, Safari and Edge */
-        ::-webkit-scrollbar {
-            display: none;
-        }
-        /* Hide scrollbar for Firefox */
-        *{
-            scrollbar-width: none;
-        }"""
-    )
+    ui.add_css("""
+        a:link, a:visited { color: inherit !important; text-decoration: none; font-weight: 500; }
+        ::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; }
+    """)
 
     # the queries below are used to expand the contend down to the footer (content can then use flex-grow to expand)
     ui.query(".q-page").classes("flex")
@@ -122,7 +142,7 @@ async def index_page():
             ).props("bg-color=grey-2 text-color=dark")
 
         with ui.tab_panel(logs_tab):
-            log = ui.log().classes("w-full h-full")
+            ui.log().classes("w-full h-full")
 
     with ui.footer().classes("bg-transparent p-4"):
         with ui.row().classes("w-full justify-center"):
@@ -138,9 +158,7 @@ async def index_page():
                         "flat round dense color=primary icon=send"
                     ).classes("ml-auto")
 
-
-# app.mount("/nicegui", nicegui_app)
-nicegui.ui.run_with(
+ui.run_with(
     app,
     title="GQL Evolution",
     favicon="🚀",
@@ -148,4 +166,3 @@ nicegui.ui.run_with(
     tailwind=True,
     storage_secret="SUPER-SECRET",
 )
-# endregion
