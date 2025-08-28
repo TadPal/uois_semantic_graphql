@@ -43,7 +43,8 @@ nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 async def index_page():
 
     # 🔹 Přidáme CSS a JS pro light/dark mód
-    ui.add_head_html("""
+    ui.add_head_html(
+        """
     <style>
         body.light-mode .nicegui-content { background-color: #e5e7eb !important; } /* light grey rectangle */
         body.light-mode .chat-message .name { color: white !important; }
@@ -54,7 +55,8 @@ async def index_page():
         const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         document.body.classList.add(isDark ? 'dark-mode' : 'light-mode');
     </script>
-    """)
+    """
+    )
 
     async def send() -> None:
         question = text.value.strip()
@@ -74,7 +76,7 @@ async def index_page():
                 sent=False,
                 avatar="https://robohash.org/ui",
             ).props("bg-color=grey-2 text-color=dark")
-            
+
         async def animate_thinking(msg):
             dots = [".", "..", "..."]
             i = 0
@@ -119,11 +121,13 @@ async def index_page():
                     ui.markdown(part["content"])
         ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
 
-    ui.add_css("""
+    ui.add_css(
+        """
         a:link, a:visited { color: inherit !important; text-decoration: none; font-weight: 500; }
         ::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; }
-    """)
+    """
+    )
 
     # the queries below are used to expand the contend down to the footer (content can then use flex-grow to expand)
     ui.query(".q-page").classes("flex")
@@ -134,10 +138,9 @@ async def index_page():
         # Use log tab
         logs_tab = ui.tab("Logs")
 
-
     with ui.tab_panels(tabs, value=chat_tab).classes(
-    "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800"# TODO 
-    #"w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg bg-neutral-300 dark:bg-neutral-800"# 
+        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800"  # TODO
+        # "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg bg-neutral-300 dark:bg-neutral-800"#
     ):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:
@@ -148,14 +151,14 @@ async def index_page():
                 avatar="https://robohash.org/ui",
             ).props("bg-color=grey-2 text-color=dark")
 
-    
-
         with ui.tab_panel(logs_tab):
             ui.log().classes("w-full h-full")
 
     with ui.footer().classes("bg-transparent p-4"):
         with ui.row().classes("w-full justify-center"):
-            with ui.card().classes("w-full max-w-2xl rounded-2xl shadow-2xl light:bg-white dark:bg-neutral-900"):
+            with ui.card().classes(
+                "w-full max-w-2xl rounded-2xl shadow-2xl light:bg-white dark:bg-neutral-900"
+            ):
                 with ui.row().classes("items-center w-full no-wrap"):
                     text = (
                         ui.input(placeholder="Type a message...")
@@ -166,6 +169,7 @@ async def index_page():
                     ui.button(on_click=send).props(
                         "flat round dense color=primary icon=send"
                     ).classes("ml-auto")
+
 
 ui.run_with(
     app,

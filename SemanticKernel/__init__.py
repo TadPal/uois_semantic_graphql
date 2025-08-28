@@ -389,6 +389,7 @@ def create_graphql_detection_skill(kernel: Kernel):
     1. Exclude any types whose names end with `"Error"`, unless explicitly requested.
     2. Match on type name or on keywords found in the description.
     3. Detect 1:N (one-to-many) or N:1 relationships between the matched types, and order the array so that each parent type appears immediately before its child types.
+    4. If there any type is provided with an id it must be the root (first) type.
 
     [EXAMPLE]
     prompt:
