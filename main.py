@@ -15,38 +15,17 @@ from SemanticKernel import (
     FunctionChoiceBehavior,
     AutoFunctionInvocationContext,
     FilterTypes,
+    openChat,
 )
 
-gqlClient = None
+
+chat_hook = None
 
 
 async def startup_gql_client():
-    global gqlClient
-    gqlClient = await createGQLClient(
-        username="john.newbie@world.com", password="john.newbie@world.com"
-    )
+    global chat_hook
+    chat_hook = await openChat()
 
-
-skills = []
-for plugin in kernel.plugins.values():
-    skills.extend(plugin.functions.keys())
-    print(skills)
-
-# for pname, plugin in kernel.plugins.items():
-#     print(f"Plugin: {pname}")
-#     print("  Functions:", list(plugin.functions))
-
-history = ChatHistory()
-execution_settings = AzureChatPromptExecutionSettings()
-execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
-
-
-async def inject_gql_client(context: AutoFunctionInvocationContext, next):
-    context.arguments["gqlclient"] = gqlClient
-    await next(context)
-
-
-kernel.add_filter(FilterTypes.AUTO_FUNCTION_INVOCATION, inject_gql_client)
 
 from nicegui import core
 import nicegui
@@ -83,16 +62,7 @@ async def index_page():
             ).props("bg-color=grey-2 text-color=dark")
 
         # AI stuff
-        history.add_user_message(question)
-        # print(f"history: {history.serialize()}")
-        # https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/chat-completion/function-calling/?pivots=programming-language-python
-        result = await azure_chat.get_chat_message_content(
-            chat_history=history,
-            settings=execution_settings,
-            kernel=kernel,
-            # context_variables={"extraContext": extra_context}
-            arguments=KernelArguments(),
-        )
+        result = await chat_hook(question)
 
         response = [{"type": "md", "content": f"{result}"}]
 
