@@ -390,7 +390,6 @@ def create_graphql_detection_skill(kernel: Kernel):
     2. Match on type name or on keywords found in the description.
     3. Detect 1:N (one-to-many) or N:1 relationships between the matched types, and order the array so that each parent type appears immediately before its child types.
 
-
     [EXAMPLE]
     prompt:
         "Give me a list of study programs and their students"

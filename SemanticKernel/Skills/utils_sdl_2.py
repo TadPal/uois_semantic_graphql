@@ -878,13 +878,14 @@ def build_large_fragment(
 
     parts: typing.List[str] = ["__typename"]
 
-    for field in type_def.fields:  # type: FieldDefinitionNode
+    for field in type_def.fields:
         # skip if any argument is NonNull
         if any(
             isinstance(arg.type, NonNullTypeNode) for arg in (field.arguments or [])
         ):
             continue
 
+        # TODO : broken containers
         if field.name.value == "events" or field.name.value == "plannedLessons":
             continue
 
