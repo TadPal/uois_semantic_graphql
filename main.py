@@ -133,8 +133,11 @@ async def index_page():
         chat_tab = ui.tab("Chat")
         # Use log tab
         logs_tab = ui.tab("Logs")
+
+
     with ui.tab_panels(tabs, value=chat_tab).classes(
-        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-md"  # TODO TADY JE TA PICOVINA
+    "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800"# TODO 
+    #"w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg bg-neutral-300 dark:bg-neutral-800"# 
     ):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:
@@ -145,12 +148,14 @@ async def index_page():
                 avatar="https://robohash.org/ui",
             ).props("bg-color=grey-2 text-color=dark")
 
+    
+
         with ui.tab_panel(logs_tab):
             ui.log().classes("w-full h-full")
 
     with ui.footer().classes("bg-transparent p-4"):
         with ui.row().classes("w-full justify-center"):
-            with ui.card().classes("w-full max-w-2xl rounded-2xl shadow-md bg-silver"):
+            with ui.card().classes("w-full max-w-2xl rounded-2xl shadow-2xl light:bg-white dark:bg-neutral-900"):
                 with ui.row().classes("items-center w-full no-wrap"):
                     text = (
                         ui.input(placeholder="Type a message...")
