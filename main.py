@@ -67,10 +67,14 @@ async def index_page():
                 name="You",
                 sent=True,
             ).props("bg-color=primary text-color=white")
-            response_message = ui.chat_message(
-                name="Assistant", sent=False, avatar="https://robohash.org/ui"
-            ).props("bg-color=grey-2 text-color=dark")
 
+            thinking_message = ui.chat_message(
+                text="…",
+                name="Assistant",
+                sent=False,
+                avatar="https://robohash.org/ui",
+            ).props("bg-color=grey-2 text-color=dark")
+            
         async def animate_thinking(msg):
             dots = [".", "..", "..."]
             i = 0
@@ -130,7 +134,7 @@ async def index_page():
         # Use log tab
         logs_tab = ui.tab("Logs")
     with ui.tab_panels(tabs, value=chat_tab).classes(
-        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-md bg-neutral-800"
+        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-md"  # TODO TADY JE TA PICOVINA
     ):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:
