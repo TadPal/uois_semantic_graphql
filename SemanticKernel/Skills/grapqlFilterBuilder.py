@@ -33,7 +33,7 @@ class GraphQLFilterQueryPlugin:
 
             Pro porovnání hodnot:
 
-            _eq: Rovná se. {Not to be used with id}
+            _eq: Rovná se.
 
             _le: Menší nebo rovno.
 
@@ -70,9 +70,6 @@ class GraphQLFilterQueryPlugin:
         print(f"build_graphql_filter_query(graphql_types={graphql_types})")
         builder = GraphQLQueryBuilder(disabled_fields=["createdby", "changedby"])
         query = builder.build_query_vector(graphql_types)
-
-        print("\n použil filter  sssssssssssssssssssssssssssss\n")
-
         # The generated query should already include the `where` argument
         # as part of the query vector definition. The `run_graphql_filter_query`
         # skill will handle the actual execution with the provided variables.

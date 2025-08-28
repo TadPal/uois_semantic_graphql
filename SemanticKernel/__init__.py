@@ -206,6 +206,19 @@ async def openChat():
         print(skills)
 
     history = ChatHistory()
+
+    system_prompt = f"""
+    You are an assistant and your primary task is to help query databases using graphql.
+    
+    Rules:
+    1. Build a new query before running it against the API.
+    2. You build the graphql queries only using available kernel_functions. 
+    3. Every time the query returns with an Error you provide the used query in your response.
+    4. Never use graphqlFilterBuilder with id.
+    """
+
+    history.add_system_message(system_prompt)
+
     execution_settings = AzureChatPromptExecutionSettings()
     execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
 
@@ -228,8 +241,6 @@ async def openChat():
 
     # user_input = yield "Chat session initialized. Zadejte dotaz nebo 'exit'."
     async def hook(user_input):
-        if user_input.strip().lower() == "exit":
-            return None
         history.add_user_message(user_input)
         result = await azure_chat.get_chat_message_content(
             chat_history=history,
