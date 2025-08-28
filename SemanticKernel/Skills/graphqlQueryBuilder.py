@@ -119,11 +119,6 @@ class GraphQLQueryBuilder:
         )
         args3_str += "\n\n# to get more results, adjust parameters $skip and / or $limit and call the query until the result is empty vector\n"
 
-        # Generate fragment definitions
-        medium_fragments = [build_medium_fragment(self.ast, t) for t in types]
-        large_fragments = [rootfragment]  # root large fragment
-        fragments = medium_fragments + large_fragments
-
         # Precompute paths and build nested selections
         full_paths = {t: self._find_path(types[i], t) for i, t in enumerate(types[1:])}
         print(full_paths)
@@ -138,26 +133,35 @@ class GraphQLQueryBuilder:
 
         # selections = [build_spread(root, path) for path in full_paths.values()]
 
-        def build_spread(path: List[Tuple[str, str]], idx: int, max_idx: int) -> str:
-            # walk down the chain and nest progressively
-            # [('events', 'EventGQLModel')]
+        def build_spread(path: list[tuple[str, str]]) -> str:
+            # Base case: if path is empty, return nothing
+            if not path:
+                return ""
             field, next_type = path[0]
-            if max_idx == 0:
+            # If this is the last element in the path, return the fragment
+            if len(path) == 1:
                 return f"{field} {{ ...{next_type}MediumFragment }}"
-            elif idx == max_idx:
-                return f"{field} {{ ...{next_type}MediumFragment }}" + "}"
-            else:
-                return f"{field}" + "{" + f" ...{next_type}MediumFragment"
+            # Otherwise, nest recursively
+            nested = build_spread(path[1:])
+            return f"{field} {{ ...{next_type}MediumFragment {nested} }}"
 
         # Build selection sets for each target and combine
         # full_paths = {'EventGQLModel': [('events', 'EventGQLModel')], 'GroupGQLModel': [('groups', 'GroupGQLModel')]}
-        selections = [
-            build_spread(path, i, len(full_paths) - 1)
-            for i, path in enumerate(full_paths.values())
-        ]
+        selections = [build_spread(path) for path in full_paths.values()]
         print(selections)
 
         selection_str = " ".join(list(dict.fromkeys(selections)))  # remove duplicates
+
+        # Generate fragment definitions
+        # Extract models from full_paths
+        models_from_paths = {model for path in full_paths.values() for _, model in path}
+
+        # Combine with graphgql_types and remove duplicates
+        all_models = models_from_paths.union(types)
+
+        medium_fragments = [build_medium_fragment(self.ast, t) for t in all_models]
+        large_fragments = [rootfragment]  # root large fragment
+        fragments = medium_fragments + large_fragments
 
         # Build main query
         query = f"""query {page_operation}({args_str})\n{args3_str}\n{{\n{page_operation}({args2_str})\n{{...{root}MediumFragment\n...{root}LargeFragment\n{selection_str}}}}}"""
@@ -188,11 +192,6 @@ class GraphQLQueryBuilder:
         args2_str = ", ".join(args2)
         # print(f"args: {args}")
 
-        # print(f"field: {field}, {field.name.value}")
-        # Generate fragment definitions for each type
-        fragments = [build_medium_fragment(self.ast, t) for t in types]
-        fragments.append(rootfragment)
-
         # Precompute full paths from root to each target
         full_paths = {t: self._find_path(types[i], t) for i, t in enumerate(types[1:])}
 
@@ -206,24 +205,35 @@ class GraphQLQueryBuilder:
 
         # selections = [build_spread(root, path) for path in full_paths.values()]
 
-        def build_spread(path: List[Tuple[str, str]], idx: int, max_idx: int) -> str:
-            # walk down the chain and nest progressively
-            # [('events', 'EventGQLModel')]
+        def build_spread(path: list[tuple[str, str]]) -> str:
+            # Base case: if path is empty, return nothing
+            if not path:
+                return ""
             field, next_type = path[0]
-            if max_idx == 0:
+            # If this is the last element in the path, return the fragment
+            if len(path) == 1:
                 return f"{field} {{ ...{next_type}MediumFragment }}"
-            elif idx == max_idx:
-                return f"{field} {{ ...{next_type}MediumFragment }}" + "}"
-            else:
-                return f"{field}" + "{" + f" ...{next_type}MediumFragment"
+            # Otherwise, nest recursively
+            nested = build_spread(path[1:])
+            return f"{field} {{ ...{next_type}MediumFragment {nested} }}"
 
         # Build selection sets for each target and combine
         # full_paths = {'EventGQLModel': [('events', 'EventGQLModel')], 'GroupGQLModel': [('groups', 'GroupGQLModel')]}
-        selections = [
-            build_spread(path, i, len(full_paths) - 1)
-            for i, path in enumerate(full_paths.values())
-        ]
+        selections = [build_spread(path) for path in full_paths.values()]
         print(selections)
+
+        selection_str = " ".join(list(dict.fromkeys(selections)))  # remove duplicates
+
+        # Generate fragment definitions
+        # Extract models from full_paths
+        models_from_paths = {model for path in full_paths.values() for _, model in path}
+
+        # Combine with graphgql_types and remove duplicates
+        all_models = models_from_paths.union(types)
+
+        medium_fragments = [build_medium_fragment(self.ast, t) for t in all_models]
+        large_fragments = [rootfragment]  # root large fragment
+        fragments = medium_fragments + large_fragments
 
         unique_selections = list(dict.fromkeys(selections))
         selection_str = " ".join(unique_selections)

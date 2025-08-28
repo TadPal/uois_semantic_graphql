@@ -5,6 +5,7 @@ from semantic_kernel.functions import kernel_function
 from semantic_kernel.functions import KernelArguments
 from SemanticKernel.Skills.graphqlQueryBuilder import GraphQLQueryBuilder
 
+
 class GraphQLFilterQueryPlugin:
     """
     Plugin for generating and running GraphQL queries with filter conditions.
@@ -12,58 +13,59 @@ class GraphQLFilterQueryPlugin:
 
     @kernel_function(
         name="buildFilterQuery",
-        #description="Builds a GraphQL query for fetching a list of entities with a 'where' filter."
+        # description="Builds a GraphQL query for fetching a list of entities with a 'where' filter."
     )
     def build_graphql_filter_query(
         self,
         graphql_types: Annotated[
-            List[str], "The list of GraphQL object types to be included in the query, e.g., ['UserGQLModel', 'RoleGQLModel']"
+            List[str],
+            "The list of GraphQL object types to be included in the query, e.g., ['UserGQLModel', 'RoleGQLModel']",
         ],
         arguments: KernelArguments = None,
     ) -> str:
         """
-        Builds a GraphQL query with a 'where' filter.
+            Builds a GraphQL query with a 'where' filter.
 
-        This skill is designed to automatically generate a GraphQL query that can fetch
-        a collection of entities (e.g., users, programs) and filter them based on
-        a 'where' argument. This is particularly useful for searching or listing
-        items that match specific criteria.
+            This skill is designed to automatically generate a GraphQL query that can fetch
+            a collection of entities (e.g., users, programs) and filter them based on
+            a 'where' argument. This is particularly useful for searching or listing
+            items that match specific criteria.
 
-        Pro porovnání hodnot:
+            Pro porovnání hodnot:
 
-        _eq: Rovná se. Ideální pro přesné shody, například {"id": {"_eq": "123"}}.
+            _eq: Rovná se. {Not to be used with id}
 
-        _le: Menší nebo rovno.
+            _le: Menší nebo rovno.
 
-        _lt: Menší než.
+            _lt: Menší než.
 
-        _ge: Větší nebo rovno.
+            _ge: Větší nebo rovno.
 
-        _gt: Větší než.
+            _gt: Větší než.
 
-        Příklad porovnání:
+            Příklad porovnání:
 
-        {"where": {"number": {"_ge": 50000, "_le": 100000}}}
+            {"where": {"number": {"_ge": 50000, "_le": 100000}}}
 
-        Pro textová pole (stringy):
+            Pro textová pole (stringy):
 
-            _like: Podobné jako v SQL, umožňuje použití zástupných znaků (% a _).
+                _like: Podobné jako v SQL, umožňuje použití zástupných znaků (% a _).
 
-            _ilike: Stejné jako _like, ale ignoruje velikost písmen (case-insensitive).
+                _ilike: Stejné jako _like, ale ignoruje velikost písmen (case-insensitive).
 
-            _startswith: Začíná na.
+                _startswith: Začíná na.
 
-            _endswith: Končí na.
+                _endswith: Končí na.
 
-    Příklad textového filtru:
+        Příklad textového filtru:
 
-    {"where": {"email": {"_ilike": "john%.com"}, "name": {"_startswith": "Jan"}}}
+        {"where": {"email": {"_ilike": "john%.com"}, "name": {"_startswith": "Jan"}}}
 
-        Args:
-          graphql_types: A list of GraphQL type names to build the query for.
+            Args:
+              graphql_types: A list of GraphQL type names to build the query for.
 
-        Returns:
-          A GraphQL query string that includes a 'where' variable for filtering.
+            Returns:
+              A GraphQL query string that includes a 'where' variable for filtering.
         """
         print(f"build_graphql_filter_query(graphql_types={graphql_types})")
         builder = GraphQLQueryBuilder(disabled_fields=["createdby", "changedby"])
@@ -78,20 +80,22 @@ class GraphQLFilterQueryPlugin:
         # The result from build_query_vector should be suitable for use with a filter.
         # We need to ensure that the returned query has the correct structure for
         # passing variables. The builder is expected to handle this.
-        
+
         return builder.explain_graphql_query(query)
 
     @kernel_function(
         name="runFilterQuery",
-        description="Runs a GraphQL query with a 'where' filter and optional pagination."
+        description="Runs a GraphQL query with a 'where' filter and optional pagination.",
     )
     async def run_graphql_filter_query(
         self,
         graphql_query: Annotated[
-            str, "The full GraphQL query string with a '$where' variable and optional '$skip' and '$limit' variables."
+            str,
+            "The full GraphQL query string with a '$where' variable and optional '$skip' and '$limit' variables.",
         ],
         graphql_variables: Annotated[
-            str, "A JSON string containing the variables for the query, including the 'where' filter."
+            str,
+            "A JSON string containing the variables for the query, including the 'where' filter.",
         ],
         arguments: KernelArguments = None,
     ) -> str:
@@ -105,7 +109,7 @@ class GraphQLFilterQueryPlugin:
           graphql_query: The complete GraphQL query string.
           graphql_variables: A JSON string of variables, e.g., '{userPage(where: {email: {_like: "%.com"}}, skip:0, limit:2)'.
 
-  
+
         Returns:
           The list of filtered entities as a JSON string.
         """
@@ -115,7 +119,7 @@ class GraphQLFilterQueryPlugin:
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON variables: {e}")
             return f"Error: Invalid JSON variables provided. {e}"
-        
+
         # Ensure that `gqlclient` is available in the arguments from the kernel context.
         gqlclient = arguments.get("gqlclient")
         if not gqlclient:
@@ -123,12 +127,12 @@ class GraphQLFilterQueryPlugin:
 
         # The GraphQL client is expected to handle the query and variables.
         rows = await gqlclient(query=graphql_query, variables=variables)
-        
+
         assert "data" in rows, f"the response does not contain the data key {rows}"
         data = rows["data"]
-        
+
         # The result should be a list of entities, so we just return the value of the first key.
         # This assumes the query returns a single root field that is a list.
         _, entities = next(iter(data.items()))
-        
+
         return json.dumps(entities, indent=2, ensure_ascii=False)
