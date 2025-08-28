@@ -18,14 +18,21 @@ from SemanticKernel import (
     openChat,
 )
 
+# Store per user chat instances
+user_chats = {}
 
-chat_hook = None
+async def get_user_chat_hook(user_id: str):
+    """Get or create a chat hook for a specific user"""
+    if user_id not in user_chats:
+        # Create a new chat hook for this user
+        user_chats[user_id] = await openChat()
+    return user_chats[user_id]
 
-
+# we dont create global hook to isolate history
 async def startup_gql_client():
-    global chat_hook
-    chat_hook = await openChat()
-
+    # global chat_hook
+    # chat_hook = await openChat()
+    pass
 
 from nicegui import core
 import nicegui
@@ -40,7 +47,17 @@ nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 
 
 @ui.page("/")
-async def index_page():
+async def index_page(request: Request):
+
+    # Get or create a unique user ID for this session
+    user_id = request.session.get('user_id')
+    if not user_id:
+        import uuid
+        user_id = str(uuid.uuid4())
+        request.session['user_id'] = user_id
+    
+    # Get the chat hook for this specific user
+    chat_hook = await get_user_chat_hook(user_id)
 
     # 🔹 Přidáme CSS a JS pro light/dark mód
     ui.add_head_html(
