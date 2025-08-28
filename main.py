@@ -134,9 +134,9 @@ async def index_page():
         # Use log tab
         logs_tab = ui.tab("Logs")
     with ui.tab_panels(tabs, value=chat_tab).classes(
-        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-md"  # TODO TADY JE TA PICOVINA
+        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-md"  # TODO 
     ):
-        message_container = ui.tab_panel(chat_tab).classes("items-stretch")
+        message_container = ui.tab_panel(chat_tab).classes("items-stretch") 
         with message_container:
             ui.chat_message(
                 text="Hi! How can I assist you today?",
