@@ -1,5 +1,8 @@
 import asyncio
 
+# Auth
+import jwt
+
 # FastAPI part
 
 import asyncio
@@ -20,6 +23,7 @@ from SemanticKernel import (
 
 # Store per user chat instances
 user_chats = {}
+
 
 async def get_user_chat_hook(user_id: str):
     """Get or create a chat hook for a specific user"""
@@ -47,16 +51,32 @@ nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 
 
 @ui.page("/")
-async def index_page(request: Request):
+async def index_page(request: Request):    
 
     # Get or create a unique user ID for this session
-    user_id = request.session.get('user_id')
+    user_id = None
+    authorization_cookie = request.cookies.get("authorization")
+    print(authorization_cookie)
+
+    # Get user Id for his context history
+    if authorization_cookie:
+        try:
+            decoded_token = jwt.decode(authorization_cookie)
+            user_id=decoded_token("user_id")
+        except jwt.PyJWTError:
+            print("Invalid JWT token")
+    
+
     if not user_id:
         import uuid
-        user_id = str(uuid.uuid4())
-        request.session['user_id'] = user_id
+        user_id=request.session.get("user_id")
+        
+        if not user_id:
+            user_id = str(uuid.uuid4())
+            request.session['user_id'] = user_id
     
     # Get the chat hook for this specific user
+    print("user id",user_id)
     chat_hook = await get_user_chat_hook(user_id)
 
     # 🔹 Přidáme CSS a JS pro light/dark mód
