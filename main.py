@@ -43,8 +43,6 @@ app = FastAPI(on_startup=[startup_gql_client])
 
 from nicegui import ui, app as nicegui_app, storage, core
 from starlette.middleware.sessions import SessionMiddleware
-import base64
-import json
 
 nicegui_app.add_middleware(storage.RequestTrackingMiddleware)
 nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
@@ -56,27 +54,21 @@ async def index_page(request: Request):
     # Get or create a unique user ID for this session
     user_id = None
     authorization_cookie = request.cookies.get("authorization")
-    print(authorization_cookie)
 
     # Get user Id for his context history
     if authorization_cookie:
         try:
-            decoded_token = json.loads(
-                base64.b64decode(authorization_cookie.split(".")[1]).decode("utf-8")
+            decoded_token = jwt.decode(
+                authorization_cookie, options={"verify_signature": False}
             )
+            print(decoded_token)
             user_id = decoded_token["user_id"]
-            print(user_id)
         except:
             print("Cannot decode token")
 
     if not user_id:
-        import uuid
-
-        user_id = request.session.get("user_id")
-
-        if not user_id:
-            user_id = str(uuid.uuid4())
-            request.session["user_id"] = user_id
+        # ui.navigate.to("http://localhost:33001/")
+        user_id = "fake_user_id"
 
     # Get the chat hook for this specific user
     print("user id", user_id)
