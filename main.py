@@ -53,6 +53,10 @@ from starlette.middleware.sessions import SessionMiddleware
 
 nicegui_app.add_middleware(storage.RequestTrackingMiddleware)
 nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
+nicegui_app.add_static_files(
+    '/assets', './assets'
+    
+)
 
 
 @ui.page("/")
@@ -96,9 +100,9 @@ async def index_page(request: Request):
 
             thinking_message = ui.chat_message(
                 text="…",
-                name="Assistant",
+                name="Tadeáš",
                 sent=False,
-                avatar="https://robohash.org/ui",
+                avatar="/assets/img/Tadeas.png",
             ).props("bg-color=grey-2 text-color=dark")
 
         async def animate_thinking(msg):
@@ -184,10 +188,10 @@ async def index_page(request: Request):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:
             ui.chat_message(
-                text="Hi! How can I assist you today?",
-                name="Assistant",
+                text="Noo, co potřebuješ?",
+                name="Tadeáš",
                 sent=False,
-                avatar="https://robohash.org/ui",
+                avatar="/assets/img/Tadeas.png",
             ).props("bg-color=grey-2 text-color=dark")
 
         with ui.tab_panel(logs_tab) as logs_container:
