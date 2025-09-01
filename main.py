@@ -4,7 +4,6 @@ import asyncio
 import jwt
 
 # FastAPI part
-
 import asyncio
 from fastapi import FastAPI, Request, Response
 
@@ -32,11 +31,10 @@ async def get_user_chat_hook(user_id: str):
         user_chats[user_id] = await openChat()
     return user_chats[user_id]
 
-# we dont create global hook to isolate history
+
 async def startup_gql_client():
-    # global chat_hook
-    # chat_hook = await openChat()
     pass
+
 
 from nicegui import core
 import nicegui
@@ -51,7 +49,7 @@ nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 
 
 @ui.page("/")
-async def index_page(request: Request):    
+async def index_page(request: Request):
 
     # Get or create a unique user ID for this session
     user_id = None
@@ -62,30 +60,33 @@ async def index_page(request: Request):
     if authorization_cookie:
         try:
             decoded_token = jwt.decode(authorization_cookie)
-            user_id=decoded_token("user_id")
+            user_id = decoded_token("user_id")
         except jwt.PyJWTError:
             print("Invalid JWT token")
-    
 
     if not user_id:
         import uuid
-        user_id=request.session.get("user_id")
-        
+
+        user_id = request.session.get("user_id")
+
         if not user_id:
             user_id = str(uuid.uuid4())
-            request.session['user_id'] = user_id
-    
+            request.session["user_id"] = user_id
+
     # Get the chat hook for this specific user
-    print("user id",user_id)
+    print("user id", user_id)
     chat_hook = await get_user_chat_hook(user_id)
+
+    # 🔹 Historie otázek a odpovědí
+    history = []  # list of tuples (q, a)
 
     # 🔹 Přidáme CSS a JS pro light/dark mód
     ui.add_head_html(
         """
     <style>
-        body.light-mode .nicegui-content { background-color: #e5e7eb !important; } /* light grey rectangle */
+        body.light-mode .nicegui-content { background-color: #e5e7eb !important; }
         body.light-mode .chat-message .name { color: white !important; }
-        body.dark-mode .nicegui-content { background-color: #1f2937 !important; } /* dark grey rectangle */
+        body.dark-mode .nicegui-content { background-color: #1f2937 !important; }
         body.dark-mode .chat-message .name { color: black !important; }
     </style>
     <script>
@@ -137,17 +138,6 @@ async def index_page(request: Request):
 
         response = [{"type": "md", "content": f"{result}"}]
 
-        # for part in response:
-        #     await asyncio.sleep(1)
-        #     if part["type"] == "text":
-        #         with response_message:
-        #             ui.html(part["content"])
-        #     elif part["type"] == "md":
-        #         with message_container:
-        #             ui.markdown(part["content"])
-        # ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
-
-        # Make the UI better
         for part in response:
             await asyncio.sleep(1)
             thinking_message.clear()
@@ -158,6 +148,17 @@ async def index_page(request: Request):
                     ui.markdown(part["content"])
         ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
 
+        # 🔹 Uložení do historie
+        history.append((question, result))
+
+        # 🔹 Aktualizace log panelu
+        logs_container.clear()
+        with logs_container:
+            for q, a in history:
+                with ui.column().classes("mb-4 p-2 border-b border-gray-300"):
+                    ui.markdown(f"**Q:** {q}")
+                    ui.markdown(f"**A:** {a}")
+
     ui.add_css(
         """
         a:link, a:visited { color: inherit !important; text-decoration: none; font-weight: 500; }
@@ -166,18 +167,16 @@ async def index_page(request: Request):
     """
     )
 
-    # the queries below are used to expand the contend down to the footer (content can then use flex-grow to expand)
+    # the queries below are used to expand the content down to the footer (content can then use flex-grow to expand)
     ui.query(".q-page").classes("flex")
     ui.query(".nicegui-content").classes("w-full")
 
     with ui.tabs().classes("w-full") as tabs:
         chat_tab = ui.tab("Chat")
-        # Use log tab
         logs_tab = ui.tab("Logs")
 
     with ui.tab_panels(tabs, value=chat_tab).classes(
-        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800"  # TODO
-        # "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg bg-neutral-300 dark:bg-neutral-800"#
+        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800"
     ):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:
@@ -188,8 +187,8 @@ async def index_page(request: Request):
                 avatar="https://robohash.org/ui",
             ).props("bg-color=grey-2 text-color=dark")
 
-        with ui.tab_panel(logs_tab):
-            ui.log().classes("w-full h-full")
+        with ui.tab_panel(logs_tab) as logs_container:
+            ui.label("Conversation Log").classes("font-bold mb-2")
 
     with ui.footer().classes("bg-transparent p-4"):
         with ui.row().classes("w-full justify-center"):
