@@ -54,8 +54,8 @@ from starlette.middleware.sessions import SessionMiddleware
 nicegui_app.add_middleware(storage.RequestTrackingMiddleware)
 nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 nicegui_app.add_static_files(
-    '/assets',
-    r'C:\Users\junio\Desktop\PRAXE2025\uois_semantic_graphql\assets'
+    '/assets', './assets'
+    
 )
 
 
@@ -102,7 +102,7 @@ async def index_page(request: Request):
                 text="…",
                 name="Tadeáš",
                 sent=False,
-                avatar="/assets/img/Tadeas.webp",
+                avatar="/assets/img/Tadeas.png",
             ).props("bg-color=grey-2 text-color=dark")
 
         async def animate_thinking(msg):
