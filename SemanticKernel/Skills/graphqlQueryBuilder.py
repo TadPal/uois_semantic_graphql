@@ -170,7 +170,7 @@ class GraphQLQueryBuilder:
         fragments_str = "\n\n".join(fragments)
         result = f"{query}\n\n{fragments_str}"
 
-        print(f"vector query \n{result}")
+        # print(f"vector query \n{result}")
         return result
 
     def build_query_scalar(self, types: List[str]) -> str:
@@ -242,7 +242,7 @@ class GraphQLQueryBuilder:
         # query = f"query {page_operation}({args_str})\n{{\n{page_operation}({args2_str})\n{{...{root}MediumFragment\n{selection_str}\n}}\n}}"
         # Append fragments after the main query
         fragments_str = "\n\n".join(fragments)
-        print(f"{query}\n\n{fragments_str}")
+        # print(f"{query}\n\n{fragments_str}")
         return f"{query}\n\n{fragments_str}"
 
     def explain_graphql_query(self, query: str):

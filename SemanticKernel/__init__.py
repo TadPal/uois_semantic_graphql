@@ -230,14 +230,43 @@ async def openChat():
 
     kernel.add_filter(FilterTypes.AUTO_FUNCTION_INVOCATION, inject_gql_client)
 
-    def trim_history(history: ChatHistory, max_msgs: int = 20):
-        entries = history.serialize()  # seznam dictů s role, skill, content
-        preserved = [e for e in entries if e.get("metadata", {}).get("important")]
-        others = [e for e in entries if e not in preserved]
-        to_keep = preserved + others[-(max_msgs - len(preserved)) :]
-        history.clear()
-        for e in to_keep:
-            history.add(e["role"], e["content"], metadata=e.get("metadata"))
+    def trim_history(history: "ChatHistory", max_msgs: int = 20):
+        from src.Utils.extract_history import extract_prompts_from_chat_xml
+
+        prompts = {}
+        try:
+            prompts = extract_prompts_from_chat_xml(f"{history}")
+            preserved = [
+                {"role": "system", "items": [{"content_type": "text", "text": p}]}
+                for p in prompts["system_prompts"]
+            ]
+            users_prompts = [
+                {"role": "user", "items": [{"content_type": "text", "text": p}]}
+                for p in prompts["user_prompts"]
+            ]
+            assistant_prompts = [
+                {"role": "assistant", "items": [{"content_type": "text", "text": p}]}
+                for p in prompts["assistant_prompts"]
+            ]
+            queries = [
+                {"role": "assistant", "items": [{"content_type": "text", "text": p}]}
+                for p in prompts["tool_prompts"]
+            ]
+            others = [
+                item for pair in zip(users_prompts, assistant_prompts) for item in pair
+            ]
+
+            # Keep the last (max_msgs - len(preserved)) non-system messages
+            to_keep = (
+                preserved + others[-max(0, max_msgs - len(preserved)) :] + queries[-1:]
+            )
+
+            # Reset the history and add back the trimmed messages
+            history.clear()
+            for msg in to_keep:
+                history.add_message(msg)
+        except Exception as e:
+            print(f"History couldn't be trimmed! {e}")
 
     # user_input = yield "Chat session initialized. Zadejte dotaz nebo 'exit'."
     async def hook(user_input):
@@ -248,7 +277,8 @@ async def openChat():
             kernel=kernel,
             arguments=KernelArguments(),
         )
-
+        history.add_assistant_message(f"{result}")
+        trim_history(history)
         return result
 
     return hook
@@ -310,6 +340,45 @@ async def main():
     # except Exception as e:
     #     print(e)
 
+    def trim_history(history: "ChatHistory", max_msgs: int = 20):
+        from src.Utils.extract_history import extract_prompts_from_chat_xml
+
+        prompts = {}
+        try:
+            prompts = extract_prompts_from_chat_xml(f"{history}")
+            preserved = [
+                {"role": "system", "items": [{"content_type": "text", "text": p}]}
+                for p in prompts["system_prompts"]
+            ]
+            users_prompts = [
+                {"role": "user", "items": [{"content_type": "text", "text": p}]}
+                for p in prompts["user_prompts"]
+            ]
+            assistant_prompts = [
+                {"role": "assistant", "items": [{"content_type": "text", "text": p}]}
+                for p in prompts["assistant_prompts"]
+            ]
+            queries = [
+                {"role": "tool", "items": [{"content_type": "text", "text": p}]}
+                for p in prompts["tool_prompts"]
+            ]
+
+            others = [
+                item for pair in zip(users_prompts, assistant_prompts) for item in pair
+            ]
+
+            # Keep the last (max_msgs - len(preserved)) non-system messages
+            to_keep = (
+                preserved + others[-max(0, max_msgs - len(preserved)) :] + queries[-1:]
+            )
+
+            # Reset the history and add back the trimmed messages
+            history.clear()
+            for msg in to_keep:
+                history.add_message(msg)
+        except Exception as e:
+            print(f"History couldn't be trimmed! {e}")
+
     while True:
         user_input = input("Uživatel: ")
         if user_input == "exit":
@@ -324,6 +393,8 @@ async def main():
             # context_variables={"extraContext": extra_context}
             arguments=KernelArguments(),
         )
+        history.add_assistant_message(f"{result}")
+        trim_history(history)
 
         # vrat mi 5 studijnich programu
         #
