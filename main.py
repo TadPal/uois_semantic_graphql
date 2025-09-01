@@ -64,6 +64,48 @@ async def index_page(request: Request):
 
     user_id = authorize_user(request)
 
+    # Help speech avatar
+    speech_bubble_sticky = None
+    prompt_count = 0
+    def _close_bubble():
+        nonlocal speech_bubble_sticky
+        if speech_bubble_sticky:
+            try:
+                speech_bubble_sticky.delete()  # bezpečné smazání
+            except Exception:
+                pass
+            speech_bubble_sticky = None
+
+    def show_recommendation(message: str = "Skoro bych Vám doporučil, vykašlete se na to...", duration: float = 6.0):
+        nonlocal speech_bubble_sticky
+        _close_bubble()
+
+        # VLOŽ bublinu jako dítě wrapperu tooltip_anchor (nad avatarem)
+        with tooltip_anchor:  # <── DŮLEŽITÉ: použít wrapper z bodu 1
+            with ui.element('div').classes(
+                # POZOR: odstraněno "relative"
+                'tooltip-card px-3 py-2 text-sm font-medium '
+                'text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-md '
+                'opacity-0 invisible transition-all duration-200 translate-y-1 scale-95'
+            ) as speech_bubble_sticky:
+                ui.label(message).classes('leading-snug text-lg')
+                ui.element('div').classes('tooltip-arrow')
+
+        # zobrazit s animací (už nepotřebujeme zarovnání šipky)
+        ui.run_javascript("""
+        (function () {
+        const card = document.querySelector('.tooltip-item .tooltip-card');
+        if (!card) return;
+        card.classList.remove('opacity-0','invisible','translate-y-1','scale-95');
+        card.classList.add('opacity-100','translate-y-0','scale-100');
+        })();
+        """)
+
+        if duration:
+            ui.timer(duration, _close_bubble, once=True)
+
+
+
     chat_hook = await get_user_chat_hook(user_id)
     history = get_user_history(user_id)
     # 🔹 Historie otázek a odpovědí
@@ -86,7 +128,7 @@ async def index_page(request: Request):
     # )
 
     async def send() -> None:
-        nonlocal feedback_row
+        nonlocal feedback_row, prompt_count
         question = text.value.strip()
         if not question:
             return
@@ -139,6 +181,12 @@ async def index_page(request: Request):
 
         # 🔹 Uložení do historie
         history.add_entry(question=question, answer=result)
+        prompt_count += 1
+        if prompt_count == 2:
+            show_recommendation(
+                message="Skoro bych Vám doporučil, vykašlete se na to...",
+                duration=6.0
+            )
 
         # 🔹 Aktualizace log panelu
         history_container.clear()
@@ -170,6 +218,50 @@ async def index_page(request: Request):
         a:link, a:visited { color: inherit !important; text-decoration: none; font-weight: 500; }
         ::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; }
+        /* Wrapper vpravo dole */
+        .tooltip-item{
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 9999;
+        }
+
+        /* Klikatelný avatar */
+        .avatar-cta{ pointer-events: auto; z-index: 10000; }
+
+        /* Bublina (jedna řádka) – posun doleva přes --x */
+        .tooltip-card{
+        --x: -90%;                       /* dolaď: -70%…-95% = více doleva */
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(var(--x)) scale(.95);
+        white-space: nowrap;
+        width: max-content;
+        pointer-events: auto;
+        z-index: 10001;
+        }
+
+        /* Viditelný stav – zachovej stejný posun */
+        .tooltip-card.opacity-100{
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translateX(var(--x)) scale(1) !important;
+        }
+
+        /* Ocásek (dědí barvu pozadí bubliny) */
+        .tooltip-card .tooltip-arrow{
+        position: absolute;
+        bottom: -6px;
+        left: 90%;                        /* posun ocásku – klidně uprav */
+        transform: translateX(-50%) rotate(45deg);
+        width: 12px; height: 12px;
+        background: inherit;
+        border-radius: 2px;
+        }
     """
     )
 
@@ -220,6 +312,14 @@ async def index_page(request: Request):
                     ui.button(on_click=send).props(
                         "flat round dense color=primary icon=send"
                     ).classes("ml-auto")
+
+    with ui.element('div').classes('tooltip-item fixed bottom-10 right-6 z-[9999]') as tooltip_anchor:
+        with ui.button(on_click=lambda: show_recommendation(message="Aha, tak to je blbá chyba...")) \
+            .props('round flat dense') \
+            .classes('p-0 avatar-cta'):
+            ui.image('/assets/img/profesor.png') \
+                .classes('w-[120px] h-[120px] rounded-full object-cover pointer-events-none') \
+                .props('alt="Rounded avatar"')
 
 
 ui.run_with(
