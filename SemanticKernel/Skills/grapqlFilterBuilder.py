@@ -21,6 +21,7 @@ class GraphQLFilterQueryPlugin:
             List[str],
             "The list of GraphQL object types to be included in the query, e.g., ['UserGQLModel', 'RoleGQLModel']",
         ],
+        disabled_fields=["createdby", "changedby", "memberOf"],
         arguments: KernelArguments = None,
     ) -> str:
         """
@@ -68,7 +69,7 @@ class GraphQLFilterQueryPlugin:
               A GraphQL query string that includes a 'where' variable for filtering.
         """
         print(f"build_graphql_filter_query(graphql_types={graphql_types})")
-        builder = GraphQLQueryBuilder(disabled_fields=["createdby", "changedby"])
+        builder = GraphQLQueryBuilder(disabled_fields=disabled_fields)
         query = builder.build_query_vector(graphql_types)
         # The generated query should already include the `where` argument
         # as part of the query vector definition. The `run_graphql_filter_query`
