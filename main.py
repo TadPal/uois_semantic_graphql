@@ -83,7 +83,7 @@ async def index_page(request: Request):
     chat_hook = await get_user_chat_hook(user_id)
 
     # 🔹 Historie otázek a odpovědí
-    history = []  # list of tuples (q, a)
+    history_list = []  # list of tuples (q, a)
     feedback_row = None
 
 
