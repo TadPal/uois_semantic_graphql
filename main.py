@@ -1,12 +1,11 @@
 import asyncio
 
 # Auth
-import jwt
+from Auth.auth import authorize_user
 
 # FastAPI part
 import asyncio
 from fastapi import FastAPI, Request, Response
-
 from SemanticKernel import (
     kernel,
     azure_chat,
@@ -51,27 +50,8 @@ nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 @ui.page("/")
 async def index_page(request: Request):
 
-    # Get or create a unique user ID for this session
-    user_id = None
-    authorization_cookie = request.cookies.get("authorization")
+    user_id = authorize_user(request)
 
-    # Get user Id for his context history
-    if authorization_cookie:
-        try:
-            decoded_token = jwt.decode(
-                authorization_cookie, options={"verify_signature": False}
-            )
-            print(decoded_token)
-            user_id = decoded_token["user_id"]
-        except:
-            print("Cannot decode token")
-
-    if not user_id:
-        # ui.navigate.to("http://localhost:33001/")
-        user_id = "fake_user_id"
-
-    # Get the chat hook for this specific user
-    print("user id", user_id)
     chat_hook = await get_user_chat_hook(user_id)
 
     # 🔹 Historie otázek a odpovědí
