@@ -200,7 +200,7 @@ async def index_page(request: Request):
             if feedback_row:
                 feedback_row.delete()
             with ui.row().classes("ml-12 gap-1 -mt-4") as feedback_row:
-                # --- LIKE ---
+                # --- SVG ikony ---
                 like_default = """
                 <svg class="w-6 h-6 text-blue-700 dark:text-gray-200" xmlns="http://www.w3.org/2000/svg" 
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -223,16 +223,8 @@ async def index_page(request: Request):
                 </svg>
                 """
 
-                like_icon = ui.html(like_default).classes("cursor-pointer")
-
-                def on_like_click():
-                    like_icon.set_content(like_selected)
-
-                like_icon.on('click', on_like_click)
-
-                # --- DISLIKE ---
                 dislike_default = """
-                <svg class="w-6 h-6 text-blue-400 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" 
+                <svg class="w-6 h-6 text-blue-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" 
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" 
                         d="M17 13c-.889.086-1.416.543-2.156 1.057a22.322 
@@ -248,18 +240,44 @@ async def index_page(request: Request):
                 """
 
                 dislike_selected = """
-                <svg class="w-6 h-6 text-blue-400 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" 
+                <svg class="w-6 h-6 text-blue-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" 
                     width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                 <path fill-rule="evenodd" d="M8.97 14.316H5.004c-.322 0-.64-.08-.925-.232a2.022 2.022 0 0 1-.717-.645 2.108 2.108 0 0 1-.242-1.883l2.36-7.201C5.769 3.54 5.96 3 7.365 3c2.072 0 4.276.678 6.156 1.256.473.145.925.284 1.35.404h.114v9.862a25.485 25.485 0 0 0-4.238 5.514c-.197.376-.516.67-.901.83a1.74 1.74 0 0 1-1.21.048 1.79 1.79 0 0 1-.96-.757 1.867 1.867 0 0 1-.269-1.211l1.562-4.63ZM19.822 14H17V6a2 2 0 1 1 4 0v6.823c0 .65-.527 1.177-1.177 1.177Z" clip-rule="evenodd"/>
                 </svg>
                 """
 
+                # --- Ikony jako HTML prvky ---
+                like_icon = ui.html(like_default).classes("cursor-pointer")
                 dislike_icon = ui.html(dislike_default).classes("cursor-pointer")
 
-                def on_dislike_click():
-                    dislike_icon.set_content(dislike_selected)
+                # --- Stav ---
+                state = {"like": False, "dislike": False}
 
+                # --- Handlery ---
+                def on_like_click():
+                    if state["like"]:  # už je aktivní -> odznačit
+                        like_icon.set_content(like_default)
+                        state["like"] = False
+                    else:  # zapnout like, vypnout dislike
+                        like_icon.set_content(like_selected)
+                        dislike_icon.set_content(dislike_default)
+                        state["like"] = True
+                        state["dislike"] = False
+
+                def on_dislike_click():
+                    if state["dislike"]:  # už je aktivní -> odznačit
+                        dislike_icon.set_content(dislike_default)
+                        state["dislike"] = False
+                    else:  # zapnout dislike, vypnout like
+                        dislike_icon.set_content(dislike_selected)
+                        like_icon.set_content(like_default)
+                        state["dislike"] = True
+                        state["like"] = False
+
+                # --- Klik události ---
+                like_icon.on('click', on_like_click)
                 dislike_icon.on('click', on_dislike_click)
+
 
 
 
