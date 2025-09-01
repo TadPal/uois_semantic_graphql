@@ -149,11 +149,11 @@ async def index_page(request: Request):
                 feedback_row.delete()
             with ui.row().classes("ml-12 gap-2") as feedback_row:  # NEW
                 ui.button(
-                    "Like",
+                    "👍",
                     on_click=lambda: ui.run_javascript("console.log('Like clicked')"),
                 ).props("flat dense color=positive").classes("text-xs italic")
                 ui.button(
-                    "Dislike",
+                    "👎",
                     on_click=lambda: ui.run_javascript(
                         "console.log('Dislike clicked')"
                     ),
