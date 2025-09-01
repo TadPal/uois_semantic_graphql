@@ -43,6 +43,8 @@ app = FastAPI(on_startup=[startup_gql_client])
 
 from nicegui import ui, app as nicegui_app, storage, core
 from starlette.middleware.sessions import SessionMiddleware
+import base64
+import json
 
 nicegui_app.add_middleware(storage.RequestTrackingMiddleware)
 nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
@@ -59,10 +61,13 @@ async def index_page(request: Request):
     # Get user Id for his context history
     if authorization_cookie:
         try:
-            decoded_token = jwt.decode(authorization_cookie)
-            user_id = decoded_token("user_id")
-        except jwt.PyJWTError:
-            print("Invalid JWT token")
+            decoded_token = json.loads(
+                base64.b64decode(authorization_cookie.split(".")[1]).decode("utf-8")
+            )
+            user_id = decoded_token["user_id"]
+            print(user_id)
+        except:
+            print("Cannot decode token")
 
     if not user_id:
         import uuid
