@@ -83,7 +83,9 @@ async def index_page(request: Request):
     chat_hook = await get_user_chat_hook(user_id)
 
     # 🔹 Historie otázek a odpovědí
-    history_list = []  # list of tuples (q, a)
+    history = []  # list of tuples (q, a)
+    feedback_row = None
+
 
     # 🔹 Přidáme CSS a JS pro light/dark mód
     # ui.add_head_html(
@@ -102,6 +104,7 @@ async def index_page(request: Request):
     # )
 
     async def send() -> None:
+        nonlocal feedback_row
         question = text.value.strip()
         if not question:
             return
@@ -151,7 +154,7 @@ async def index_page(request: Request):
                     ui.html(part["content"])
                 elif part["type"] == "md":
                     ui.markdown(part["content"])
-        ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
+        
 
         # 🔹 Uložení do historie
         history_list.append((question, result))
@@ -163,6 +166,19 @@ async def index_page(request: Request):
                 with ui.column().classes("mb-4 p-2 border-b border-gray-300"):
                     ui.markdown(f"**Q:** {q}")
                     ui.markdown(f"**A:** {a}")
+        
+        with message_container:  # NEW
+            if feedback_row:
+                feedback_row.delete()   
+            with ui.row().classes("ml-12 gap-2") as feedback_row:  # NEW
+                ui.button("Like",
+                        on_click=lambda: ui.run_javascript("console.log('Like clicked')")) \
+                .props("flat dense color=positive").classes("text-xs italic")
+                ui.button("Dislike",
+                        on_click=lambda: ui.run_javascript("console.log('Dislike clicked')")) \
+                .props("flat dense color=negative").classes("text-xs italic")
+
+        ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
 
     ui.add_css(
         """
@@ -182,8 +198,8 @@ async def index_page(request: Request):
         history_tab = ui.tab("History")
 
     with ui.tab_panels(tabs, value=chat_tab).classes(
-        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800"
-    ):
+    "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800"
+):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:
             ui.chat_message(
