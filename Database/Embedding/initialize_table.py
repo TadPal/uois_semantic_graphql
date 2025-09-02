@@ -12,8 +12,8 @@ def initialize_embedding_table(conn):
 
     CREATE TABLE graphql_types (
         id SERIAL PRIMARY KEY,
-        name TEXT UNIQUE,
-        description TEXT,
+        question TEXT UNIQUE,
+        answer TEXT,
         embedding vector({embedding_dimension})
     );
 
