@@ -3,12 +3,9 @@ import asyncio
 # import pytest
 import logging
 import typing
-import uuid
-import strawberry
 import typing
 
 from graphql import parse
-from graphql import specified_scalar_types
 from graphql.language import (
     DocumentNode,
     ObjectTypeDefinitionNode,
@@ -1502,36 +1499,6 @@ def createTests(schema):
     result["test_root_description"] = T3
     result["test_validate_relation_directives"] = T4
     return result
-
-
-# async def createResolveTestLocals(sdl_doc: DocumentNode, ops: dict):
-#     """
-#     Dynamically builds and returns a pytest async test that queries the federated
-#     _entities field using representations for each typename/id in `types`.
-#     """
-#     # 1) Build the _entities query from the SDL AST
-#     query = build_entities_query(sdl_doc)
-#     logging.info(f"Entities query: {query}")
-#     assert query, "Unable to build _entities query from SDL"
-
-#     @pytest.mark.asyncio
-#     async def test_entities(SchemaExecutor):
-#         await test_scalar(sdl_doc, ops, executor=SchemaExecutor)
-#         reps = [
-#             {"__typename": tn, "id": str(i)}
-#             for tn, ids in types.items() for i in ids
-#         ]
-#         result = await SchemaExecutor(query=query, variable_values={"representations": reps})
-#         errors = result.get("errors")
-#         assert errors is None, f"Error during entities execution: {errors}"
-#         data = result.get("data")
-#         assert data is not None, "Empty response, check federated resolver"
-#         entities = data.get("_entities")
-#         assert isinstance(entities, list) and entities, "No entities returned"
-#         return entities
-
-#     test_entities.__name__ = "test_entities"
-#     return test_entities
 
 
 async def createResolveTest(sdl_doc: DocumentNode, types: dict):
