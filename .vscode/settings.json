@@ -1,4 +1,4 @@
-// Install Black Formatter and 'Better Comments'
+// Install 'Black Formatter' and 'Better Comments'
 {
     "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
