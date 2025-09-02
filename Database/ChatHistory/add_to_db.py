@@ -1,7 +1,10 @@
 import psycopg2
 from psycopg2 import sql
+from Database.connection import connect_to_postgres
+import os
 
-def add_chat_history(conn, message, user_id):
+
+def add_chat_history(message, user_id, conn=None):
     """
     Adds a new message to the chat_history table for a specific user ID.
 
@@ -10,9 +13,9 @@ def add_chat_history(conn, message, user_id):
         message (str): The text message to be saved.
         user_id (str): The UUID of the user.
     """
+
     if not conn:
-        print("Database connection is not available. Cannot add chat history.")
-        return
+        conn = connect_to_postgres(os.environ)
 
     try:
         cursor = conn.cursor()
@@ -20,7 +23,7 @@ def add_chat_history(conn, message, user_id):
         # Insert the message into the chat_history table with the provided user ID
         cursor.execute(
             sql.SQL("INSERT INTO chat_history (user_id, messages) VALUES (%s, %s)"),
-            (user_id, message)
+            (user_id, message),
         )
         conn.commit()
         print(f"Message successfully added to chat history for user ID: {user_id}.")

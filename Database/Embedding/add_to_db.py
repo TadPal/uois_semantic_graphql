@@ -1,7 +1,14 @@
 import psycopg2
 from embeding import get_ollama_embedding
+from Database.connection import connect_to_postgres
+import os
 
-def add_embedding_row(conn, question, answer_query):
+
+def add_embedding_row(GQLquery, user_prompt, conn=None):
+
+    if not conn:
+        conn = connect_to_postgres(os.environ)
+
     """
     Inserts a new row into the graphql_types table.
     """
@@ -11,12 +18,12 @@ def add_embedding_row(conn, question, answer_query):
     """
 
     # get embedding in float type
-    embedding=get_ollama_embedding(answer_query)
-    
+    embedding = get_ollama_embedding(user_prompt)
+
     if conn:
         try:
             cursor = conn.cursor()
-            cursor.execute(command, (question, answer_query, str(embedding)))
+            cursor.execute(command, (user_prompt, GQLquery, embedding))
             conn.commit()
             cursor.close()
             print("Row added successfully.")
