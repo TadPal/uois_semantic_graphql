@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 # Auth
 from Auth.auth import authorize_user
@@ -20,6 +21,10 @@ from SemanticKernel import (
 )
 from History.chatHistory import UserChatHistory
 
+
+from src.Utils.on_button_press import FeedbackState, render_buttons, on_like_click, on_dislike_click
+from src.Utils.graphQLdata import GraphQLData
+
 # Store per user chat instances
 user_chats = {}
 history = {}
@@ -40,7 +45,11 @@ async def get_user_chat_hook(user_id: str):
 
 
 async def startup_gql_client():
-    pass
+    global gql_client
+    gql_client = await createGQLClient(
+        username="john.newbie@world.com",
+        password="john.newbie@world.com"
+    )
 
 
 from nicegui import core
@@ -53,10 +62,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 nicegui_app.add_middleware(storage.RequestTrackingMiddleware)
 nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
-nicegui_app.add_static_files(
-    '/assets', './assets'
-    
-)
+nicegui_app.add_static_files('/assets', './assets')
 
 
 @ui.page("/")
@@ -197,9 +203,9 @@ async def index_page(request: Request):
                     ui.markdown(f"**A:** {a}")
 
         with message_container:  # NEW
-            if feedback_row:
-                feedback_row.delete()
-            with ui.row().classes("ml-12 gap-1 -mt-4") as feedback_row:
+            # if feedback_row:
+            #     feedback_row.delete()
+            # with ui.row().classes("ml-12 gap-1 -mt-4") as feedback_row:
                 # --- SVG ikony ---
                 like_default = """
                 <svg class="w-6 h-6 text-blue-700 dark:text-gray-200" xmlns="http://www.w3.org/2000/svg" 
@@ -246,37 +252,25 @@ async def index_page(request: Request):
                 </svg>
                 """
 
-                # --- Ikony jako HTML prvky ---
-                like_icon = ui.html(like_default).classes("cursor-pointer")
-                dislike_icon = ui.html(dislike_default).classes("cursor-pointer")
+                SVGS = {
+                    "like_default": like_default,
+                    "like_selected": like_selected,
+                    "dislike_default": dislike_default,
+                    "dislike_selected": dislike_selected,
+                }
 
-                # --- Stav ---
-                state = {"like": False, "dislike": False}
+                state = FeedbackState()
 
-                # --- Handlery ---
-                def on_like_click():
-                    if state["like"]:  # už je aktivní -> odznačit
-                        like_icon.set_content(like_default)
-                        state["like"] = False
-                    else:  # zapnout like, vypnout dislike
-                        like_icon.set_content(like_selected)
-                        dislike_icon.set_content(dislike_default)
-                        state["like"] = True
-                        state["dislike"] = False
+                with ui.row().classes("ml-12 gap-1 -mt-4") as feedback_row:
+                    # Inicialní render tlačítek
+                    like_html, dislike_html = render_buttons(state, SVGS)
 
-                def on_dislike_click():
-                    if state["dislike"]:  # už je aktivní -> odznačit
-                        dislike_icon.set_content(dislike_default)
-                        state["dislike"] = False
-                    else:  # zapnout dislike, vypnout like
-                        dislike_icon.set_content(dislike_selected)
-                        like_icon.set_content(like_default)
-                        state["dislike"] = True
-                        state["like"] = False
+                    like_btn = ui.html(like_html)
+                    dislike_btn = ui.html(dislike_html)
 
-                # --- Klik události ---
-                like_icon.on('click', on_like_click)
-                dislike_icon.on('click', on_dislike_click)
+                    # Handlery – logika je v odděleném souboru
+                    like_btn.on('click', lambda e: on_like_click(like_btn, dislike_btn, state, SVGS, "like"))
+                    dislike_btn.on('click', lambda e: on_dislike_click(like_btn, dislike_btn, state, SVGS, "dislike"))
 
 
 
@@ -286,8 +280,8 @@ async def index_page(request: Request):
     ui.add_css(
         """
         a:link, a:visited { color: inherit !important; text-decoration: none; font-weight: 500; }
-        ::-webkit-scrollbar { display: none; }
-        * { scrollbar-width: none; }
+        # ::-webkit-scrollbar { display: none; }
+        # * { scrollbar-width: none; }
         /* Wrapper vpravo dole */
         .tooltip-item{
         position: fixed;
@@ -343,6 +337,7 @@ async def index_page(request: Request):
         chat_tab = ui.tab("Chat")
         logs_tab = ui.tab("Logs")
         history_tab = ui.tab("History")
+        graphql_tab = ui.tab("GraphQL")
 
     with ui.tab_panels(tabs, value=chat_tab).classes(
         "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800"
@@ -356,9 +351,15 @@ async def index_page(request: Request):
                 avatar="/assets/img/Tadeas.png",
             ).props("bg-color=grey-2 text-color=dark")
 
+        #######################################################
+        #* Logs tab
+        #######################################################
         with ui.tab_panel(logs_tab) as logs_container:
             ui.label("Conversation Log").classes("font-bold mb-2")
 
+        #######################################################
+        #* History tab
+        #######################################################
         with ui.tab_panel(history_tab) as history_container:
             ui.label("Conversation history").classes("font-bold mb-2")
             with history_container:
@@ -367,6 +368,62 @@ async def index_page(request: Request):
                         ui.markdown(f"**Q:** {q}")
                         ui.markdown(f"**A:** {a}")
 
+        #######################################################
+        #* GraphQL tab
+        #######################################################
+        with ui.tab_panel(graphql_tab).classes("items-stretch"):
+            ui.label("GraphQL browser").classes("font-bold mb-2")
+            default_query = """
+                query ListItems($skip: Int, $limit: Int) {
+                items(skip: $skip, limit: $limit) {
+                    id
+                    name
+                    createdAt
+                }
+                }
+                """.strip()
+            query_input = ui.textarea(label="GraphQL query", value=default_query).props("rows=10")
+            variables_input = ui.textarea(
+                label='Variables (JSON, např. {"skip": 0, "limit": 10})',
+                value='{"skip": 0, "limit": 10}'
+            ).props("rows=4")
+
+            gql_container = ui.column().classes("mt-2")
+
+            async def run_graphql():
+                gql_container.clear()
+                # ochrana: klient musí být připraven
+                if gql_client is None:
+                    with gql_container:
+                        ui.markdown("> ⚠️ GraphQL klient ještě není inicializován.")
+                    return
+
+                # načti dotaz a proměnné
+                query = (query_input.value or "").strip()
+                try:
+                    variables = json.loads(variables_input.value) if variables_input.value else {}
+                    if not isinstance(variables, dict):
+                        raise ValueError("Variables must be a JSON object")
+                except Exception as e:
+                    with gql_container:
+                        ui.markdown(f"> ❌ Chyba v JSON variables: `{e}`")
+                    return
+
+                # vykresli widget
+                with gql_container:
+                    GraphQLData(
+                        gqlclient=gql_client,
+                        query=query,
+                        variables=variables,
+                        result=None,
+                        metadata=None,
+                        autoload=True,
+                    )
+
+            ui.button("Run query", on_click=run_graphql).props("color=primary").classes("mt-2")
+
+
+    
     with ui.footer().classes("bg-transparent p-4"):
         with ui.row().classes("w-full justify-center"):
             with ui.card().classes(
@@ -394,8 +451,8 @@ async def index_page(request: Request):
 
 ui.run_with(
     app,
-    title="GQL Evolution",
-    favicon="🚀",
+    title="TedGPT",
+    favicon="./assets/img/tedGPT.png",
     dark=None,
     tailwind=True,
     storage_secret="SUPER-SECRET",
