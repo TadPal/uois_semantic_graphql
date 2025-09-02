@@ -7,15 +7,6 @@ from Auth.auth import authorize_user
 import asyncio
 from fastapi import FastAPI, Request, Response
 from SemanticKernel import (
-    kernel,
-    azure_chat,
-    KernelArguments,
-    createGQLClient,
-    ChatHistory,
-    AzureChatPromptExecutionSettings,
-    FunctionChoiceBehavior,
-    AutoFunctionInvocationContext,
-    FilterTypes,
     openChat,
 )
 from History.chatHistory import UserChatHistory
@@ -43,9 +34,6 @@ async def startup_gql_client():
     pass
 
 
-from nicegui import core
-import nicegui
-
 app = FastAPI(on_startup=[startup_gql_client])
 
 from nicegui import ui, app as nicegui_app, storage, core
@@ -53,10 +41,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 nicegui_app.add_middleware(storage.RequestTrackingMiddleware)
 nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
-nicegui_app.add_static_files(
-    '/assets', './assets'
-    
-)
+nicegui_app.add_static_files("/assets", "./assets")
 
 
 @ui.page("/")
@@ -67,6 +52,7 @@ async def index_page(request: Request):
     # Help speech avatar
     speech_bubble_sticky = None
     prompt_count = 0
+
     def _close_bubble():
         nonlocal speech_bubble_sticky
         if speech_bubble_sticky:
@@ -76,35 +62,38 @@ async def index_page(request: Request):
                 pass
             speech_bubble_sticky = None
 
-    def show_recommendation(message: str = "Skoro bych Vám doporučil, vykašlete se na to...", duration: float = 6.0):
+    def show_recommendation(
+        message: str = "Skoro bych Vám doporučil, vykašlete se na to...",
+        duration: float = 6.0,
+    ):
         nonlocal speech_bubble_sticky
         _close_bubble()
 
         # VLOŽ bublinu jako dítě wrapperu tooltip_anchor (nad avatarem)
         with tooltip_anchor:  # <── DŮLEŽITÉ: použít wrapper z bodu 1
-            with ui.element('div').classes(
+            with ui.element("div").classes(
                 # POZOR: odstraněno "relative"
-                'tooltip-card px-3 py-2 text-sm font-medium '
-                'text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-md '
-                'opacity-0 invisible transition-all duration-200 translate-y-1 scale-95'
+                "tooltip-card px-3 py-2 text-sm font-medium "
+                "text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-md "
+                "opacity-0 invisible transition-all duration-200 translate-y-1 scale-95"
             ) as speech_bubble_sticky:
-                ui.label(message).classes('leading-snug text-lg')
-                ui.element('div').classes('tooltip-arrow')
+                ui.label(message).classes("leading-snug text-lg")
+                ui.element("div").classes("tooltip-arrow")
 
         # zobrazit s animací (už nepotřebujeme zarovnání šipky)
-        ui.run_javascript("""
+        ui.run_javascript(
+            """
         (function () {
         const card = document.querySelector('.tooltip-item .tooltip-card');
         if (!card) return;
         card.classList.remove('opacity-0','invisible','translate-y-1','scale-95');
         card.classList.add('opacity-100','translate-y-0','scale-100');
         })();
-        """)
+        """
+        )
 
         if duration:
             ui.timer(duration, _close_bubble, once=True)
-
-
 
     chat_hook = await get_user_chat_hook(user_id)
     history = get_user_history(user_id)
@@ -184,8 +173,7 @@ async def index_page(request: Request):
         prompt_count += 1
         if prompt_count == 2:
             show_recommendation(
-                message="Skoro bych Vám doporučil, vykašlete se na to...",
-                duration=6.0
+                message="Skoro bych Vám doporučil, vykašlete se na to...", duration=6.0
             )
 
         # 🔹 Aktualizace log panelu
@@ -275,11 +263,8 @@ async def index_page(request: Request):
                         state["like"] = False
 
                 # --- Klik události ---
-                like_icon.on('click', on_like_click)
-                dislike_icon.on('click', on_dislike_click)
-
-
-
+                like_icon.on("click", on_like_click)
+                dislike_icon.on("click", on_dislike_click)
 
         ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
 
@@ -383,13 +368,15 @@ async def index_page(request: Request):
                         "flat round dense color=primary icon=send"
                     ).classes("ml-auto")
 
-    with ui.element('div').classes('tooltip-item fixed bottom-10 right-6 z-[9999]') as tooltip_anchor:
-        with ui.button(on_click=lambda: show_recommendation(message="Aha, tak to je blbá chyba...")) \
-            .props('round flat dense') \
-            .classes('p-0 avatar-cta'):
-            ui.image('/assets/img/profesor.png') \
-                .classes('w-[120px] h-[120px] rounded-full object-cover pointer-events-none') \
-                .props('alt="Rounded avatar"')
+    with ui.element("div").classes(
+        "tooltip-item fixed bottom-10 right-6 z-[9999]"
+    ) as tooltip_anchor:
+        with ui.button(
+            on_click=lambda: show_recommendation(message="Aha, tak to je blbá chyba...")
+        ).props("round flat dense").classes("p-0 avatar-cta"):
+            ui.image("/assets/img/profesor.png").classes(
+                "w-[120px] h-[120px] rounded-full object-cover pointer-events-none"
+            ).props('alt="Rounded avatar"')
 
 
 ui.run_with(
