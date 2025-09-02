@@ -21,7 +21,6 @@ parent_dir = os.path.dirname(current_dir)
 top_level = os.path.dirname(parent_dir)
 sys.path.insert(0, top_level)
 
-# Utility imports from utils_sdl_2 (support both relative and absolute imports)
 try:
     from Skills.utils_sdl_2 import (
         build_medium_fragment,
@@ -32,7 +31,6 @@ try:
     )
 except ImportError:
     from SemanticKernel.Skills.utils_sdl_2 import (
-        # from .utils_sdl_2 import (
         build_medium_fragment,
         get_read_vector_values,
         select_ast_by_path,
@@ -661,29 +659,3 @@ class GraphQLBuilderPlugin:
         )
         query = builder.build_query_scalar(graphql_types)
         return builder.explain_graphql_query(query)
-
-
-def main():
-    # sestav mi dotaz GroupGQLModel a UserGQLModel
-    from sdl.sdl_fetch import fetch_sdl
-
-    sdl = fetch_sdl()
-    ast = parse(sdl)
-
-    fragment = build_medium_fragment(ast, "UserGQLModel")
-    print("UserGQLModel")
-    print(fragment)
-    # pass
-
-    graphqltypes = ["GroupGQLModel", "UserGQLModel"]
-    graphqltypes = ["FacilityGQLModel", "EventGQLModel"]
-    # graphqltypes = ["GroupGQLModel", "MembershipGQLModel", "EventGQLModel"]
-    builder = GraphQLQueryBuilder(
-        disabled_fields=["createdby", "changedby", "memberOf"]
-    )
-    query = builder.build_query_vector(graphqltypes)
-    print(builder.explain_graphql_query(query))
-
-
-if __name__ == "__main__":
-    main()
