@@ -121,5 +121,5 @@ class GraphQLBuilderPlugin:
             arguments=KernelArguments(),
         )
 
-        print(result)
+        print(f"Detected types: {result}")
         return result

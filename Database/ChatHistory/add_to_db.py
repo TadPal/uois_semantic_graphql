@@ -4,13 +4,14 @@ from Database.connection import connect_to_postgres
 import os
 
 
-def add_chat_history(message, user_id, conn=None):
+def add_chat_history(message, answer, user_id, session_id, conn=None):
     """
     Adds a new message to the chat_history table for a specific user ID.
 
     Args:
         conn (psycopg2.connection): The database connection object.
         message (str): The text message to be saved.
+        answer (str): The text message given by LLM
         user_id (str): The UUID of the user.
     """
 
@@ -24,13 +25,11 @@ def add_chat_history(message, user_id, conn=None):
         cursor.execute(
             sql.SQL(
                 """
-                INSERT INTO chat_history (user_id, messages)
-                VALUES (%s, %s)
-                ON CONFLICT (user_id) DO UPDATE
-                SET messages = EXCLUDED.messages;
+                INSERT INTO chat_history (user_id, session_id, messages, answer)
+                VALUES (%s, %s, %s, %s);
             """
             ),
-            (user_id, message),
+            (str(user_id), str(session_id), str(message), str(answer)),
         )
 
         conn.commit()

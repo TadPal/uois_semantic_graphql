@@ -1,5 +1,22 @@
 from typing import List, Tuple, Dict, Annotated, Any
 import json
+import os
+import sys
+from graphql.language.ast import (
+    TypeNode,
+    DocumentNode,
+    NamedTypeNode,
+    NonNullTypeNode,
+    ListTypeNode,
+    ObjectTypeDefinitionNode,
+    ScalarTypeDefinitionNode,
+    UnionTypeDefinitionNode,
+)
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+top_level = os.path.dirname(parent_dir)
+sys.path.insert(0, top_level)
 
 from semantic_kernel.functions import kernel_function
 from semantic_kernel.functions import KernelArguments
@@ -12,74 +29,110 @@ class GraphQLFilterQueryPlugin:
     """
 
     @kernel_function(
-        name="buildFilterQuery",
-        # description="Builds a GraphQL query for fetching a list of entities with a 'where' filter."
+        name="findFilterVariables",
     )
-    def build_graphql_filter_query(
+    def find_filter_variables(
         self,
         graphql_types: Annotated[
             List[str],
-            "The list of GraphQL object types to be included in the query, e.g., ['UserGQLModel', 'RoleGQLModel']",
+            "The list of GraphQL types to be searched for available variables, e.g., ['UserGQLModel', 'RoleGQLModel']",
         ],
         disabled_fields=["createdby", "changedby", "memberOf"],
         arguments: KernelArguments = None,
     ) -> str:
         """
-            Builds a GraphQL query with a 'where' filter.
+        Finds filterable variables for desired GraphQL types and their filter options which can be used to build a 'where' variable.
 
-            This skill is designed to automatically generate a GraphQL query that can fetch
-            a collection of entities (e.g., users, programs) and filter them based on
-            a 'where' argument. This is particularly useful for searching or listing
-            items that match specific criteria.
+        Args:
+          graphql_types: The list of GraphQL types to be searched for available variables, e.g., ['UserGQLModel', 'RoleGQLModel']
 
-            Pro porovnání hodnot:
-
-            _eq: Rovná se.
-
-            _le: Menší nebo rovno.
-
-            _lt: Menší než.
-
-            _ge: Větší nebo rovno.
-
-            _gt: Větší než.
-
-            Příklad porovnání:
-
-            {"where": {"number": {"_ge": 50000, "_le": 100000}}}
-
-            Pro textová pole (stringy):
-
-                _like: Podobné jako v SQL, umožňuje použití zástupných znaků (% a _).
-
-                _ilike: Stejné jako _like, ale ignoruje velikost písmen (case-insensitive).
-
-                _startswith: Začíná na.
-
-                _endswith: Končí na.
-
-        Příklad textového filtru:
-
-        {"where": {"email": {"_ilike": "john%.com"}, "name": {"_startswith": "Jan"}}}
-
-            Args:
-              graphql_types: A list of GraphQL type names to build the query for.
-
-            Returns:
-              A GraphQL query string that includes a 'where' variable for filtering.
+        Returns:
+          A json structure with filtrable variables and their filter options.
         """
-        print(f"build_graphql_filter_query(graphql_types={graphql_types})")
-        builder = GraphQLQueryBuilder(disabled_fields=disabled_fields)
-        query = builder.build_query_vector(graphql_types)
-        # The generated query should already include the `where` argument
-        # as part of the query vector definition. The `run_graphql_filter_query`
-        # skill will handle the actual execution with the provided variables.
 
-        # The result from build_query_vector should be suitable for use with a filter.
-        # We need to ensure that the returned query has the correct structure for
-        # passing variables. The builder is expected to handle this.
+        def unwrap_type(t):
+            # Unwrap AST type nodes (NonNull, List) to get NamedTypeNode
+            while isinstance(t, (NonNullTypeNode, ListTypeNode)):
+                t = t.type
+            if isinstance(t, NamedTypeNode):
+                return t.name.value
+            raise TypeError(f"Unexpected type node: {t}")
 
-        return builder.explain_graphql_query(query)
+        def build_adjacency(
+            ast, disabled_fields: list[str]
+        ) -> Dict[str, List[Tuple[str, str]]]:
+            edges: Dict[str, List[Tuple[str, str]]] = {}
+            for defn in ast.definitions:
+                if hasattr(defn, "fields"):
+                    from_type = defn.name.value
+                    for field in defn.fields:
+                        if field.name.value in disabled_fields:
+                            continue
+                        to_type = unwrap_type(field.type)
+                        edges.setdefault(from_type, []).append(
+                            (field.name.value, to_type)
+                        )
+            return edges
+
+        def extract_filter_inputs(ast) -> dict[str, list[str]]:
+            """
+            Extract available filter input types (e.g. StrFilter) and their operators
+            from the SDL AST.
+            Example:
+            {
+                "StrFilter": ["_eq", "_le", "_lt", "_ge", "_gt", "_like", "_ilike", "_startswith", "_endswith"]
+            }
+            """
+            filters: dict[str, list[str]] = {}
+            for defn in ast.definitions:
+                if defn.kind == "input_object_type_definition":
+                    input_name = defn.name.value
+                    if "Filter" in input_name or "filter" in input_name:
+                        operators = [field.name.value for field in defn.fields]
+                        filters[input_name] = operators
+            return filters
+
+        def get_filterable_fields_with_ops(
+            ast, adjacency
+        ) -> dict[str, dict[str, list[str]]]:
+            """
+            Return fields and their supported filter operators, using SDL filter inputs.
+            """
+            filter_inputs = extract_filter_inputs(ast)
+
+            SCALAR_TO_FILTER = {
+                "String": "StrFilter",
+                "UUID": "UuidFilter",
+                "Int": "IntFilter",
+                "DateTime": "DateTimeFilter",
+                "Boolean": "BoolFilter",
+            }
+
+            result: dict[str, dict[str, list[str]]] = {}
+
+            for type_name, fields in adjacency.items():
+                if type_name not in graphql_types:  # only process requested types
+                    continue
+
+                for field_name, field_type in fields:
+                    if field_type in SCALAR_TO_FILTER:
+                        filter_type = SCALAR_TO_FILTER[field_type]
+                        if filter_type in filter_inputs:
+                            result.setdefault(type_name, {})[field_name] = (
+                                filter_inputs[filter_type]
+                            )
+
+            return result
+
+        print(f"find_filter_variables(graphql_types={graphql_types})")
+        from sdl.sdl_fetch import fetch_sdl
+        from graphql import parse, build_ast_schema
+
+        sdl = fetch_sdl()
+        ast = parse(sdl)
+        adjacency = build_adjacency(ast=ast, disabled_fields=disabled_fields)
+
+        return get_filterable_fields_with_ops(ast, adjacency)
 
     @kernel_function(
         name="runFilterQuery",
@@ -105,7 +158,7 @@ class GraphQLFilterQueryPlugin:
 
         Args:
           graphql_query: The complete GraphQL query string.
-          graphql_variables: A JSON string of variables, e.g., '{userPage(where: {email: {_like: "%.com"}}, skip:0, limit:2)'.
+          graphql_variables: A JSON string of variables, e.g., '{"where":{"name":{"_ilike":"Zdeňka%"}},"limit":1}'.
 
 
         Returns:
