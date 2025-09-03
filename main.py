@@ -25,6 +25,9 @@ from src.Utils.graphQLdata import GraphQLData
 import logging, uuid, contextvars
 from src.Utils.log_bus import LOG_BUS, LEVEL_COLORS, setup_logging
 from starlette.middleware.base import BaseHTTPMiddleware
+from pathlib import Path
+import tempfile
+import time
 
 # Store per user chat instances
 user_chats = {}
@@ -191,7 +194,7 @@ async def index_page(request: Request):
         state = {
             "running": True,
             "tail": 500,
-            "level": "ALL",
+            "level": "ALL",  # SINGLE select: ALL / DEBUG / INFO / WARNING / ERROR / CRITICAL
             "logger_filter": "",
             "search": "",
             "autoscroll": False,
@@ -202,29 +205,78 @@ async def index_page(request: Request):
         def normalize_level(x: str | None) -> str | None:
             if not x:
                 return x
-            x = x.upper()
+            x = str(x).upper()
+            # držme se standardních názvů; UI neposílá aliasy
             aliases = {"WARN": "WARNING", "FATAL": "CRITICAL", "CRIT": "CRITICAL"}
             return aliases.get(x, x)
 
         def make_key(r: dict) -> str:
             return f"{r.get('ts','')}|{r.get('logger','')}|{r.get('module','')}|{r.get('line','')}"
 
+        # Filtr pro zobrazení v UI (včetně dalších polí, ať se ti pohled chová jako dřív)
+        def passes_for_view(r: dict) -> bool:
+            # LEVEL (single)
+            if state["level"] != "ALL":
+                if normalize_level(r.get("level")) != normalize_level(state["level"]):
+                    return False
+            # Logger/module
+            if lf := state["logger_filter"].strip().lower():
+                cand = (r.get("logger", "") + "." + r.get("module", "")).lower()
+                if lf not in cand:
+                    return False
+            # User
+            if uf := state["user_filter"].strip().lower():
+                if uf not in (str(r.get("user_id", "")) or "").lower():
+                    return False
+            # Full-text
+            if s := state["search"].strip().lower():
+                hay = " ".join(
+                    [
+                        r.get("message", ""),
+                        r.get("logger", ""),
+                        r.get("module", ""),
+                        r.get("exc_text", "") or "",
+                        str(r.get("extra", "") or ""),
+                    ]
+                ).lower()
+                if s not in hay:
+                    return False
+            return True
+
+        # Export jen podle SINGLE levelu (ALL = všechno); cesta ./tmp v projektu
+        def export_ndjson():
+            base_dir = Path(__file__).resolve().parent / "tmp"
+            base_dir.mkdir(parents=True, exist_ok=True)
+
+            rows = LOG_BUS.get_last(state["tail"])
+            if state["level"] != "ALL":
+                lvl = normalize_level(state["level"])
+                rows = [r for r in rows if normalize_level(r.get("level")) == lvl]
+
+            ts = time.strftime("%Y%m%d-%H%M%S")
+            suffix = (
+                "ALL" if state["level"] == "ALL" else normalize_level(state["level"])
+            )
+            path = base_dir / f"logs-{suffix}-{ts}.ndjson"
+
+            with open(path, "w", encoding="utf-8") as f:
+                for r in rows:
+                    f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+            ui.download(str(path))
+
         with parent:
             with ui.row().classes("items-end gap-3"):
-                # LEVEL toggle + databinding
-                ui.toggle(
-                    {
-                        "ALL": "ALL",
-                        "DEBUG": "DEBUG",
-                        "INFO": "INFO",
-                        "WARNING": "WARN",
-                        "ERROR": "ERROR",
-                        "CRITICAL": "CRIT",
-                    },
+                # SINGLE select – žádné dicty, žádné aliasy
+                level_select = ui.select(
+                    options=["ALL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                     value="ALL",
-                ).bind_value(state, "level")
+                    label="Level",
+                    with_input=False,
+                    clearable=False,
+                )
+                level_select.bind_value(state, "level")
 
-                # !!! JEN JEDEN logger_in (žádný duplikát) !!!
                 logger_in = ui.input("Logger/module contains")
                 logger_in.on(
                     "update:model-value",
@@ -251,15 +303,8 @@ async def index_page(request: Request):
                     lambda e: (state.update(tail=int(e.args or 500)), paint.refresh()),
                 )
 
-                def export_logs():
-                    rows = LOG_BUS.get_last(0)
-                    path = "/tmp/logs.ndjson"
-                    with open(path, "w", encoding="utf-8") as f:
-                        for r in rows:
-                            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-                    ui.download(path)
-
-                ui.button("Export NDJSON", on_click=export_logs)
+                # Jedno tlačítko – export podle zvoleného levelu
+                ui.button("Export NDJSON", on_click=export_ndjson)
 
             container = ui.column().classes("w-full gap-0")
 
@@ -268,34 +313,7 @@ async def index_page(request: Request):
                 container.clear()
                 rows = LOG_BUS.get_last(state["tail"])
 
-                def passes(r):
-                    if state["level"] != "ALL":
-                        if normalize_level(r.get("level")) != normalize_level(
-                            state["level"]
-                        ):
-                            return False
-                    if lf := state["logger_filter"].strip().lower():
-                        cand = (r.get("logger", "") + "." + r.get("module", "")).lower()
-                        if lf not in cand:
-                            return False
-                    if uf := state["user_filter"].strip().lower():
-                        if uf not in (str(r.get("user_id", "")) or "").lower():
-                            return False
-                    if s := state["search"].strip().lower():
-                        hay = " ".join(
-                            [
-                                r.get("message", ""),
-                                r.get("logger", ""),
-                                r.get("module", ""),
-                                r.get("exc_text", "") or "",
-                                str(r.get("extra", "") or ""),
-                            ]
-                        ).lower()
-                        if s not in hay:
-                            return False
-                    return True
-
-                for r in (rr for rr in rows if passes(rr)):
+                for r in (rr for rr in rows if passes_for_view(rr)):
                     row_key = make_key(r)
                     with ui.card().classes("w-full mb-1"):
                         with ui.row().classes("w-full items-start gap-2 no-wrap"):
@@ -321,20 +339,16 @@ async def index_page(request: Request):
                                 "Traceback", value=(row_key in state["open_keys"])
                             )
 
-                            # POZOR: NiceGUI dává stav do e.args (ne e.value)
                             def on_expansion_toggle(e, k=row_key):
                                 is_open = bool(e.args)
                                 if is_open:
                                     state["open_keys"].add(k)
-                                    # vypnout autoscroll a polling, ať to nebliká a neskáče
                                     state["autoscroll"] = False
                                     state["running"] = False
                                 else:
                                     state["open_keys"].discard(k)
-                                    # pokud není otevřený žádný traceback, automaticky obnov polling
                                     if not state["open_keys"]:
                                         state["running"] = True
-                                # volitelné – okamžitý repaint (kvůli odznakům/stavům v UI):
                                 paint.refresh()
 
                             exp.on("update:model-value", on_expansion_toggle)
@@ -353,11 +367,10 @@ async def index_page(request: Request):
 
             ui.timer(0.5, on_timer)
 
-        # ---- STICKY OVLÁDÁNÍ LOGS + AUTOSCROLL (mimo container i paint) ----
-        ui.add_css(".q-page-sticky{z-index:10000;}")  # ať je panel nad footrem/dialogy
-
+        # sticky panel (beze změn)
+        ui.add_css(".q-page-sticky{z-index:10000;}")
         with ui.page_sticky(position="bottom-left", x_offset=16, y_offset=16):
-            with ui.column().classes("gap-2"):  # teď to bude pěkně pod sebou
+            with ui.column().classes("gap-2"):
                 with ui.row().classes(
                     "bg-white/90 dark:bg-neutral-800/90 backdrop-blur rounded-xl shadow-lg "
                     "px-3 py-2 items-center gap-3 pointer-events-auto"
