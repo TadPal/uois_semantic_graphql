@@ -8,7 +8,7 @@ top_level = os.path.dirname(parent_dir)
 sys.path.insert(0, top_level)
 
 from Database.connection import connect_to_postgres
-from initialize_table import initialize_chathistory_table
+from Database.ChatHistory.initialize_table import initialize_chathistory_table
 
 
 load_dotenv()

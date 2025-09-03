@@ -9,7 +9,7 @@ top_level = os.path.dirname(parent_dir)
 sys.path.insert(0, top_level)
 
 from Database.connection import connect_to_postgres
-from initialize_table import initialize_embedding_table
+from Database.Embedding.initialize_table import initialize_embedding_table
 
 load_dotenv()
 conn = connect_to_postgres(os.environ)

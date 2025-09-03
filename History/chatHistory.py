@@ -1,7 +1,11 @@
+from uuid import uuid4
+
+
 class UserChatHistory:
     def __init__(self):
         # Each item will be stored as a tuple: (question, answer)
         self.history = []
+        self.uuid = uuid4()
 
     def add_entry(self, question: str, answer: str):
         """Add a question and answer pair to the history."""
@@ -18,3 +22,6 @@ class UserChatHistory:
     def clear_history(self):
         """Clear all stored chat history."""
         self.history.clear()
+
+    def get_history_id(self):
+        return self.uuid

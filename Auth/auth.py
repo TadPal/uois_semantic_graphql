@@ -20,6 +20,6 @@ def authorize_user(request: Request):
 
     if not user_id:
         # ui.navigate.to("http://localhost:33001/")
-        return "fake_user_id"
+        return "d1822e48-2f4b-405c-a429-e0c0a37dc8a6"
 
     return user_id
