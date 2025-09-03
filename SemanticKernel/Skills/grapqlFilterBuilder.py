@@ -6,6 +6,8 @@ import json
 import graphql
 import os
 
+from typing import Annotated
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -138,3 +140,57 @@ class GraphQLBuilderPlugin:
 
         print(result)
         return result
+
+    @kernel_function(
+        name="runFilterQuery",
+        description="Runs a GraphQL query with a 'where' filter and optional pagination.",
+    )
+    async def run_graphql_filter_query(
+        self,
+        graphql_query: Annotated[
+            str,
+            "The full GraphQL query string with a '$where' variable and optional '$skip' and '$limit' variables.",
+        ],
+        graphql_variables: Annotated[
+            str,
+            "A JSON string containing the variables for the query, including the 'where' filter.",
+        ],
+        arguments: KernelArguments = None,
+    ) -> str:
+        """
+        Runs a GraphQL query with a 'where' filter from build_filter_variable function and optional pagination.
+
+        This skill takes a pre-built GraphQL query and a set of variables, allowing
+        for flexible filtering of data.
+
+        Args:
+          graphql_query: The complete GraphQL query string.
+          graphql_variables: A JSON string of variables, e.g., '{userPage(where: {email: {_like: "%.com"}}, skip:0, limit:2)'.
+
+
+        Returns:
+          The list of filtered entities as a JSON string.
+        """
+        print(f"run_graphql_filter_query graphql_variables: {graphql_variables}")
+        try:
+            variables = json.loads(graphql_variables)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON variables: {e}")
+            return f"Error: Invalid JSON variables provided. {e}"
+
+        # Ensure that `gqlclient` is available in the arguments from the kernel context.
+        gqlclient = arguments.get("gqlclient")
+        if not gqlclient:
+            return "Error: gqlclient not found in arguments. This skill requires a GraphQL client."
+
+        # The GraphQL client is expected to handle the query and variables.
+        rows = await gqlclient(query=graphql_query, variables=variables)
+
+        assert "data" in rows, f"the response does not contain the data key {rows}"
+        data = rows["data"]
+
+        # The result should be a list of entities, so we just return the value of the first key.
+        # This assumes the query returns a single root field that is a list.
+        _, entities = next(iter(data.items()))
+
+        return json.dumps(entities, indent=2, ensure_ascii=False)
