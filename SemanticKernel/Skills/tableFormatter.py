@@ -3,10 +3,6 @@ from typing import Annotated
 from semantic_kernel.functions import kernel_function
 from semantic_kernel.functions import KernelArguments
 
-import logging
-
-# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
-logger = logging.getLogger("table_formatter")
 
 class TableFormatterPlugin:
     @kernel_function(

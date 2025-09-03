@@ -8,11 +8,6 @@ import os
 
 from dotenv import load_dotenv
 
-import logging
-
-# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
-logger = logging.getLogger("types_detector")
-
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -64,7 +59,6 @@ class GraphQLBuilderPlugin:
         arguments: KernelArguments = None,
     ) -> str:
         """
-        Build JSON structure, which will be used as where variable in GQL quries.
 
         Args:
           user_prompt: full string representation of users prompt
@@ -74,7 +68,6 @@ class GraphQLBuilderPlugin:
         Returns:
           An ordered list of GQL types names
         """
-        # from sdl.sdl_fetch import fetch_sdl
 
         # sdl = fetch_sdl()
         # ast = graphql.parse(sdl)

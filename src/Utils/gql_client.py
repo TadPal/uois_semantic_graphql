@@ -1,8 +1,3 @@
-import logging
-
-# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
-logger = logging.getLogger("gql_client")
-
 async def createGQLClient(*, url: str = "http://localhost:33001/api/gql", username: str, password: str):
     import aiohttp
     async def getToken():
@@ -53,7 +48,7 @@ async def createGQLClient(*, url: str = "http://localhost:33001/api/gql", userna
             except aiohttp.ContentTypeError as e:
                 attempts = attempts - 1
                 total_attempts = total_attempts - 1
-                logger.info("attempts %s-%s", attempts, total_attempts)
+                print(f"attempts {attempts}-{total_attempts}", flush=True)
                 nonlocal token
                 token = await getToken()
 

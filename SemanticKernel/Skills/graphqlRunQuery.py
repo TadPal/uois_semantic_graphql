@@ -4,10 +4,6 @@ import json
 from semantic_kernel.functions import kernel_function
 from semantic_kernel.functions import KernelArguments
 
-import logging
-
-# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
-logger = logging.getLogger("run_query")
 
 class GraphQLRunQueryPlugin:
     @kernel_function(
@@ -39,7 +35,7 @@ class GraphQLRunQueryPlugin:
         # types = json.loads(graphgql_types)
         # types = payload["types"]
         # sdl = payload["sdl"]
-        logger.info("run_graphql_query_for_page skip: %s, limit: %s", skip, limit)
+        print(f"run_graphql_query_for_page skip: {skip}, limit: {limit}")
         variables = {"skip": skip, "limit": limit}
 
         # extra_context = arguments["extra_context"]
@@ -84,7 +80,7 @@ class GraphQLRunQueryPlugin:
         # types = json.loads(graphgql_types)
         # types = payload["types"]
         # sdl = payload["sdl"]
-        logger.info("run_graphql_query_for_single_entity id: %s", id)
+        print(f"run_graphql_query_for_single_entity id: {id}")
         variables = {"id": id}
 
         # extra_context = arguments["extra_context"]
