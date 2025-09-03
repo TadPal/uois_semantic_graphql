@@ -119,7 +119,6 @@ class GraphQLQueryBuilder:
 
         # Precompute paths and build nested selections
         full_paths = {t: self._find_path(types[i], t) for i, t in enumerate(types[1:])}
-        print(full_paths)
 
         # def build_spread(current: str, remaining_path: List[Tuple[str, str]]) -> str:
         #     # If no more path, insert fragment spread
