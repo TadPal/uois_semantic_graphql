@@ -119,12 +119,12 @@ class GraphQLBuilderPlugin:
         * For numeric and boolean fields, coerce literals when unambiguous.
         * For dates, prefer ISO strings (`YYYY-MM-DD`) if a concrete date is given.
 
-        \[EXAMPLE]
+        [EXAMPLE]
         prompt:
         "Najdi mi x uživatelů, obsahující Zde"
         output:
         {"name": {"_like": "%Zde%"}}
-        \[END EXAMPLE]
+        [END EXAMPLE]
         """
 
         history = ChatHistory()
