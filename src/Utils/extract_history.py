@@ -1,6 +1,10 @@
 import xml.etree.ElementTree as ET
 from typing import List, Dict, Any
 
+import logging
+
+# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
+logger = logging.getLogger("extract_history")
 
 def extract_prompts_from_chat_xml(xml_content: str) -> Dict[str, List[str]]:
     """
@@ -77,7 +81,7 @@ def print_extracted_prompts(prompts: Dict[str, List[str]]) -> None:
         print(f"{'='*50}")
 
         if not prompt_list:
-            print("No prompts found in this category.")
+            logger.warning("No prompts found in this category.")
         else:
             for i, prompt in enumerate(prompt_list, 1):
                 print(f"\n[{i}] {prompt}")
@@ -308,12 +312,13 @@ def main():
         print_extracted_prompts(extracted_prompts)
 
         # You can also access individual categories:
-        print(f"\nFound {len(extracted_prompts['system_prompts'])} system prompts")
-        print(f"Found {len(extracted_prompts['user_prompts'])} user prompts")
-        print(f"Found {len(extracted_prompts['assistant_prompts'])} assistant prompts")
+        logger.info("Found %s system prompts", len(extracted_prompts["system_prompts"]))
+        logger.info("Found %s user prompts", len(extracted_prompts["user_prompts"]))
+        logger.info("Found %s assistant prompts", len(extracted_prompts["assistant_prompts"]))
 
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error("Error: %s", e)
+
 
 
 # main()

@@ -22,6 +22,10 @@ from graphql.language import (
     ListTypeNode,
 )
 
+import logging
+
+# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
+logger = logging.getLogger("utils_sdl_2")
 
 def get_scalar_names(sdl_doc: DocumentNode) -> set:
     # 1) základní GraphQL scalary

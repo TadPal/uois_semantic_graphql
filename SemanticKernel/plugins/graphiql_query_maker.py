@@ -10,6 +10,11 @@ from semantic_kernel.functions import KernelArguments
 
 from typing import Annotated, List, Optional, Dict
 
+import logging
+
+# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
+logger = logging.getLogger("query_maker")
+
 CHAIN = ["EventGQLModel", "UserGQLModel", "PresenceGQLModel", "PresenceTypeGQLModel"]
 
 #! Simulace modelů
@@ -74,7 +79,7 @@ class GraphQLQueryPlugin:
         if not graphql_types:
             raise ValueError("graphql_types must not be empty")
         if graphql_types != CHAIN:
-            print(f"[WARN] Neočekávaný chain: {graphql_types}")
+            logger.warning("Neočekávaný chain: %s", graphql_types)
 
         root_type = graphql_types[0]
         requested = set(graphql_types)
@@ -105,4 +110,4 @@ if __name__ == "__main__":
             ]
         )
     )
-    print("\n[RETURNED]:\n", q)
+    logger.info("[RETURNED]: %s", q)

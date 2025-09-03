@@ -2,6 +2,10 @@ import typing
 from nicegui import ui
 import json
 
+import logging
+
+# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
+logger = logging.getLogger("graphql_data")
 
 def GraphQLData(
     *,
@@ -80,7 +84,7 @@ def GraphQLData(
                 vars_now["skip"] = skip
             else:
                 vars_now["skip"] = vars_now.get("skip", 0) + vars_now.get("limit", 10)
-            print(f"load_page.variables={vars_now}")
+            logger.info("load_page.variables=%s", vars_now)
             response = await gqlclient(query, vars_now)
             errors = response.get("errors")
             if errors:
@@ -113,7 +117,7 @@ def GraphQLData(
             view.refresh()
 
     async def load_more():
-        print(f"load_more")
+        logger.info("load_more")
         await load_page()
 
     def getcolumns():

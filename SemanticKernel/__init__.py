@@ -28,6 +28,11 @@ from semantic_kernel.connectors.ai.function_choice_behavior import (
     FunctionChoiceBehavior,
 )
 
+import logging
+
+# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
+logger = logging.getLogger("__init__")
+
 skills_dir = Path(__file__).parent / "Skills"
 plugins = {}
 
@@ -137,7 +142,7 @@ async def createGQLClient(
             except aiohttp.ContentTypeError as e:
                 attempts = attempts - 1
                 total_attempts = total_attempts - 1
-                print(f"attempts {attempts}-{total_attempts}", flush=True)
+                logger.info("attempts %s-%s", attempts, total_attempts)
                 nonlocal token
                 token = await getToken()
 
@@ -343,7 +348,7 @@ async def main():
         #     else:
         #         display(value)
 
-        print(f"Assistant: {result}")
+        logger.info("Assistant: %s", result)
 
 
 # asyncio.run(main())

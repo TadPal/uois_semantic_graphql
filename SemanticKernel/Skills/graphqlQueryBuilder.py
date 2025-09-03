@@ -16,6 +16,11 @@ import os
 import sys
 from pathlib import Path
 
+import logging
+
+# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
+logger = logging.getLogger("query_builder")
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 top_level = os.path.dirname(parent_dir)
@@ -172,7 +177,7 @@ class GraphQLQueryBuilder:
         return result
 
     def build_query_scalar(self, types: List[str]) -> str:
-        print(f"building query scalar for types {types}")
+        logger.info("building query scalar for types %s", types)
         root = types[0]
         rootfragment = build_large_fragment(self.ast, root)
         page_operations = get_read_scalar_values(self.ast)
@@ -621,7 +626,10 @@ class GraphQLBuilderPlugin:
         # types = json.loads(graphgql_types)
         # types = payload["types"]
         # sdl = payload["sdl"]
-        print(f"graphql_vetor_query_builder_skill(graphgql_types={graphql_types})")
+        logger.info(
+            "graphql_vector_query_builder_skill(graphql_types=%s)", graphql_types
+        )
+
         builder = GraphQLQueryBuilder(
             disabled_fields=["createdby", "changedby", "memberOf"]
         )
@@ -653,7 +661,9 @@ class GraphQLBuilderPlugin:
         # types = json.loads(graphgql_types)
         # types = payload["types"]
         # sdl = payload["sdl"]
-        print(f"graphql_scalar_query_builder_skill(graphgql_types={graphql_types})")
+        logger.info(
+            "graphql_scalar_query_builder_skill(graphql_types=%s)", graphql_types
+        )
         builder = GraphQLQueryBuilder(
             disabled_fields=["createdby", "changedby", "memberOf"]
         )

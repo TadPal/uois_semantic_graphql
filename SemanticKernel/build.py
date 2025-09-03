@@ -12,6 +12,11 @@ from graphql.language.printer import print_ast
 
 from jinja2 import Template
 
+import logging
+
+# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
+logger = logging.getLogger("build")
+
 TYPEDICTS_TEMPLATE = """
 from typing import TypedDict, Optional, List, Any, Annotated
 import uuid
