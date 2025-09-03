@@ -1,140 +1,147 @@
-from typing import List, Tuple, Dict, Annotated, Any
+from semantic_kernel.functions import kernel_function, KernelArguments
+from semantic_kernel.prompt_template import PromptTemplateConfig
+from semantic_kernel.kernel import Kernel
+from pathlib import Path
 import json
+import graphql
+import os
 
-from semantic_kernel.functions import kernel_function
-from semantic_kernel.functions import KernelArguments
-from SemanticKernel.Skills.graphqlQueryBuilder import GraphQLQueryBuilder
+from dotenv import load_dotenv
 
 import logging
 
 # modul-level logger (umísti mezi ostatní top-level konstanty/importy)
-logger = logging.getLogger("filter_builder")
+logger = logging.getLogger("types_detector")
 
-class GraphQLFilterQueryPlugin:
-    """
-    Plugin for generating and running GraphQL queries with filter conditions.
-    """
+load_dotenv()
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+account = os.getenv("AZURE_COGNITIVE_ACCOUNT_NAME", "")
+model_name = os.getenv("AZURE_CHAT_DEPLOYMENT_NAME", "") or "summarization-deployment"
+endpoint = f"https://{account}.openai.azure.com"
+
+from semantic_kernel.connectors.ai.open_ai.services.azure_chat_completion import (
+    AzureChatCompletion,
+)
+
+from semantic_kernel.contents.chat_history import ChatHistory
+
+azure_chat = AzureChatCompletion(
+    service_id="azure-gpt4",
+    api_key=OPENAI_API_KEY,
+    endpoint=endpoint,
+    deployment_name=model_name,
+    # api_version="2024-02-15-preview"  # nebo verze, co máš v Azure portálu
+    api_version="2024-02-01",
+)
+
+kernel = Kernel(
+    services=[
+        # azure_orchestrator,
+        azure_chat,
+    ],
+)
+
+from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_prompt_execution_settings import (
+    AzureChatPromptExecutionSettings,
+)
+
+from semantic_kernel.connectors.ai.function_choice_behavior import (
+    FunctionChoiceBehavior,
+)
+
+execution_settings = AzureChatPromptExecutionSettings()
+execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
+
+
+class GraphQLBuilderPlugin:
     @kernel_function(
-        name="buildFilterQuery",
-        # description="Builds a GraphQL query for fetching a list of entities with a 'where' filter."
+        name="build_filter_variable",
     )
-    def build_graphql_filter_query(
+    async def build_filter_variable(
         self,
-        graphql_types: Annotated[
-            List[str],
-            "The list of GraphQL object types to be included in the query, e.g., ['UserGQLModel', 'RoleGQLModel']",
-        ],
-        disabled_fields=["createdby", "changedby", "memberOf"],
+        user_prompt: str,
         arguments: KernelArguments = None,
     ) -> str:
         """
-            Builds a GraphQL query with a 'where' filter.
-
-            This skill is designed to automatically generate a GraphQL query that can fetch
-            a collection of entities (e.g., users, programs) and filter them based on
-            a 'where' argument. This is particularly useful for searching or listing
-            items that match specific criteria.
-
-            Pro porovnání hodnot:
-
-            _eq: Rovná se.
-
-            _le: Menší nebo rovno.
-
-            _lt: Menší než.
-
-            _ge: Větší nebo rovno.
-
-            _gt: Větší než.
-
-            Příklad porovnání:
-
-            {"where": {"number": {"_ge": 50000, "_le": 100000}}}
-
-            Pro textová pole (stringy):
-
-                _like: Podobné jako v SQL, umožňuje použití zástupných znaků (% a _).
-
-                _ilike: Stejné jako _like, ale ignoruje velikost písmen (case-insensitive).
-
-                _startswith: Začíná na.
-
-                _endswith: Končí na.
-
-        Příklad textového filtru:
-
-        {"where": {"email": {"_ilike": "john%.com"}, "name": {"_startswith": "Jan"}}}
-
-            Args:
-              graphql_types: A list of GraphQL type names to build the query for.
-
-            Returns:
-              A GraphQL query string that includes a 'where' variable for filtering.
-        """
-        logger.info("build_graphql_filter_query(graphql_types=%s)", graphql_types)
-        builder = GraphQLQueryBuilder(disabled_fields=disabled_fields)
-        query = builder.build_query_vector(graphql_types)
-        # The generated query should already include the `where` argument
-        # as part of the query vector definition. The `run_graphql_filter_query`
-        # skill will handle the actual execution with the provided variables.
-
-        # The result from build_query_vector should be suitable for use with a filter.
-        # We need to ensure that the returned query has the correct structure for
-        # passing variables. The builder is expected to handle this.
-
-        return builder.explain_graphql_query(query)
-
-    @kernel_function(
-        name="runFilterQuery",
-        description="Runs a GraphQL query with a 'where' filter and optional pagination.",
-    )
-    async def run_graphql_filter_query(
-        self,
-        graphql_query: Annotated[
-            str,
-            "The full GraphQL query string with a '$where' variable and optional '$skip' and '$limit' variables.",
-        ],
-        graphql_variables: Annotated[
-            str,
-            "A JSON string containing the variables for the query, including the 'where' filter.",
-        ],
-        arguments: KernelArguments = None,
-    ) -> str:
-        """
-        Runs a GraphQL query with a 'where' filter and optional pagination.
-
-        This skill takes a pre-built GraphQL query and a set of variables, allowing
-        for flexible filtering of data.
+        Build JSON structure, which will be used as where variable in GQL quries.
 
         Args:
-          graphql_query: The complete GraphQL query string.
-          graphql_variables: A JSON string of variables, e.g., '{userPage(where: {email: {_like: "%.com"}}, skip:0, limit:2)'.
-
+          user_prompt: full string representation of users prompt
+          kernel: own Kernel instance
+          arguments.sdl_doc: AST of the GraphQL sdl (DocumentNode)
 
         Returns:
-          The list of filtered entities as a JSON string.
+          An ordered list of GQL types names
         """
-        logger.info("run_graphql_filter_query graphql_variables: %s", graphql_variables)
-        try:
-            variables = json.loads(graphql_variables)
-        except json.JSONDecodeError as e:
-            logger.error("Error decoding JSON variables: %s", e)
-            return f"Error: Invalid JSON variables provided. {e}"
+        # from sdl.sdl_fetch import fetch_sdl
 
-        # Ensure that `gqlclient` is available in the arguments from the kernel context.
-        gqlclient = arguments.get("gqlclient")
-        if not gqlclient:
-            return "Error: gqlclient not found in arguments. This skill requires a GraphQL client."
+        # sdl = fetch_sdl()
+        # ast = graphql.parse(sdl)
 
-        # The GraphQL client is expected to handle the query and variables.
-        rows = await gqlclient(query=graphql_query, variables=variables)
+        # result = {}
+        # for node in ast.definitions:
+        #     if isinstance(node, graphql.language.ast.ObjectTypeDefinitionNode):
+        #         name = node.name.value
+        #         if "Error" in name:
+        #             continue
+        #         description = node.description.value if node.description else None
+        #         result[name] = {"name": name, "description": description}
 
-        assert "data" in rows, f"the response does not contain the data key {rows}"
-        data = rows["data"]
+        # result = list(result.values())
 
-        # The result should be a list of entities, so we just return the value of the first key.
-        # This assumes the query returns a single root field that is a list.
-        _, entities = next(iter(data.items()))
+        prompt = f"""
+        You are given a user's natural-language request and a GraphQL schema (as JSON below).
+        Your task: build a **GraphQL `where` filter JSON object** that matches the user's intent.
 
-        return json.dumps(entities, indent=2, ensure_ascii=False)
+        Return **only** a valid JSON object representing the `where` filter — **no extra text, no code fences**.
+        Do **not** include pagination, order, selection sets, or fields not present in the schema.
+
+        Rules:
+
+        1. **Fields & Types**
+
+        * Use only fields that exist on the inferred root type (based on the user's domain words and the schema).
+        * Prefer exact field-name matches; otherwise map common synonyms using field descriptions.
+        * If a field is unknown, omit it.
+
+        2. **Operators (map from user phrasing)**
+
+        _eq: String – operation for select.filter() method
+        _le: String – operation for select.filter() method
+        _lt: String – operation for select.filter() method
+        _ge: String – operation for select.filter() method
+        _gt: String – operation for select.filter() method
+        _like: String – operation for select.filter() method
+        _ilike: String – operation for select.filter() method
+        _startswith: String – operation for select.filter() method
+        _endswith: String – operation for select.filter() method
+
+        3. **Values**
+
+        * Trim whitespace; keep user’s diacritics.
+        * For partial-text operators (`_like`, `_ilike`, `_nlike`, `_nilike`), always add `%` wildcards as shown above.
+        * For numeric and boolean fields, coerce literals when unambiguous.
+        * For dates, prefer ISO strings (`YYYY-MM-DD`) if a concrete date is given.
+
+        \[EXAMPLE]
+        prompt:
+        "Najdi mi x uživatelů, obsahující Zde"
+        output:
+        {"name": {"_like": "%Zde%"}}
+        \[END EXAMPLE]
+        """
+
+        history = ChatHistory()
+
+        history.add_system_message(prompt)
+        history.add_user_message(user_prompt)
+        result = await azure_chat.get_chat_message_content(
+            chat_history=history,
+            settings=execution_settings,
+            kernel=kernel,
+            arguments=KernelArguments(),
+        )
+
+        print(result)
+        return result
