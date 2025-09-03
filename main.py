@@ -52,6 +52,8 @@ class ContextFilter(logging.Filter):
 
 
 def get_user_history(user_id: str):
+    import uuid
+
     if user_id not in history:
         history[user_id] = UserChatHistory()
     return history[user_id]
@@ -110,6 +112,8 @@ log_auth = logging.getLogger("auth")
 
 from nicegui import ui, app as nicegui_app, storage, core
 from starlette.middleware.sessions import SessionMiddleware
+
+from Database.ChatHistory.add_to_db import add_chat_history
 
 nicegui_app.add_middleware(storage.RequestTrackingMiddleware)
 nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
@@ -458,6 +462,13 @@ async def index_page(request: Request):
 
         # 🔹 Uložení do historie
         history.add_entry(question=question, answer=result)
+        add_chat_history(
+            message=question,
+            answer=result,
+            user_id=user_id,
+            session_id=history.get_history_id(),
+        )
+
         prompt_count += 1
         if prompt_count == 2:
             show_recommendation(

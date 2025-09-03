@@ -1,5 +1,8 @@
 import ollama
 import psycopg2
+import os
+
+from Database.connection import connect_to_postgres
 
 
 def get_embeddings(query: str):
@@ -8,7 +11,10 @@ def get_embeddings(query: str):
     return response["embedding"]
 
 
-def search_index(conn):
+def search_index(conn=None):
+    if not conn:
+        conn = connect_to_postgres(os.environ)
+
     query = "Show me all planned lessons for this semester"
 
     embedding = get_embeddings(query=query)
@@ -31,3 +37,4 @@ def search_index(conn):
         print(f"Error executing command: {error}")
     finally:
         cur.close()
+        conn.close()

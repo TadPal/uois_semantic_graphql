@@ -1,5 +1,7 @@
 import psycopg2
 
+# DROP TABLE IF EXISTS graphql_types;
+
 
 def initialize_embedding_table(conn):
 
@@ -8,12 +10,10 @@ def initialize_embedding_table(conn):
     command = f"""
     CREATE EXTENSION IF NOT EXISTS vector;
 
-    DROP TABLE IF EXISTS graphql_types;
-
     CREATE TABLE graphql_types (
-        id SERIAL PRIMARY KEY,
-        name TEXT UNIQUE,
-        description TEXT,
+        id uuid PRIMARY KEY,
+        question TEXT UNIQUE,
+        answer TEXT,
         embedding vector({embedding_dimension})
     );
 
