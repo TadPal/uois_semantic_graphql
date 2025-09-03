@@ -5,10 +5,6 @@ from semantic_kernel.functions import kernel_function
 from semantic_kernel.functions import KernelArguments
 from SemanticKernel.Skills.graphqlQueryBuilder import GraphQLQueryBuilder
 
-import logging
-
-# modul-level logger (umísti mezi ostatní top-level konstanty/importy)
-logger = logging.getLogger("filter_builder")
 
 class GraphQLFilterQueryPlugin:
     """
@@ -72,7 +68,7 @@ class GraphQLFilterQueryPlugin:
             Returns:
               A GraphQL query string that includes a 'where' variable for filtering.
         """
-        logger.info("build_graphql_filter_query(graphql_types=%s)", graphql_types)
+        print(f"build_graphql_filter_query(graphql_types={graphql_types})")
         builder = GraphQLQueryBuilder(disabled_fields=disabled_fields)
         query = builder.build_query_vector(graphql_types)
         # The generated query should already include the `where` argument
@@ -115,11 +111,11 @@ class GraphQLFilterQueryPlugin:
         Returns:
           The list of filtered entities as a JSON string.
         """
-        logger.info("run_graphql_filter_query graphql_variables: %s", graphql_variables)
+        print(f"run_graphql_filter_query graphql_variables: {graphql_variables}")
         try:
             variables = json.loads(graphql_variables)
         except json.JSONDecodeError as e:
-            logger.error("Error decoding JSON variables: %s", e)
+            print(f"Error decoding JSON variables: {e}")
             return f"Error: Invalid JSON variables provided. {e}"
 
         # Ensure that `gqlclient` is available in the arguments from the kernel context.
