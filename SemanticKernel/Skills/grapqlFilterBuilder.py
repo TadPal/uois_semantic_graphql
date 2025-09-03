@@ -134,6 +134,7 @@ class GraphQLFilterQueryPlugin:
 
         return get_filterable_fields_with_ops(ast, adjacency)
 
+      
     @kernel_function(
         name="runFilterQuery",
         description="Runs a GraphQL query with a 'where' filter and optional pagination.",
