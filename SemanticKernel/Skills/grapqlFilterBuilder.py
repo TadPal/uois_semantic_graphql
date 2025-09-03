@@ -79,8 +79,6 @@ class GraphQLFilterQueryPlugin:
         # We need to ensure that the returned query has the correct structure for
         # passing variables. The builder is expected to handle this.
 
-        return builder.explain_graphql_query(query)
-
     @kernel_function(
         name="runFilterQuery",
         description="Runs a GraphQL query with a 'where' filter and optional pagination.",
