@@ -1,8 +1,10 @@
 # feedback_handlers.py
 from dataclasses import dataclass
+from Database.Embedding.add_to_db import add_embedding_row
+
 
 # provides a decorator and functions for automatically adding generated special methods such as __init__() and __repr__() to user-defined classes
-#* https://docs.python.org/3/library/dataclasses.html
+# * https://docs.python.org/3/library/dataclasses.html
 @dataclass
 class FeedbackState:
     like: bool = False
@@ -10,7 +12,7 @@ class FeedbackState:
     locked: bool = False
 
 
-def _btn_html(kind: str, pressed: bool, svgs: dict,  disabled: bool = False) -> str:
+def _btn_html(kind: str, pressed: bool, svgs: dict, disabled: bool = False) -> str:
     """Vyrenderuje <button> s příslušným SVG a správnými ARIA atributy."""
     if kind == "like":
         svg = svgs["like_selected"] if pressed else svgs["like_default"]
@@ -28,15 +30,15 @@ def _btn_html(kind: str, pressed: bool, svgs: dict,  disabled: bool = False) -> 
     disabled_attrs = (
         ' disabled aria-disabled="true" tabindex="-1" '
         ' class="inline-flex items-center justify-center w-8 h-8 rounded-md opacity-50 pointer-events-none" '
-        if disabled else
-        ' class="inline-flex items-center justify-center w-8 h-8 rounded-md focus:outline-none focus:ring focus:ring-offset-2 focus:ring-blue-500" '
+        if disabled
+        else ' class="inline-flex items-center justify-center w-8 h-8 rounded-md focus:outline-none focus:ring focus:ring-offset-2 focus:ring-blue-500" '
     )
 
-    return f'''
+    return f"""
     <button type="button" aria-pressed="{str(pressed).lower()}" aria-label="{label}" title="{title}" {disabled_attrs}>
         {svg}
     </button>
-    '''
+    """
 
 
 def render_buttons(state: FeedbackState, svgs: dict) -> tuple[str, str]:
@@ -46,17 +48,20 @@ def render_buttons(state: FeedbackState, svgs: dict) -> tuple[str, str]:
         _btn_html("dislike", state.dislike, svgs),
     )
 
+
 def _disable_both(like_btn, dislike_btn, state: FeedbackState, svgs: dict):
     state.locked = True
     like_btn.set_content(_btn_html("like", state.like, svgs, disabled=True))
     dislike_btn.set_content(_btn_html("dislike", state.dislike, svgs, disabled=True))
 
 
-def on_like_click(like_btn, dislike_btn, state: FeedbackState, svgs: dict, on_commit=None):
+def on_like_click(
+    like_btn, dislike_btn, state: FeedbackState, svgs: dict, on_commit=None
+):
     #! safeguard
     if state.locked:
         return
-    
+
     if state.like:
         state.like = False
         like_btn.set_content(_btn_html("like", state.like, svgs, disabled=False))
@@ -67,11 +72,13 @@ def on_like_click(like_btn, dislike_btn, state: FeedbackState, svgs: dict, on_co
         like_btn.set_content(_btn_html("like", state.like, svgs, disabled=False))
 
         if on_commit:
-            print(f'{on_commit}')  # např. uloží do DB
+            add_embedding_row(on_commit[0], on_commit[1])
         _disable_both(like_btn, dislike_btn, state, svgs)
 
 
-def on_dislike_click(like_btn, dislike_btn, state: FeedbackState, svgs: dict, on_commit=None):
+def on_dislike_click(
+    like_btn, dislike_btn, state: FeedbackState, svgs: dict, on_commit=None
+):
     #! safeguard
     if state.locked:
         return
@@ -79,14 +86,18 @@ def on_dislike_click(like_btn, dislike_btn, state: FeedbackState, svgs: dict, on
     if state.dislike:
         # vypnout dislike
         state.dislike = False
-        dislike_btn.set_content(_btn_html("dislike", state.dislike, svgs, disabled=False))
+        dislike_btn.set_content(
+            _btn_html("dislike", state.dislike, svgs, disabled=False)
+        )
         return
 
     if not state.like:
         # zapnout dislike
         state.dislike = True
-        dislike_btn.set_content(_btn_html("dislike", state.dislike, svgs, disabled=False))
+        dislike_btn.set_content(
+            _btn_html("dislike", state.dislike, svgs, disabled=False)
+        )
 
         if on_commit:
-            print(f'{on_commit}')  # např. uloží do DB
+            print(f"{on_commit}")  # např. uloží do DB
         _disable_both(like_btn, dislike_btn, state, svgs)

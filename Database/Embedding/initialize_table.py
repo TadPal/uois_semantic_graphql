@@ -9,9 +9,10 @@ def initialize_embedding_table(conn):
 
     command = f"""
     CREATE EXTENSION IF NOT EXISTS vector;
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
     CREATE TABLE graphql_types (
-        id uuid PRIMARY KEY,
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         question TEXT UNIQUE,
         answer TEXT,
         embedding vector({embedding_dimension})
