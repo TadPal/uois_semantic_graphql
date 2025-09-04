@@ -133,10 +133,8 @@ class GraphQLFilterQueryPlugin:
         adjacency = build_adjacency(ast=ast, disabled_fields=disabled_fields)
 
         result = get_filterable_fields_with_ops(ast, adjacency)
-        print(result)
         return result
 
-      
     @kernel_function(
         name="runFilterQuery",
         description="Runs a GraphQL query with a 'where' filter and optional pagination.",

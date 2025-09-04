@@ -74,7 +74,6 @@ class GraphQLQueryBuilder:
         return edges
 
     def _find_path(self, source: str, target: str) -> List[Tuple[str, str]]:
-        print(f"{source=}{target=}")
         queue = deque([(source, [])])
         visited = {source}
         while queue:
@@ -145,7 +144,6 @@ class GraphQLQueryBuilder:
         # Build selection sets for each target and combine
         # full_paths = {'EventGQLModel': [('events', 'EventGQLModel')], 'GroupGQLModel': [('groups', 'GroupGQLModel')]}
         selections = [build_spread(path) for path in full_paths.values()]
-        print(selections)
 
         selection_str = " ".join(list(dict.fromkeys(selections)))  # remove duplicates
 
@@ -191,7 +189,6 @@ class GraphQLQueryBuilder:
 
         # Precompute full paths from root to each target
         full_paths = {t: self._find_path(types[i], t) for i, t in enumerate(types[1:])}
-        print(full_paths)
 
         # def build_spread(current: str, remaining_path: List[Tuple[str, str]]) -> str:
         #     # If no more path, insert fragment spread
@@ -218,7 +215,6 @@ class GraphQLQueryBuilder:
         # Build selection sets for each target and combine
         # full_paths = {'EventGQLModel': [('events', 'EventGQLModel')], 'GroupGQLModel': [('groups', 'GroupGQLModel')]}
         selections = [build_spread(path) for path in full_paths.values()]
-        print(selections)
 
         selection_str = " ".join(list(dict.fromkeys(selections)))  # remove duplicates
 
