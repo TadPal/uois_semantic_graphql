@@ -11,7 +11,7 @@ def initialize_embedding_table(conn):
     CREATE EXTENSION IF NOT EXISTS vector;
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-    CREATE TABLE graphql_types (
+    CREATE TABLE IF NOT EXISTS graphql_types (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         question TEXT UNIQUE,
         answer TEXT,
@@ -30,7 +30,7 @@ def initialize_embedding_table(conn):
             cursor.execute(command)
             conn.commit()
             cursor.close()
-            print(f"Table initialized with {embedding_dimension} dimensions")
+            print(f"Table available with {embedding_dimension} dimensions")
 
         except psycopg2.Error as error:
             print(f"Error executing command: {error}")

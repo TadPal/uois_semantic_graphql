@@ -444,10 +444,6 @@ async def index_page(request: Request):
             log_chat.exception("Chat hook failed")
             raise
 
-        # Turn result.content to JSON and separe QUERY and RESPONSE
-        ####
-        ####    Danda
-        ####
         query = None
         variables = None
         try:
@@ -456,8 +452,6 @@ async def index_page(request: Request):
             query = data["Query"]
             variables = data["Variables"]
             response = data["Response"]
-
-            print(f"query: {query} & var: {variables} & types: {type(query)}")
 
         except json.JSONDecodeError as e:
             print(f"Chyba při parsování JSONu: {e}")
@@ -486,7 +480,6 @@ async def index_page(request: Request):
                     gqlclient=gql_client,
                     query=query,
                     variables=variables,
-                    result=Response,
                 )
 
         # 🔹 Uložení do historie

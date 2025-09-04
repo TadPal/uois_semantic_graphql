@@ -187,17 +187,23 @@ async def openChat():
     skills = []
     for plugin in kernel.plugins.values():
         skills.extend(plugin.functions.keys())
-        print(skills)
+    print(skills)
 
     history = ChatHistoryTruncationReducer(target_count=12)
 
     system_prompt = f"""
     You are an assistant and your primary task is to help query databases using graphql.
 
+    Your response always follows this JSON format: {{"Response": "...", "Query": "...", "Variables": "..."}}
+
+    Response: str -> Your natural language summary of the result
+    Query: str -> Full built GQL query (give empty string if no query was used)
+    Varaibles: str -> Variables to be used when calling the Query (give empty string if no query was used)
+    
     Rules:
-        1. You respond in valid JSON object containing your text response, query and variables used to call GraphQL API. 
-            Example: {{"Response": "I have fetched the users for you!", "Query": "query userPage($skip: Int, $limit: Int, $orderby: String, $where: UserInputWhereFilter) {{userPage(skip: $skip, limit: $limit, orderby: $orderby, where: $where) {{id name memberships {{id group {{ id name }}}}}}}}", "Variables": {{{{"where": {{"name": {{"_startswith": "Z"}}}},"skip": 0,"limit": 100}}}}}}
-            Exmaple if no query used: {{"Response": "Hello how can I help you?", "Query": null, "Variables": null}}
+        1. You respond in valid JSON object containing response, query and variables used to call GraphQL API. 
+            Example 1: {{"Response": "I have fetched the users for you!", "Query": "query userPage($skip: Int, $limit: Int, $orderby: String, $where: UserInputWhereFilter) {{userPage(skip: $skip, limit: $limit, orderby: $orderby, where: $where) {{id name memberships {{id group {{ id name }}}}}}}}", "Variables": {{{{"where": {{"name": {{"_startswith": "Z"}}}},"skip": 0,"limit": 100}}}}}}
+            Example 2: {{"Response": "PC is short for personal computer.", "Query": "", "Variables": ""}}
         2. Build a new query before running it against the API.
         3. You build the graphql queries only using available kernel_functions.
         4. Always use detectGraphQLTypes function to get the graphql_types variable. This ensures the correct types are identified for the query.
@@ -244,6 +250,7 @@ async def main():
     skills = []
     for plugin in kernel.plugins.values():
         skills.extend(plugin.functions.keys())
+
     print(f"Loaded skills: {skills}")
 
     # for pname, plugin in kernel.plugins.items():

@@ -5,7 +5,9 @@ import json
 
 def GraphQLData(
     *,
-    gqlclient: typing.Callable[[str, typing.Dict[str, typing.Any]], typing.Awaitable[dict]],
+    gqlclient: typing.Callable[
+        [str, typing.Dict[str, typing.Any]], typing.Awaitable[dict]
+    ],
     query: str,
     variables: typing.Optional[typing.Dict[str, typing.Any]] = None,
     result: typing.Optional[typing.List[typing.Dict[str, typing.Any]]] = None,
@@ -22,28 +24,45 @@ def GraphQLData(
         result: initial rows (optional)
         autoload: if True and no initial result, automatically loads first page
     """
-    if variables is None:
-        variables = {}
-    if result is None:
-        result = []
-    if isinstance(result, dict):
-        result = next(iter(result.values()), None)
-    if metadata is None:
-        metadata = {}
+    try:
+        if variables:
+            if isinstance(variables, str):
+                variables = json.loads(variables)
+            elif isinstance(variables, dict):
+                # already a dict, do nothing
+                pass
+            else:
+                raise TypeError(f"Unsupported type for variables: {type(variables)}")
+        else:
+            variables = {}
 
-    state = {
-        "variables": {
-            **variables,
-            "skip": variables.get("skip", 0),
-            "limit": variables.get("limit", 10)
-        },
-        "errors": [],
-        "result": list(result),
-        "ids": {r.get("id") for r in result if isinstance(r, dict) and "id" in r and r["id"] is not None},
-        "loading": False,
-        "done": False
-    }
+        if result is None:
+            result = []
+        if isinstance(result, dict):
+            result = next(iter(result.values()), None)
+        if metadata is None:
+            metadata = {}
 
+        state = {
+            "variables": {
+                "where": variables.get("where", None),
+                "orderby": variables.get("orderby", None),
+                "desc": variables.get("desc", None),
+                "skip": variables.get("skip", 0),
+                "limit": variables.get("limit", 10),
+            },
+            "errors": [],
+            "result": list(result),
+            "ids": {
+                r.get("id")
+                for r in result
+                if isinstance(r, dict) and "id" in r and r["id"] is not None
+            },
+            "loading": False,
+            "done": False,
+        }
+    except Exception as e:
+        print(f"Error occured: {e}")
     # def default_extract_rows(data: typing.Dict[str, typing.Any]) -> typing.List[typing.Dict[str, typing.Any]]:
     #     if not data:
     #         return []
@@ -61,13 +80,13 @@ def GraphQLData(
         state["done"] = (limit == 0) or (new_count < limit)
 
     compute_done(new_count=len(result))
+
     async def reload_all():
         state["result"].clear()
         state["ids"].clear()
         state["variables"]["skip"] = 0
         state["done"] = False
         await load_page(skip=0)
-    
 
     async def load_page(skip: typing.Optional[int] = None):
         if state["loading"]:
@@ -102,9 +121,7 @@ def GraphQLData(
                         state["ids"].add(rid)
                     # new_added += 1
 
-            state["variables"] = {
-                **vars_now
-            }
+            state["variables"] = {**vars_now}
             compute_done(len(rows))
         except Exception as e:
             state["errors"] = [f"{type(e).__name__}: {e}"]
@@ -131,44 +148,39 @@ def GraphQLData(
             for key, value in rows[0].items()
             if not isinstance(value, (dict, list))
         ]
-    
+
     @ui.refreshable
     def view():
-        # fullscreen = ui.fullscreen()    
+        # fullscreen = ui.fullscreen()
         # ui.button('Toggle Fullscreen', on_click=fullscreen.toggle)
         with ui.tabs() as tabs:
-            queryTab = ui.tab('query')
-            varTab = ui.tab('variables')
-            rawresultTab = ui.tab('rawresult')
-            resultTab = ui.tab('result')
-        with ui.tab_panels(tabs, value=resultTab).classes('w-full'):
+            queryTab = ui.tab("query")
+            varTab = ui.tab("variables")
+            rawresultTab = ui.tab("rawresult")
+            resultTab = ui.tab("result")
+        with ui.tab_panels(tabs, value=resultTab).classes("w-full"):
             with ui.tab_panel(queryTab):
                 # ui.label('queryTab tab')
-                ui.markdown((
-                    "```graphql\n"
-                    f"{query}"
-                    "\n```"
-                ))
+                ui.markdown(("```graphql\n" f"{query}" "\n```"))
             with ui.tab_panel(varTab):
                 # ui.label('varTab tab')
-                ui.markdown((
-                    "```json\n"
-                    f'{json.dumps(state["variables"], indent=2)}'
-                    "\n```"
-                ))
+                ui.markdown(
+                    ("```json\n" f'{json.dumps(state["variables"], indent=2)}' "\n```")
+                )
             with ui.tab_panel(rawresultTab):
-                ui.markdown((
-                    "## Raw Result\n\n"
-                    "```json\n"
-                    f"{json.dumps(state['result'], indent=2)}"
-                    "\n```\n"
-                    "## Metadata\n\n"
-                    "```json\n"
-                    f"{json.dumps(metadata, indent=2)}"
-                    "\n```"
-                    
-                ))
-            with ui.tab_panel(resultTab).classes('w-full'):
+                ui.markdown(
+                    (
+                        "## Raw Result\n\n"
+                        "```json\n"
+                        f"{json.dumps(state['result'], indent=2)}"
+                        "\n```\n"
+                        "## Metadata\n\n"
+                        "```json\n"
+                        f"{json.dumps(metadata, indent=2)}"
+                        "\n```"
+                    )
+                )
+            with ui.tab_panel(resultTab).classes("w-full"):
                 # ui.markdown((
                 #     "```json\n"
                 #     f"{json.dumps(state['result'], indent=2)}"
@@ -180,7 +192,9 @@ def GraphQLData(
                 #     row_key="id"
                 # )
                 cols = getcolumns()
-                with ui.element('div').classes('w-full overflow-x-auto').style('max-width: 100%;'):
+                with ui.element("div").classes("w-full overflow-x-auto").style(
+                    "max-width: 100%;"
+                ):
                     # spočítáme celkovou minimální šířku tabulky
                     per_col = 180  # px na sloupec
                     min_width_px = max(640, per_col * len(cols))
@@ -191,14 +205,13 @@ def GraphQLData(
                         row_key="id",
                     )
 
-
                     t.props(f'table-style="min-width: {min_width_px}px"')
 
         if state["errors"]:
             ui.markdown("```text\n" + "\n".join(map(str, state["errors"])) + "\n```")
 
-        with ui.row().classes('gap-2 mt-2'):
-            
+        with ui.row().classes("gap-2 mt-2"):
+
             ui.button(
                 "Reload",
                 on_click=reload_all,
@@ -213,7 +226,7 @@ def GraphQLData(
                 ui.spinner(size="md")
 
             if state["done"]:
-                ui.label("No more data").classes('text-xs text-gray-500')
+                ui.label("No more data").classes("text-xs text-gray-500")
 
         pass
 
