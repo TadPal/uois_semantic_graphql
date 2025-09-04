@@ -12,6 +12,7 @@ from SemanticKernel import (
     openChat,
 )
 from History.chatHistory import UserChatHistory
+from Database.Embedding.add_to_db import add_embedding_row
 
 
 from src.Utils.on_button_press import (
@@ -138,6 +139,8 @@ async def index_page(request: Request):
     # )
 
     async def send() -> None:
+        spare_response = None
+
         nonlocal feedback_row, prompt_count
         question = text.value.strip()
         if not question:
@@ -169,8 +172,18 @@ async def index_page(request: Request):
 
         animation_task = asyncio.create_task(animate_thinking(thinking_message))
 
-        # AI stuff
         result = await chat_hook(question)
+
+        # Turn result.content to JSON and separe QUERY and RESPONSE
+        try:
+            data = json.loads(result.content)
+
+            query = data["Query"]
+
+        except json.JSONDecodeError as e:
+            print(f"Chyba při parsování JSONu: {e}")
+        except KeyError as e:
+            print(f"Klíč nebyl nalezen: {e}")
 
         animation_task.cancel()
         try:
@@ -178,8 +191,7 @@ async def index_page(request: Request):
         except asyncio.CancelledError:
             pass
 
-        response = [{"type": "md", "content": f"{result}"}]
-
+        response = [{"type": "md", "content": f"{data["Response"]}"}]
         for part in response:
             await asyncio.sleep(1)
             thinking_message.clear()
@@ -281,7 +293,13 @@ async def index_page(request: Request):
                 # Handlery – logika je v odděleném souboru
                 like_btn.on(
                     "click",
-                    lambda e: on_like_click(like_btn, dislike_btn, state, SVGS, "like"),
+                    lambda e: on_like_click(
+                        like_btn,
+                        dislike_btn,
+                        state,
+                        SVGS,
+                        on_commit=(query, question),
+                    ),
                 )
                 dislike_btn.on(
                     "click",

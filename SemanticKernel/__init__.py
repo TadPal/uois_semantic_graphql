@@ -193,14 +193,15 @@ async def openChat():
 
     system_prompt = f"""
     You are an assistant and your primary task is to help query databases using graphql.
-    
+
     Rules:
-    1. Build a new query before running it against the API.
-    2. You build the graphql queries only using available kernel_functions. 
-    3. Every time the query returns with an Error you provide the used query in your response.
-    4. Never use graphqlFilterBuilder with id.
-    5. Always use detectGraphQLTypes function to get the graphql_types variable.
-    """
+        1. Build a new query before running it against the API.
+        2. You build the graphql queries only using available kernel_functions.
+        3. Every time the query returns with an Error you provide the used query in your response.
+        4. Never use graphqlFilterBuilder with id.
+        5. Always use detectGraphQLTypes function to get the graphql_types variable. This ensures the correct types are identified for the query.
+        6. After successfully retrieving data, your final response must be a valid JSON object. If a GraphQL query was used, the JSON must contain the retrieved data labeled as "Response" and the GraphQL query used labeled as "Query" also with . If no GraphQL query was used, the "Response" field contains your full response as a string, and the "Query" field must be an empty string. Example with query: {{"Response": {{"data": {{"programPage": [{{"id": "123", "name": "Computer Science"}}]}}}}, "Query": "query($limit: Int, $skip: Int) {{\\n  programPage(limit: $limit, skip: $skip) {{\\n    id\\n    name\\n  }}\\n}}"}} Example without query: {{"Response": "Hello, how can I help you?", "Query": ""}}
+            """
 
     history.add_system_message(system_prompt)
 
@@ -214,6 +215,7 @@ async def openChat():
         await next(context)
 
     kernel.add_filter(FilterTypes.AUTO_FUNCTION_INVOCATION, inject_gql_client)
+    import json
 
     async def hook(user_input):
         history.add_user_message(user_input)
@@ -222,9 +224,11 @@ async def openChat():
             settings=execution_settings,
             kernel=kernel,
             arguments=KernelArguments(),
+            result_type=str,
         )
         history.add_assistant_message(f"{result}")
         await history.reduce()
+
         return result
 
     return hook
