@@ -448,19 +448,16 @@ async def index_page(request: Request):
         ####
         ####    Danda
         ####
+        query = None
+        variables = None
         try:
             data = json.loads(result.content)
 
-            if data["Query"]:
-                query = data["Query"]
-                variables = data["Variables"]
-                response = data["Response"]
+            query = data["Query"]
+            variables = data["Variables"]
+            response = data["Response"]
 
-            from Utils.graphQLdata import GraphQLData
-
-            GraphQLData(
-                gqlclient=gql_client, query=query, variables=variables, result=Response
-            )
+            print(f"query: {query} & var: {variables} & types: {type(query)}")
 
         except json.JSONDecodeError as e:
             print(f"Chyba při parsování JSONu: {e}")
@@ -482,6 +479,15 @@ async def index_page(request: Request):
                     ui.html(part["content"])
                 elif part["type"] == "md":
                     ui.markdown(part["content"])
+
+        if query:
+            with message_container:
+                GraphQLData(
+                    gqlclient=gql_client,
+                    query=query,
+                    variables=variables,
+                    result=Response,
+                )
 
         # 🔹 Uložení do historie
         history.add_entry(question=question, answer=result)
