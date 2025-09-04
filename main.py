@@ -445,10 +445,22 @@ async def index_page(request: Request):
             raise
 
         # Turn result.content to JSON and separe QUERY and RESPONSE
+        ####
+        ####    Danda
+        ####
         try:
             data = json.loads(result.content)
 
-            query = data["Query"]
+            if data["Query"]:
+                query = data["Query"]
+                variables = data["Variables"]
+                response = data["Response"]
+
+            from Utils.graphQLdata import GraphQLData
+
+            GraphQLData(
+                gqlclient=gql_client, query=query, variables=variables, result=Response
+            )
 
         except json.JSONDecodeError as e:
             print(f"Chyba při parsování JSONu: {e}")
