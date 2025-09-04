@@ -132,7 +132,9 @@ class GraphQLFilterQueryPlugin:
         ast = parse(sdl)
         adjacency = build_adjacency(ast=ast, disabled_fields=disabled_fields)
 
-        return get_filterable_fields_with_ops(ast, adjacency)
+        result = get_filterable_fields_with_ops(ast, adjacency)
+        print(result)
+        return result
 
       
     @kernel_function(
