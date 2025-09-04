@@ -23,9 +23,33 @@ from src.Utils.on_button_press import (
 )
 from src.Utils.graphQLdata import GraphQLData
 
+import logging, uuid, contextvars
+from src.Utils.log_bus import LOG_BUS, LEVEL_COLORS, setup_logging
+from starlette.middleware.base import BaseHTTPMiddleware
+from pathlib import Path
+import tempfile
+import time
+
 # Store per user chat instances
 user_chats = {}
 history = {}
+gql_client = None
+
+
+# --- log kontext ---
+current_user: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "user", default=None
+)
+current_req: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "req", default=None
+)
+
+
+class ContextFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.user_id = current_user.get()
+        record.req_id = current_req.get()
+        return True
 
 
 def get_user_history(user_id: str):
@@ -46,15 +70,46 @@ async def get_user_chat_hook(user_id: str):
 
 async def startup_gql_client():
     global gql_client
+    # 1) inicializace loggingu a filtru
+    setup_logging(level=logging.DEBUG, use_queue=False)
+    logging.getLogger().addFilter(ContextFilter())
+
+    # (volitelné) posílej uvicorn/fastapi logy do našeho root loggeru -> LogBus
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
+        lg = logging.getLogger(name)
+        lg.setLevel(logging.INFO)
+        lg.propagate = True
+
+    # 2) self-test záznam, ať vidíš v Logs tabu, že LogBus běží
+    logging.getLogger("selftest").info("LogBus OK - startup reached")
+
+    # 3) inicializace GQL klienta
     gql_client = await createGQLClient(
         username="john.newbie@world.com", password="john.newbie@world.com"
     )
+    logging.getLogger("app.startup").info("GraphQL client ready")
 
 
 from nicegui import core
 import nicegui
 
+
+class LogContextMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        rid_token = current_req.set(uuid.uuid4().hex[:8])
+        try:
+            response = await call_next(request)
+            return response
+        finally:
+            current_req.reset(rid_token)
+
+
 app = FastAPI(on_startup=[startup_gql_client])
+
+app.add_middleware(LogContextMiddleware)
+log_chat = logging.getLogger("chat")
+log_gql = logging.getLogger("graphql")
+log_auth = logging.getLogger("auth")
 
 from nicegui import ui, app as nicegui_app, storage, core
 from starlette.middleware.sessions import SessionMiddleware
@@ -70,6 +125,8 @@ nicegui_app.add_static_files("/assets", "./assets")
 async def index_page(request: Request):
 
     user_id = authorize_user(request)
+    _ = current_user.set(user_id)
+    log_auth.info("User authorized", extra={"user_id": user_id})
 
     # Help speech avatar
     speech_bubble_sticky = None
@@ -138,11 +195,220 @@ async def index_page(request: Request):
     # """
     # )
 
+    def build_logs_ui(parent):
+        state = {
+            "running": True,
+            "tail": 500,
+            "level": "ALL",  # SINGLE select: ALL / DEBUG / INFO / WARNING / ERROR / CRITICAL
+            "logger_filter": "",
+            "search": "",
+            "autoscroll": False,
+            "user_filter": "",
+            "open_keys": set(),
+        }
+
+        def normalize_level(x: str | None) -> str | None:
+            if not x:
+                return x
+            x = str(x).upper()
+            # držme se standardních názvů; UI neposílá aliasy
+            aliases = {"WARN": "WARNING", "FATAL": "CRITICAL", "CRIT": "CRITICAL"}
+            return aliases.get(x, x)
+
+        def make_key(r: dict) -> str:
+            return f"{r.get('ts','')}|{r.get('logger','')}|{r.get('module','')}|{r.get('line','')}"
+
+        # Filtr pro zobrazení v UI (včetně dalších polí, ať se ti pohled chová jako dřív)
+        def passes_for_view(r: dict) -> bool:
+            # LEVEL (single)
+            if state["level"] != "ALL":
+                if normalize_level(r.get("level")) != normalize_level(state["level"]):
+                    return False
+            # Logger/module
+            if lf := state["logger_filter"].strip().lower():
+                cand = (r.get("logger", "") + "." + r.get("module", "")).lower()
+                if lf not in cand:
+                    return False
+            # User
+            if uf := state["user_filter"].strip().lower():
+                if uf not in (str(r.get("user_id", "")) or "").lower():
+                    return False
+            # Full-text
+            if s := state["search"].strip().lower():
+                hay = " ".join(
+                    [
+                        r.get("message", ""),
+                        r.get("logger", ""),
+                        r.get("module", ""),
+                        r.get("exc_text", "") or "",
+                        str(r.get("extra", "") or ""),
+                    ]
+                ).lower()
+                if s not in hay:
+                    return False
+            return True
+
+        # Export jen podle SINGLE levelu (ALL = všechno); cesta ./tmp v projektu
+        def export_ndjson():
+            base_dir = Path(__file__).resolve().parent / "tmp"
+            base_dir.mkdir(parents=True, exist_ok=True)
+
+            rows = LOG_BUS.get_last(state["tail"])
+            if state["level"] != "ALL":
+                lvl = normalize_level(state["level"])
+                rows = [r for r in rows if normalize_level(r.get("level")) == lvl]
+
+            ts = time.strftime("%Y%m%d-%H%M%S")
+            suffix = (
+                "ALL" if state["level"] == "ALL" else normalize_level(state["level"])
+            )
+            path = base_dir / f"logs-{suffix}-{ts}.ndjson"
+
+            with open(path, "w", encoding="utf-8") as f:
+                for r in rows:
+                    f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+            ui.download(str(path))
+
+        with parent:
+            with ui.row().classes("items-end gap-3"):
+                # SINGLE select – žádné dicty, žádné aliasy
+                level_select = ui.select(
+                    options=["ALL", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                    value="ALL",
+                    label="Level",
+                    with_input=False,
+                    clearable=False,
+                )
+                level_select.bind_value(state, "level")
+
+                logger_in = ui.input("Logger/module contains")
+                logger_in.on(
+                    "update:model-value",
+                    lambda e: (
+                        state.update(logger_filter=e.args or ""),
+                        paint.refresh(),
+                    ),
+                )
+
+                user_in = ui.input("User ID contains")
+                user_in.on(
+                    "update:model-value",
+                    lambda e: (state.update(user_filter=e.args or ""), paint.refresh()),
+                )
+
+                search_in = ui.input("Search in message/traceback")
+                search_in.on(
+                    "update:model-value",
+                    lambda e: (state.update(search=e.args or ""), paint.refresh()),
+                )
+
+                ui.number("Tail", value=500, min=50, max=10000, step=50).on(
+                    "change",
+                    lambda e: (state.update(tail=int(e.args or 500)), paint.refresh()),
+                )
+
+                # Jedno tlačítko – export podle zvoleného levelu
+                ui.button("Export NDJSON", on_click=export_ndjson)
+
+            container = ui.column().classes("w-full gap-0")
+
+            @ui.refreshable
+            def paint():
+                container.clear()
+                rows = LOG_BUS.get_last(state["tail"])
+
+                for r in (rr for rr in rows if passes_for_view(rr)):
+                    row_key = make_key(r)
+                    with ui.card().classes("w-full mb-1"):
+                        with ui.row().classes("w-full items-start gap-2 no-wrap"):
+                            ui.label(r.get("iso", "")).classes(
+                                "text-xs text-gray-500"
+                            ).style("min-width: 140px")
+                            ui.html(
+                                f"<b style='color:{LEVEL_COLORS.get(r.get('level','INFO'), '#374151')}'>{r.get('level')}</b>"
+                            )
+                            ui.label(
+                                f"{r.get('logger','')}.{r.get('module','')}:{r.get('line','')}"
+                            ).classes("text-xs text-gray-600")
+                            ui.label(r.get("message", "")).classes(
+                                "text-sm break-words"
+                            )
+                            if r.get("user_id"):
+                                ui.badge(f"user:{r['user_id']}").classes("text-[10px]")
+                            if r.get("req_id"):
+                                ui.badge(f"req:{r['req_id']}").classes("text-[10px]")
+
+                        if r.get("exc_text"):
+                            exp = ui.expansion(
+                                "Traceback", value=(row_key in state["open_keys"])
+                            )
+
+                            def on_expansion_toggle(e, k=row_key):
+                                is_open = bool(e.args)
+                                if is_open:
+                                    state["open_keys"].add(k)
+                                    state["autoscroll"] = False
+                                    state["running"] = False
+                                else:
+                                    state["open_keys"].discard(k)
+                                    if not state["open_keys"]:
+                                        state["running"] = True
+                                paint.refresh()
+
+                            exp.on("update:model-value", on_expansion_toggle)
+
+                            with exp:
+                                ui.markdown(f"```\n{r['exc_text']}\n```")
+
+                if state["autoscroll"]:
+                    ui.run_javascript("window.scrollTo(0, document.body.scrollHeight);")
+
+            paint()
+
+            def on_timer():
+                if state["running"]:
+                    paint.refresh()
+
+            ui.timer(0.5, on_timer)
+
+        # sticky panel (beze změn)
+        ui.add_css(".q-page-sticky{z-index:10000;}")
+        with ui.page_sticky(position="bottom-left", x_offset=16, y_offset=16):
+            with ui.column().classes("gap-2"):
+                with ui.row().classes(
+                    "bg-white/90 dark:bg-neutral-800/90 backdrop-blur rounded-xl shadow-lg "
+                    "px-3 py-2 items-center gap-3 pointer-events-auto"
+                ):
+                    ui.label("Autoscroll").classes("text-xs text-gray-600")
+                    ui.switch().bind_value(state, "autoscroll")
+                    ui.badge().bind_text_from(
+                        state, "autoscroll", backward=lambda v: "ON" if v else "OFF"
+                    )
+
+                with ui.row().classes(
+                    "bg-white/90 dark:bg-neutral-800/90 backdrop-blur rounded-xl shadow-lg "
+                    "px-3 py-2 items-center gap-3 pointer-events-auto"
+                ):
+                    ui.label("Logs feed").classes("text-xs text-gray-600")
+                    ui.button("Pause", on_click=lambda: state.update(running=False))
+                    ui.button("Resume", on_click=lambda: state.update(running=True))
+                    ui.badge().bind_text_from(
+                        state,
+                        "running",
+                        backward=lambda v: "RUNNING" if v else "PAUSED",
+                    )
+
     async def send() -> None:
         nonlocal feedback_row, prompt_count
         question = text.value.strip()
+        current_req.set(uuid.uuid4().hex[:8])
+
         if not question:
             return
+
+        log_chat.info("User question received", extra={"len": len(question)})
+
         text.value = ""
         with message_container:
             ui.chat_message(
@@ -170,7 +436,13 @@ async def index_page(request: Request):
 
         animation_task = asyncio.create_task(animate_thinking(thinking_message))
 
-        result = await chat_hook(question)
+        # AI stuff
+        try:
+            result = await chat_hook(question)
+            log_chat.info("Chat hook answered", extra={"answer_len": len(str(result))})
+        except Exception:
+            log_chat.exception("Chat hook failed")
+            raise
 
         # Turn result.content to JSON and separe QUERY and RESPONSE
         try:
@@ -387,6 +659,7 @@ async def index_page(request: Request):
         #######################################################
         with ui.tab_panel(logs_tab) as logs_container:
             ui.label("Conversation Log").classes("font-bold mb-2")
+            build_logs_ui(logs_container)
 
         #######################################################
         # * History tab
@@ -433,6 +706,9 @@ async def index_page(request: Request):
 
                 # načti dotaz a proměnné
                 query = (query_input.value or "").strip()
+
+                log_gql.info("GraphQL query run", extra={"preview": query[:100]})
+
                 try:
                     variables = (
                         json.loads(variables_input.value)

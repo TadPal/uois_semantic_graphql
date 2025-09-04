@@ -136,6 +136,7 @@ class GraphQLFilterQueryPlugin:
         print(result)
         return result
 
+      
     @kernel_function(
         name="runFilterQuery",
         description="Runs a GraphQL query with a 'where' filter and optional pagination.",
