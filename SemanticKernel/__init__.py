@@ -19,6 +19,7 @@ from semantic_kernel.contents import ChatHistoryTruncationReducer
 from semantic_kernel.functions import KernelArguments, KernelPlugin
 from semantic_kernel.filters import FilterTypes, AutoFunctionInvocationContext
 from semantic_kernel.exceptions import PluginInitializationError
+from semantic_kernel.contents.utils.author_role import AuthorRole
 
 from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_prompt_execution_settings import (
     AzureChatPromptExecutionSettings,
@@ -236,7 +237,8 @@ async def openChat():
         )
         history.add_assistant_message(f"{result}")
         await history.reduce()
-        history.add_system_message(system_prompt)
+        if not any(m.role == AuthorRole.SYSTEM for m in history.messages):
+            history.add_system_message(system_prompt)
 
         return result
 
