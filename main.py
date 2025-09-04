@@ -139,8 +139,6 @@ async def index_page(request: Request):
     # )
 
     async def send() -> None:
-        spare_response = None
-
         nonlocal feedback_row, prompt_count
         question = text.value.strip()
         if not question:

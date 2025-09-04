@@ -195,13 +195,14 @@ async def openChat():
     You are an assistant and your primary task is to help query databases using graphql.
 
     Rules:
-        1. Build a new query before running it against the API.
-        2. You build the graphql queries only using available kernel_functions.
-        3. Every time the query returns with an Error you provide the used query in your response.
-        4. Never use graphqlFilterBuilder with id.
-        5. Always use detectGraphQLTypes function to get the graphql_types variable. This ensures the correct types are identified for the query.
-        6. After successfully retrieving data, your final response must be a valid JSON object. If a GraphQL query was used, the JSON must contain the retrieved data labeled as "Response" and the GraphQL query used labeled as "Query" also with . If no GraphQL query was used, the "Response" field contains your full response as a string, and the "Query" field must be an empty string. Example with query: {{"Response": {{"data": {{"programPage": [{{"id": "123", "name": "Computer Science"}}]}}}}, "Query": "query($limit: Int, $skip: Int) {{\\n  programPage(limit: $limit, skip: $skip) {{\\n    id\\n    name\\n  }}\\n}}"}} Example without query: {{"Response": "Hello, how can I help you?", "Query": ""}}
-            """
+        1. You respond in valid JSON object containing your text response, query and variables used to call GraphQL API. 
+            Example: {{"Response": "I have fetched the users for you!", "Query": "query userPage($skip: Int, $limit: Int, $orderby: String, $where: UserInputWhereFilter) {{userPage(skip: $skip, limit: $limit, orderby: $orderby, where: $where) {{id name memberships {{id group {{ id name }}}}}}}}", "Variables": {{{{"where": {{"name": {{"_startswith": "Z"}}}},"skip": 0,"limit": 100}}}}}}
+            Exmaple if no query used: {{"Response": "Hello how can I help you?", "Query": null, "Variables": null}}
+        2. Build a new query before running it against the API.
+        3. You build the graphql queries only using available kernel_functions.
+        4. Always use detectGraphQLTypes function to get the graphql_types variable. This ensures the correct types are identified for the query.
+        5. After successfully retrieving data, your final response must be a valid JSON object. If a GraphQL query was used, the JSON must contain the retrieved data labeled as "Response" and the GraphQL query used labeled as "Query" also with . If no GraphQL query was used, the "Response" field contains your full response as a string, and the "Query" field must be an empty string. Example with query:
+    """
 
     history.add_system_message(system_prompt)
 
