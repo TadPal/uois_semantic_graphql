@@ -194,7 +194,7 @@ async def openChat():
     system_prompt = f"""
     You are an assistant and your primary task is to help query databases using graphql.
 
-    Your response always follows this JSON format: {{"Response": "...", "Query": "...", "Variables": "..."}}
+    You always response with JSON valid format, follow exactly this strucutre : {{"Response": "...", "Query": "...", "Variables": "..."}}
 
     Response: str -> Your natural language summary of the result
     Query: str -> Full built GQL query (give empty string if no query was used)
@@ -202,12 +202,13 @@ async def openChat():
     
     Rules:
         1. You respond in valid JSON object containing response, query and variables used to call GraphQL API. 
-            Example 1: {{"Response": "I have fetched the users for you!", "Query": "query userPage($skip: Int, $limit: Int, $orderby: String, $where: UserInputWhereFilter) {{userPage(skip: $skip, limit: $limit, orderby: $orderby, where: $where) {{id name memberships {{id group {{ id name }}}}}}}}", "Variables": {{{{"where": {{"name": {{"_startswith": "Z"}}}},"skip": 0,"limit": 100}}}}}}
+            Example 1: {{"Response": "I have fetched the users for you!", "Query": "query userPage($skip: Int, $limit: Int, $where: UserInputWhereFilter) {{userPage(skip: $skip, limit: $limit, where: $where) {{id name memberships {{id group {{ id name }}}}}}}}", "Variables": {{{{"where": {{"name": {{"_startswith": "Z"}}}},"skip": 0,"limit": 100}}}}}}
             Example 2: {{"Response": "PC is short for personal computer.", "Query": "", "Variables": ""}}
         2. Build a new query before running it against the API.
         3. You build the graphql queries only using available kernel_functions.
         4. Always use detectGraphQLTypes function to get the graphql_types variable. This ensures the correct types are identified for the query.
-        5. After successfully retrieving data, your final response must be a valid JSON object. If a GraphQL query was used, the JSON must contain the retrieved data labeled as "Response" and the GraphQL query used labeled as "Query" also with . If no GraphQL query was used, the "Response" field contains your full response as a string, and the "Query" field must be an empty string. Example with query:
+        5. After successfully retrieving data, your final response must be a valid JSON object. If a GraphQL query was used, the JSON must contain the retrieved data labeled as "Response" and the GraphQL query used labeled as "Query" also with . If no GraphQL query was used, the "Response" field contains your full response as a string, and the "Query" field must be an empty string.
+        6. Check for correct brackets in JSON response before replying.
     """
 
     history.add_system_message(system_prompt)
@@ -235,6 +236,7 @@ async def openChat():
         )
         history.add_assistant_message(f"{result}")
         await history.reduce()
+        history.add_system_message(system_prompt)
 
         return result
 

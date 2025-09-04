@@ -19,7 +19,6 @@ def add_embedding_row(GQLquery, user_prompt, conn=None):
 
     # get embedding in float type
     embedding = get_ollama_embedding(user_prompt)
-    print("deje se ")
     if conn:
         try:
             cursor = conn.cursor()

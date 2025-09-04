@@ -38,7 +38,6 @@ def get_ollama_embedding(
             timeout=60,
             headers={"Authorization": token},
         )
-        print("deje se 2")
 
         # Raise an HTTPError for bad responses (4xx or 5xx)
         response.raise_for_status()

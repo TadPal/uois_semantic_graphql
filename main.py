@@ -447,16 +447,18 @@ async def index_page(request: Request):
         query = None
         variables = None
         try:
+
             data = json.loads(result.content)
 
             query = data["Query"]
             variables = data["Variables"]
             response = data["Response"]
+            response = [{"type": "md", "content": f"{data["Response"]}"}]
 
         except json.JSONDecodeError as e:
             print(f"Chyba při parsování JSONu: {e}")
-        except KeyError as e:
-            print(f"Klíč nebyl nalezen: {e}")
+            data = result.content
+            response = [{"type": "md", "content": f"{data}"}]
 
         animation_task.cancel()
         try:
@@ -464,7 +466,6 @@ async def index_page(request: Request):
         except asyncio.CancelledError:
             pass
 
-        response = [{"type": "md", "content": f"{data["Response"]}"}]
         for part in response:
             await asyncio.sleep(1)
             thinking_message.clear()

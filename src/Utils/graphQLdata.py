@@ -46,7 +46,6 @@ def GraphQLData(
         state = {
             "variables": {
                 "where": variables.get("where", None),
-                "orderby": variables.get("orderby", None),
                 "desc": variables.get("desc", None),
                 "skip": variables.get("skip", 0),
                 "limit": variables.get("limit", 10),
