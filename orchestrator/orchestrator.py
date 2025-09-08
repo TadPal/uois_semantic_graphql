@@ -122,30 +122,26 @@ class Orchestrator:
     # ==== NOVÉ: volání na MCP builder/runner pro variables & filtered run ====
 
     async def _build_filter_vars(
-        self, user_text: str, gql_query: str
+        self, user_text: str, graphql_query: str
     ) -> Dict[str, Any]:
-        """
-        Zavolá MCP Builder /buildFilterVariables a vrátí:
-        {"skip":Int,"limit":Int,"orderby":str|None,"where":obj|None}
-        Kontejneru LLM dáme i celý GraphQL dotaz (gql_query) pro lepší kontext.
-        """
         payload = {
             "user_prompt": user_text,
             "skip_default": 0,
             "limit_default": 10,
             "limit_max": 100,
             "orderby_default": None,
-            "now_iso": None,  # necháme builder dopočítat / doplnit
-            "graphql_query": gql_query,  # <<< DŮLEŽITÉ: předáme dotaz
+            "graphql_query": graphql_query,  # důležité pro detekci InputWhereFilter
+            "disallowed_fields": ["createdby", "changedby", "memberOf"],
         }
         async with aiohttp.ClientSession() as s:
             resp = await s.post(
-                f"{self.builder_url}/buildFilterVariables", json=payload
+                f"{self.builder_url}/buildFilterVariables", json=payload, timeout=30
             )
             resp.raise_for_status()
             data = await resp.json()
-        variables = data.get("variables", {}) or {}
-        log_orch.info("variables.built", extra={"variables": variables})
+
+        variables = data.get("variables") or {}
+        # očekáváme rovnou {"skip","limit","desc","where"} – nic dalšího neobaluj
         return variables
 
     async def _run_filter_query(
@@ -185,12 +181,10 @@ class Orchestrator:
         # 2) in-domain ?
         if types:
             try:
-                # heuristika: "id" → scalar; jinak vector
                 is_scalar = " id " in f" {user_prompt.lower()} "
                 if is_scalar:
                     built = await self.client.build_scalar(types)
                     query = built["query"]
-                    # Bez jistého ID raději kulturně požádej o doplnění
                     return ChatResult(
                         json.dumps(
                             {
@@ -202,26 +196,20 @@ class Orchestrator:
                         )
                     )
                 else:
-                    # 1) postav dotaz (vector)
                     built = await self.client.build_vector(types)
                     query = built["query"]
 
-                    # 2) nechej builder LLM vytěžit variables (skip/limit/orderby/where)
-                    variables = await self._build_filter_vars(
-                        user_prompt, query
-                    )  # <<< předáme query
+                    variables = await self._build_filter_vars(user_prompt, query)
 
-                    # 3) spusť runner s filter variables
                     ran = await self._run_filter_query(query, variables)
                     rows = ran.get("entities", []) or []
                     natural = f"Našel jsem {len(rows)} záznamů pro {' → '.join(types)}."
-
                     return ChatResult(
                         json.dumps(
                             {
                                 "Response": natural,
                                 "Query": query,
-                                "Variables": variables,  # dict (UI ho přímo použije)
+                                "Variables": variables,
                             },
                             ensure_ascii=False,
                         )
