@@ -8,11 +8,9 @@ class MCPClient:
         self,
         builder_url: str = "http://localhost:8001",  # gql_builder_server
         runner_url: str = "http://localhost:8002",  # gql_runner_server
-        table_url: str = "http://localhost:8003",
     ):  # utils_table_server
         self.builder_url = builder_url.rstrip("/")
         self.runner_url = runner_url.rstrip("/")
-        self.table_url = table_url.rstrip("/")
         self.http = httpx.AsyncClient(timeout=60)
 
     # --- builder ---
