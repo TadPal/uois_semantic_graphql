@@ -1,0 +1,541 @@
+
+<message role="system">
+    You can pair objects mentioned by the user with GraphQL types described in the JSON below.
+    Analyze the user prompt and return only valid JSON: an array of strings, each exactly matching a type's `name`.
+    Respond with a single JSON array—no additional text, no code fences.
+
+    Rules:
+    1. Exclude any types whose names end with `"Error"`, unless explicitly requested.
+    2. Match on type name or on keywords found in the description.
+    3. Detect 1:N (one-to-many) or N:1 relationships between the matched types, and order the array so that each parent type appears immediately before its child types.
+
+
+    [EXAMPLE]
+    prompt:
+        "Give me a list of study programs and their students"
+    output:
+        ["ProgramGQLModel", "StudentGQLModel"]
+    [END EXAMPLE]
+
+    [GRAPHQLTYPES] 
+```json
+    [
+  {
+    "name": "AcClassificationGQLModel",
+    "description": "Entity which holds a exam result for a subject semester and user / student"
+  },
+  {
+    "name": "AcClassificationLevelGQLModel",
+    "description": "Mark which student could get as an exam evaluation"
+  },
+  {
+    "name": "AcClassificationTypeGQLModel",
+    "description": "Classification at the end of semester"
+  },
+  {
+    "name": "AcLessonGQLModel",
+    "description": "Entity which represents single lesson included in a topic"
+  },
+  {
+    "name": "AcLessonTypeGQLModel",
+    "description": "P, C, LC, S, ..."
+  },
+  {
+    "name": "AcProgramFormTypeGQLModel",
+    "description": "Program form type (Present, distant, ...)"
+  },
+  {
+    "name": "AcProgramGQLModel",
+    "description": "Entity representing acredited study programs"
+  },
+  {
+    "name": "AcProgramLanguageTypeGQLModel",
+    "description": "Study program language"
+  },
+  {
+    "name": "AcProgramLevelTypeGQLModel",
+    "description": "bachelor, ..."
+  },
+  {
+    "name": "AcProgramMessageGQLModel",
+    "description": "Entity representing acredited study programs"
+  },
+  {
+    "name": "AcProgramStudentGQLModel",
+    "description": "Entity which links program and student"
+  },
+  {
+    "name": "AcProgramStudentStateGQLModel",
+    "description": "Entity which links program and student"
+  },
+  {
+    "name": "AcProgramTitleTypeGQLModel",
+    "description": "Bc., Ing., ..."
+  },
+  {
+    "name": "AcProgramTypeGQLModel",
+    "description": "Encapsulation of language, level, type etc. of program. This is intermediate entity for acredited program and its types"
+  },
+  {
+    "name": "AcSemesterGQLModel",
+    "description": "Entity representing each semester in study subject"
+  },
+  {
+    "name": "AcSubjectGQLModel",
+    "description": "Entity which connects programs and semesters, includes informations about subjects (divided into semesters)"
+  },
+  {
+    "name": "AcTopicGQLModel",
+    "description": "Entity which represents a theme included in semester of subject"
+  },
+  {
+    "name": "AnswerGQLModel",
+    "description": "Entity representing an access to information"
+  },
+  {
+    "name": "AnswerResultGQLModel",
+    "description": null
+  },
+  {
+    "name": "AuthorResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "ClassificationResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "ClassificationTypeResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "EventGQLModel",
+    "description": "Entity representing an event (calendar item)"
+  },
+  {
+    "name": "EventResultGQLModel",
+    "description": "Result of event operation"
+  },
+  {
+    "name": "EventTypeGQLModel",
+    "description": "Represents an event type"
+  },
+  {
+    "name": "EventTypeResultGQLModel",
+    "description": "Result of event type operation"
+  },
+  {
+    "name": "ExternalIdCategoryGQLModel",
+    "description": "Entity representing an external category id ()"
+  },
+  {
+    "name": "ExternalIdCategoryResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "ExternalIdGQLModel",
+    "description": "Entity representing an external type id (like SCOPUS identification / id)"
+  },
+  {
+    "name": "ExternalIdResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "ExternalIdTypeGQLModel",
+    "description": "Entity representing an external type id (like SCOPUS identification / id)"
+  },
+  {
+    "name": "ExternalIdTypeResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "FacilityEventStateTypeGQLModel",
+    "description": "Entity representing a facility type"
+  },
+  {
+    "name": "FacilityGQLModel",
+    "description": "Entity representing a Facility"
+  },
+  {
+    "name": "FacilityResultGQLModel",
+    "description": null
+  },
+  {
+    "name": "FacilityTypeGQLModel",
+    "description": "Entity representing a facility type"
+  },
+  {
+    "name": "FinanceCategoryGQLModel",
+    "description": "Entity representing a finance category"
+  },
+  {
+    "name": "FinanceCategoryResultGQLModel",
+    "description": "Result of a mutation for a finance category"
+  },
+  {
+    "name": "FinanceGQLModel",
+    "description": "Entity representing a finance"
+  },
+  {
+    "name": "FinanceResultGQLModel",
+    "description": "Result of a financial data operation"
+  },
+  {
+    "name": "FinanceTypeGQLModel",
+    "description": "Entity representing a finance type"
+  },
+  {
+    "name": "FinanceTypeResultGQLModel",
+    "description": "Result of a mutation result of finance type"
+  },
+  {
+    "name": "FormCategoryGQLModel",
+    "description": "Entity representing a category of form types"
+  },
+  {
+    "name": "FormCategoryResultGQLModel",
+    "description": "Result of CU operations on FormCategory"
+  },
+  {
+    "name": "FormGQLModel",
+    "description": "# Reason\n\nEntity representing a form, form is digitalized A4 sheet\n\n## Structure\n\nform -> sections -> parts -> items"
+  },
+  {
+    "name": "FormItemCategoryGQLModel",
+    "description": "Type representing an item category"
+  },
+  {
+    "name": "FormItemCategoryResultGQLModel",
+    "description": "Result of CU operations"
+  },
+  {
+    "name": "FormItemGQLModel",
+    "description": "Type representing an item in the form"
+  },
+  {
+    "name": "FormItemResultGQLModel",
+    "description": "Result of CU operations"
+  },
+  {
+    "name": "FormItemTypeGQLModel",
+    "description": "Type representing an item type"
+  },
+  {
+    "name": "FormItemTypeResultGQLModel",
+    "description": "Result of CU operations"
+  },
+  {
+    "name": "FormPartGQLModel",
+    "description": "Type representing a part in the section"
+  },
+  {
+    "name": "FormPartResultGQLModel",
+    "description": "Result of CU operations"
+  },
+  {
+    "name": "FormRequestResultGQLModel",
+    "description": "Result of CU operations"
+  },
+  {
+    "name": "FormResultGQLModel",
+    "description": "Result of CU operations"
+  },
+  {
+    "name": "FormSectionGQLModel",
+    "description": "Type representing a section in the form"
+  },
+  {
+    "name": "FormTypeGQLModel",
+    "description": "Entity representing a category of form types"
+  },
+  {
+    "name": "FormTypeResultGQLModel",
+    "description": "Result of CU operations"
+  },
+  {
+    "name": "GroupCategoryGQLModel",
+    "description": "Entity representing a group type (like Faculty)"
+  },
+  {
+    "name": "GroupCategoryResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "GroupGQLModel",
+    "description": "Entity representing a group"
+  },
+  {
+    "name": "GroupResultGQLModel",
+    "description": "represents the result of CUD op on GroupGQLModel"
+  },
+  {
+    "name": "GroupTypeGQLModel",
+    "description": "Entity representing a group type (like Faculty)"
+  },
+  {
+    "name": "GroupTypeResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "HistoryResultGQLModel",
+    "description": "Result of CU operations"
+  },
+  {
+    "name": "InvitationTypeGQLModel",
+    "description": "Represents if an user has been invited to the event ot whatever"
+  },
+  {
+    "name": "InvitationTypeResultGQLModel",
+    "description": "Result of event type operation"
+  },
+  {
+    "name": "LessonResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "LessonTypeResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "MembershipGQLModel",
+    "description": "Entity representing a relation between an user and a group"
+  },
+  {
+    "name": "MembershipResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "MilestoneGQLModel",
+    "description": "Entity representing a milestone"
+  },
+  {
+    "name": "MilestoneResultGQLModel",
+    "description": "Result of a user operation on a milestone"
+  },
+  {
+    "name": "Mutation",
+    "description": "Type for mutation root"
+  },
+  {
+    "name": "PlanGQLModel",
+    "description": "Entity representing a study plan for timetable creation"
+  },
+  {
+    "name": "PlannedLessonGQLModel",
+    "description": "Entity representing a planned lesson for timetable creation"
+  },
+  {
+    "name": "PlannedLessonResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "PlanResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "PresenceGQLModel",
+    "description": "Describes a relation of an user to the event by invitation (like invited) and participation (like absent)"
+  },
+  {
+    "name": "PresenceResultGQLModel",
+    "description": "Result of user operation"
+  },
+  {
+    "name": "PresenceTypeGQLModel",
+    "description": "Represents a type of presence (like Present)"
+  },
+  {
+    "name": "PresenceTypeResultGQLModel",
+    "description": "Result of event type operation"
+  },
+  {
+    "name": "ProgramFormTypeResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "ProgramLanguageTypeResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "ProgramLevelTypeResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "ProgramMessageResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "ProgramResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "ProgramStudentResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "ProgramTitleTypeResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "ProgramTypeResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "ProjectCategoryGQLModel",
+    "description": "Entity representing a project category"
+  },
+  {
+    "name": "ProjectCategoryResultGQLModel",
+    "description": "Result of a mutation for a project category"
+  },
+  {
+    "name": "ProjectGQLModel",
+    "description": "Entity representing a project"
+  },
+  {
+    "name": "ProjectResultGQLModel",
+    "description": "Result of a mutation for a project"
+  },
+  {
+    "name": "ProjectTypeGQLModel",
+    "description": "Entity representing a project types"
+  },
+  {
+    "name": "ProjectTypeResultGQLModel",
+    "description": "Result of a mutation for project type"
+  },
+  {
+    "name": "PublicationAuthorGQLModel",
+    "description": "Entity representing a relation between an user and a publication"
+  },
+  {
+    "name": "PublicationGQLModel",
+    "description": "Entity representing a publication"
+  },
+  {
+    "name": "PublicationResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "PublicationTypeGQLModel",
+    "description": "Entity representing a publication type"
+  },
+  {
+    "name": "PublicationTypeResultGQLModel",
+    "description": "Result of mutation"
+  },
+  {
+    "name": "Query",
+    "description": null
+  },
+  {
+    "name": "QuestionGQLModel",
+    "description": "Entity representing an access to information"
+  },
+  {
+    "name": "QuestionResultGQLModel",
+    "description": null
+  },
+  {
+    "name": "QuestionTypeGQLModel",
+    "description": "Entity representing a relation between an user and a group"
+  },
+  {
+    "name": "QuestionValueGQLModel",
+    "description": "Entity representing an access to information"
+  },
+  {
+    "name": "RBACObjectGQLModel",
+    "description": null
+  },
+  {
+    "name": "RequestGQLModel",
+    "description": "Entity representing a request (digital form of a paper, aka \"student request to the dean\")"
+  },
+  {
+    "name": "RequestHistoryGQLModel",
+    "description": "Entity which stores a history of form evolution during a request. This allows to recall form changes."
+  },
+  {
+    "name": "RoleCategoryGQLModel",
+    "description": "Entity representing a role type (like Dean)"
+  },
+  {
+    "name": "RoleCategoryResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "RoleGQLModel",
+    "description": "Entity representing a role of a user in a group (like user A in group B is Dean)"
+  },
+  {
+    "name": "RoleResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "RoleTypeGQLModel",
+    "description": "Entity representing a role type (like Dean)"
+  },
+  {
+    "name": "RoleTypeListResult",
+    "description": ""
+  },
+  {
+    "name": "RoleTypeResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "SectionResultGQLModel",
+    "description": "Result of CU operations"
+  },
+  {
+    "name": "SemesterResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "StatementOfWorkGQLModel",
+    "description": "Entity representing a SOW"
+  },
+  {
+    "name": "StatementOfWorkResultGQLModel",
+    "description": "Result of a mutation for statement of work"
+  },
+  {
+    "name": "StudentStateResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "SubjectResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "SurveyGQLModel",
+    "description": "Entity representing a relation between an user and a group"
+  },
+  {
+    "name": "SurveyResultGQLModel",
+    "description": ""
+  },
+  {
+    "name": "SurveyTypeGQLModel",
+    "description": "Entity representing a relation between an user and a group"
+  },
+  {
+    "name": "TopicResultGQLModel",
+    "description": "Result of CUD operations"
+  },
+  {
+    "name": "UserGQLModel",
+    "description": "Entity representing a user"
+  },
+  {
+    "name": "UserResultGQLModel",
+    "description": null
+  }
+]
+```
+    [END GRAPHQLTYPES] 
+
+
+</message>
+<message role="user">{{user_prompt}}</message>

@@ -6,11 +6,15 @@ from Auth.auth import authorize_user
 
 # FastAPI part
 import asyncio
-from fastapi import FastAPI, Request, Response
-from SemanticKernel import (
-    createGQLClient,
-    openChat,
-)
+from fastapi import FastAPI, Request, Response, Body
+
+# from SemanticKernel import (
+#     createGQLClient,
+#     openChat,
+# )
+from orchestrator.orchestrator import open_chat  # ✅ nový orchestrátor
+from SemanticKernel import createGQLClient
+
 from History.chatHistory import UserChatHistory
 from Database.Embedding.add_to_db import add_embedding_row
 
@@ -34,6 +38,38 @@ import time
 user_chats = {}
 history = {}
 gql_client = None
+
+
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global gql_client
+
+    # LogBus + kořenový logger
+    setup_logging(level=logging.DEBUG, use_queue=False)
+    logging.getLogger().addFilter(ContextFilter())
+
+    # Propagace uvicorn/fastapi logů do root loggeru
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "fastapi"):
+        lg = logging.getLogger(name)
+        lg.setLevel(logging.INFO)
+        lg.propagate = True
+
+    logging.getLogger("selftest").info("LogBus OK - startup reached")
+
+    # GraphQL klient pro GraphQL tab
+    gql_client = await createGQLClient(
+        username="john.newbie@world.com",
+        password="john.newbie@world.com",
+    )
+    logging.getLogger("app.startup").info("GraphQL client ready")
+
+    try:
+        yield
+    finally:
+        logging.getLogger("app.shutdown").info("UI shutting down")
 
 
 # --- log kontext ---
@@ -64,7 +100,8 @@ async def get_user_chat_hook(user_id: str):
     """Get or create a chat hook for a specific user"""
     if user_id not in user_chats:
         # Create a new chat hook for this user
-        user_chats[user_id] = await openChat()
+        # user_chats[user_id] = await openChat()
+        user_chats[user_id] = await open_chat()
     return user_chats[user_id]
 
 
@@ -104,7 +141,8 @@ class LogContextMiddleware(BaseHTTPMiddleware):
             current_req.reset(rid_token)
 
 
-app = FastAPI(on_startup=[startup_gql_client])
+# app = FastAPI(on_startup=[startup_gql_client])
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(LogContextMiddleware)
 log_chat = logging.getLogger("chat")
@@ -119,6 +157,29 @@ from Database.ChatHistory.add_to_db import add_chat_history
 nicegui_app.add_middleware(storage.RequestTrackingMiddleware)
 nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 nicegui_app.add_static_files("/assets", "./assets")
+
+
+@app.post("/log-sink")
+async def log_sink(payload: dict = Body(...)):
+    rec = {
+        "ts": time.time(),
+        "iso": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "level": str(payload.get("level", "INFO")).upper(),
+        "logger": payload.get("logger", "remote"),
+        "message": payload.get("message", ""),
+        "module": payload.get("module", "-"),
+        "func": payload.get("func", "-"),
+        "line": int(payload.get("line", 0) or 0),
+        "process": int(payload.get("process", 0) or 0),
+        "thread": int(payload.get("thread", 0) or 0),
+        "user_id": payload.get("user_id"),
+        "req_id": payload.get("req_id"),
+        "task": payload.get("task"),
+        "extra": payload.get("extra"),
+        "exc_text": payload.get("exc_text"),
+    }
+    LOG_BUS.push_json(json.dumps(rec, ensure_ascii=False))
+    return {"ok": True}
 
 
 @ui.page("/")
@@ -248,28 +309,6 @@ async def index_page(request: Request):
                     return False
             return True
 
-        # Export jen podle SINGLE levelu (ALL = všechno); cesta ./tmp v projektu
-        def export_ndjson():
-            base_dir = Path(__file__).resolve().parent / "tmp"
-            base_dir.mkdir(parents=True, exist_ok=True)
-
-            rows = LOG_BUS.get_last(state["tail"])
-            if state["level"] != "ALL":
-                lvl = normalize_level(state["level"])
-                rows = [r for r in rows if normalize_level(r.get("level")) == lvl]
-
-            ts = time.strftime("%Y%m%d-%H%M%S")
-            suffix = (
-                "ALL" if state["level"] == "ALL" else normalize_level(state["level"])
-            )
-            path = base_dir / f"logs-{suffix}-{ts}.ndjson"
-
-            with open(path, "w", encoding="utf-8") as f:
-                for r in rows:
-                    f.write(json.dumps(r, ensure_ascii=False) + "\n")
-
-            ui.download(str(path))
-
         with parent:
             with ui.row().classes("items-end gap-3"):
                 # SINGLE select – žádné dicty, žádné aliasy
@@ -307,9 +346,6 @@ async def index_page(request: Request):
                     "change",
                     lambda e: (state.update(tail=int(e.args or 500)), paint.refresh()),
                 )
-
-                # Jedno tlačítko – export podle zvoleného levelu
-                ui.button("Export NDJSON", on_click=export_ndjson)
 
             container = ui.column().classes("w-full gap-0")
 
