@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import logging
 from contextlib import asynccontextmanager
+import graphql
 
 # SDL / builder utils
 from sdl.sdl_fetch import (
@@ -78,10 +79,10 @@ class BuildFilterVarsIn(BaseModel):
     skip_default: int = 0
     limit_default: int = 10
     limit_max: int = 100
-    # POZOR: u tebe se používá 'desc' (Boolean) – 'orderby' proto v JSONu už neposíláme
     orderby_default: Optional[str] = None
     now_iso: Optional[str] = None
-    graphql_query: Optional[str] = None  # poskytni LLM kontext dotazu (root typ/paramy)
+    graphql_query: Optional[str] = None
+    disallowed_fields: Optional[List[str]] = []  # ← volitelný blacklist
 
 
 class DetectTypesIn(BaseModel):
@@ -119,6 +120,136 @@ _SEARCHABLE_FIELDS_ORDER = [
     "givenname",
     "firstname",
 ]
+
+
+def _unwrap_type_node(t) -> Optional[str]:
+    while hasattr(t, "type"):
+        t = t.type
+    return getattr(getattr(t, "name", None), "value", None)
+
+
+def _get_where_input_name_from_query(query: Optional[str]) -> Optional[str]:
+    if not query:
+        return None
+    try:
+        ast = graphql.parse(query)
+        for defn in ast.definitions:
+            if defn.kind == "operation_definition":
+                for v in defn.variable_definitions or []:
+                    if v.variable.name.value == "where":
+                        return _unwrap_type_node(v.type)
+    except Exception:
+        pass
+    return None
+
+
+def _collect_filter_ops(sdl_ast) -> Dict[str, List[str]]:
+    """Mapuje název input filtru (např. StrFilter) → povolené operátory."""
+    out: Dict[str, List[str]] = {}
+    for d in sdl_ast.definitions:
+        if d.kind == "input_object_type_definition":
+            name = d.name.value
+            if name.endswith("Filter") or name.endswith("filter"):
+                out[name] = [f.name.value for f in (d.fields or [])]
+    return out
+
+
+def _collect_allowed_where_fields(
+    sdl_ast, where_input_name: Optional[str]
+) -> Dict[str, str]:
+    """
+    Vrátí mapu { field_name -> filter_input_type }, např. {"name":"StrFilter","id":"UuidFilter"}.
+    """
+    if not where_input_name:
+        return {}
+    for d in sdl_ast.definitions:
+        if (
+            d.kind == "input_object_type_definition"
+            and d.name.value == where_input_name
+        ):
+            allowed: Dict[str, str] = {}
+            for f in d.fields or []:
+                ft = _unwrap_type_node(f.type)
+                if ft:
+                    allowed[f.name.value] = ft
+            return allowed
+    return {}
+
+
+def _sanitize_where(
+    where: Any,
+    allowed_fields: Dict[str, str],
+    filter_ops: Dict[str, List[str]],
+    disallowed: set[str],
+) -> Optional[dict]:
+    """Vyhodí pole mimo SDL a operátory mimo definici konkrétního *Filter* input typu."""
+    if not isinstance(where, dict):
+        return None
+    cleaned: Dict[str, Any] = {}
+    for key, val in where.items():
+        if key in ("_and", "_or"):
+            if isinstance(val, list):
+                branch = []
+                for sub in val:
+                    sv = _sanitize_where(sub, allowed_fields, filter_ops, disallowed)
+                    if sv:
+                        branch.append(sv)
+                if branch:
+                    cleaned[key] = branch
+            continue
+
+        if key in disallowed:
+            continue
+        filter_input = allowed_fields.get(key)
+        if not filter_input:
+            continue  # field mimo SDL
+
+        allowed_ops = set(filter_ops.get(filter_input, []))
+        if isinstance(val, dict):
+            ops_ok = {op: v for op, v in val.items() if op in allowed_ops}
+            if ops_ok:
+                cleaned[key] = ops_ok
+    return cleaned or None
+
+
+def _make_filter_prompt(
+    *,
+    skip_default: int,
+    limit_default: int,
+    limit_max: int,
+    now_iso: str,
+    allowed_fields: Dict[str, str],
+    filter_ops: Dict[str, List[str]],
+) -> str:
+    allowed_fields_json = json.dumps(
+        [
+            {"field": f, "filter": t, "ops": filter_ops.get(t, [])}
+            for f, t in sorted(allowed_fields.items())
+        ],
+        ensure_ascii=False,
+        indent=2,
+    )
+    return f"""
+You are a GraphQL filter extractor for a known schema. 
+Return ONLY a valid JSON object with keys: {{"skip":Int,"limit":Int,"desc":Boolean|null,"where":Object|null}}.
+
+Use ONLY fields and operators listed below. Do not invent fields or operators.
+
+ALLOWED_FIELDS (from InputWhereFilter):
+{allowed_fields_json}
+
+Rules:
+- The "where" object must use nested operators under fields, e.g. {{"name":{{"_like":"%Zde%"}}}}; NEVER `"name_like"`.
+- Operators per field are restricted by its filter type (see ALLOWED_FIELDS).
+- Compose conditions only with `"_and"` and `"_or"` (arrays). When nesting, alternate blocks (an `"_or"` contains a list of `"_and"` blocks and vice versa).
+- For “contains” semantics use `_like` and include `%` wildcards in the value (e.g., "%text%").
+- Prefer the most semantically appropriate single field when the user intent is clear (avoid spreading the same token to many fields unless explicitly asked).
+- Bounds: skip default {skip_default}; limit default {limit_default}, clamp to [1, {limit_max}].
+- "desc" may be null if unspecified.
+
+Output JSON ONLY:
+{{"skip":int,"limit":int,"desc":true|false|null,"where":<object|null>}}
+""".strip()
 
 
 def _wrap_like(v: str) -> str:
@@ -261,22 +392,45 @@ async def build_filter_variables(payload: BuildFilterVarsIn):
         timespec="seconds"
     )
 
+    # --- SDL → whitelist/ops pro konkrétní $where typ ---
+    try:
+        sdl = fetch_sdl()
+        sdl_ast = graphql.parse(sdl)
+        where_input = _get_where_input_name_from_query(payload.graphql_query)
+        filter_ops = _collect_filter_ops(sdl_ast)
+        allowed_fields = _collect_allowed_where_fields(sdl_ast, where_input)
+    except Exception as e:
+        log_b.exception("buildFilter.sdl_failed", extra={"err": str(e)})
+        filter_ops, allowed_fields = {}, {}
+
+    # volitelný blacklist z klienta
+    disallowed = set(payload.disallowed_fields or [])
+
+    # --- Prompt založený na SDL ---
+    system_prompt = _make_filter_prompt(
+        skip_default=payload.skip_default,
+        limit_default=payload.limit_default,
+        limit_max=payload.limit_max,
+        now_iso=now_iso,
+        allowed_fields=allowed_fields,
+        filter_ops=filter_ops,
+    )
     user_msg = {
         "USER_QUERY": payload.user_prompt,
-        "GRAPHQL_QUERY": payload.graphql_query,
+        "GRAPHQL_QUERY": payload.graphql_query,  # jen kontext; model z něj nic neparsuje
         "DEFAULTS": {
             "skip": payload.skip_default,
             "limit": payload.limit_default,
             "limit_max": payload.limit_max,
-            "orderby": payload.orderby_default,
+            "orderby": payload.orderby_default,  # držím pro kompatibilitu
             "now_iso": now_iso,
         },
     }
 
-    # Jen LLM (bez heuristik). Pokud selže, vrať konzervativní defaulty a where=None.
+    # --- LLM → JSON ---
     try:
         raw_vars = await _llm_json(
-            _FILTER_PROMPT, json.dumps(user_msg, ensure_ascii=False)
+            system_prompt, json.dumps(user_msg, ensure_ascii=False)
         )
     except Exception as e:
         log_b.exception("buildFilter.llm_failed", extra={"err": str(e)})
@@ -290,18 +444,17 @@ async def build_filter_variables(payload: BuildFilterVarsIn):
             }
         }
 
-    # Očisti & omez hranice
+    # --- Normalizace a sanitizace vůči SDL ---
     skip = int(raw_vars.get("skip", payload.skip_default) or 0)
     limit = int(raw_vars.get("limit", payload.limit_default) or payload.limit_default)
     limit = max(1, min(limit, payload.limit_max))
     desc = raw_vars.get("desc", None)
     where = raw_vars.get("where", None)
 
-    # ✳︎ Kanonizace where → pokud jde o „jméno“ hledání, zredukuj na {"name":{"_like":"%...%"}}
-    where_canon = _canonize_where_to_name_like(where)
+    where = _sanitize_where(where, allowed_fields, filter_ops, disallowed)
 
-    out = {"skip": skip, "limit": limit, "desc": desc, "where": where_canon}
-    log_b.info("buildFilter.llm_ok", extra={"vars": out})
+    out = {"skip": skip, "limit": limit, "desc": desc, "where": where}
+    log_b.info("buildFilter.ok", extra={"vars": out})
     return {"variables": out}
 
 
