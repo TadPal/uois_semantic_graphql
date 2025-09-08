@@ -16,7 +16,24 @@ conn = connect_to_postgres(os.environ)
 
 initialize_chathistory_table(conn)
 
-conn.close()
+# from get_sessions import get_unique_sessions_by_user_id
+
+# sessions = get_unique_sessions_by_user_id("51d101a0-81f1-44ca-8366-6cf51432e8d6", conn)
+# print(sessions[0])
+##### DANDA
+
+# from get_messages import get_messages_by_session_id
+
+# x = get_messages_by_session_id("8ef1aab8-b041-45d2-aecb-eb464dac7d44", conn)
+
+# x = x[7][4]
+
+# import json
+
+# x = json.loads(x)
+# print("\n\n", x["Response"])
+
+# conn.close()
 
 # Testing functions for interacting with DB
 
