@@ -44,12 +44,7 @@ def GraphQLData(
             metadata = {}
 
         state = {
-            "variables": {
-                "where": variables.get("where", None),
-                "desc": variables.get("desc", None),
-                "skip": variables.get("skip", 0),
-                "limit": variables.get("limit", 10),
-            },
+            "variables": variables,
             "errors": [],
             "result": list(result),
             "ids": {
@@ -87,7 +82,7 @@ def GraphQLData(
         state["done"] = False
         await load_page(skip=0)
 
-    async def load_page(skip: typing.Optional[int] = None):
+    async def load_page(skip: typing.Optional[int] = None, more: int = 0):
         if state["loading"]:
             return
         state["loading"] = True
@@ -97,7 +92,7 @@ def GraphQLData(
             if skip is not None:
                 vars_now["skip"] = skip
             else:
-                vars_now["skip"] = vars_now.get("skip", 0) + vars_now.get("limit", 10)
+                vars_now["skip"] = vars_now.get("skip", 0) + more
             print(f"load_page.variables={vars_now}")
             response = await gqlclient(query, vars_now)
             errors = response.get("errors")
@@ -108,8 +103,7 @@ def GraphQLData(
             # rows = extractor(data)
             rows = next((value for value in data.values()), [])
             if not isinstance(rows, list):
-                state["errors"] = ["response has nonlist key, this is not expected"]
-                rows = []
+                rows = [rows]
             # append unique
             # new_added = 0
             for row in rows:
@@ -130,7 +124,7 @@ def GraphQLData(
 
     async def load_more():
         print(f"load_more")
-        await load_page()
+        await load_page(more=2)
 
     def getcolumns():
         rows = state["result"]

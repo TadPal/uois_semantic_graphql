@@ -733,7 +733,6 @@ async def index_page(request: Request):
                     with gql_container:
                         ui.markdown(f"> ❌ Chyba v JSON variables: `{e}`")
                     return
-
                 # vykresli widget
                 with gql_container:
                     GraphQLData(

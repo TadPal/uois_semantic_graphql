@@ -37,17 +37,19 @@ class GraphQLFilterQueryPlugin:
             List[str],
             "The list of GraphQL types to be searched for available variables, e.g., ['UserGQLModel', 'RoleGQLModel']",
         ],
-        disabled_fields=["createdby", "changedby", "memberOf"],
+        disabled_fields=["createdby", "changedby", "memberOf", "groupId", "userId"],
         arguments: KernelArguments = None,
     ) -> str:
         """
-        Finds filterable variables for desired GraphQL types and their filter options which can be used to build a 'where' variable.
+        This function finds filterable variables for desired GraphQL types and their filter options which are used to build a where filter.
+
+        Always use this function when filtering is desired.
 
         Args:
           graphql_types: The list of GraphQL types to be searched for available variables, e.g., ['UserGQLModel', 'RoleGQLModel']
 
         Returns:
-          A json structure with filtrable variables and their filter options.
+          A json structure with filterable variables and their filter options.
         """
 
         def unwrap_type(t):
@@ -137,7 +139,6 @@ class GraphQLFilterQueryPlugin:
 
     @kernel_function(
         name="runFilterQuery",
-        description="Runs a GraphQL query with a 'where' filter and optional pagination.",
     )
     async def run_graphql_filter_query(
         self,
@@ -159,7 +160,7 @@ class GraphQLFilterQueryPlugin:
 
         Args:
           graphql_query: The complete GraphQL query string.
-          graphql_variables: A JSON string of variables, e.g., '{"where":{"name":{"_ilike":"Zdeňka%"}},"limit":1}'.
+          graphql_variables: A JSON string of variables with filter, e.g., '{"where":{"name":{"_ilike":"Zdeňka%"}},"limit":1}'.
 
 
         Returns:
