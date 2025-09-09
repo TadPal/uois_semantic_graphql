@@ -121,6 +121,52 @@ nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 nicegui_app.add_static_files("/assets", "./assets")
 
 
+def add_feedback_row(parent, query, question):
+    # --- tvoje SVGčka ---
+    like_default = """<svg class="w-6 h-6 text-blue-700 dark:text-gray-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 11c.889-.086 1.416-.543 2.156-1.057a22.323 22.323 0 0 0 3.958-5.084 1.6 1.6 0 0 1 .582-.628 1.549 1.549 0 0 1 1.466-.087c.205.095.388.233.537.406a1.64 1.64 0 0 1 .384 1.279l-1.388 4.114M7 11H4v6.5A1.5 1.5 0 0 0 5.5 19v0A1.5 1.5 0 0 0 7 17.5V11Zm6.5-1h4.915c.286 0 .372.014.626.15.254.135.472.332.637.572a1.874 1.874 0 0 1 .215 1.673l-2.098 6.4C17.538 19.52 17.368 20 16.12 20c-2.303 0-4.79-.943-6.67-1.475"/></svg>"""
+    like_selected = """<svg class="w-6 h-6 text-blue-700 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M15.03 9.684h3.965c.322 0 .64.08.925.232.286.153.532.374.717.645a2.109 2.109 0 0 1 .242 1.883l-2.36 7.201c-.288.814-.48 1.355-1.884 1.355-2.072 0-4.276-.677-6.157-1.256-.472-.145-.924-.284-1.348-.404h-.115V9.478a25.485 25.485 0 0 0 4.238-5.514 1.8 1.8 0 0 1 .901-.83 1.74 1.74 0 0 1 1.21-.048c.396.13.736.397.96.757.225.36.32.788.269 1.211l-1.562 4.63ZM4.177 10H7v8a2 2 0 1 1-4 0v-6.823C3 10.527 3.527 10 4.176 10Z" clip-rule="evenodd"/></svg>"""
+    dislike_default = """<svg class="w-6 h-6 text-blue-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 13c-.889.086-1.416.543-2.156 1.057a22.322 22.322 0 0 0-3.958 5.084 1.6 1.6 0 0 1-.582.628 1.549 1.549 0 0 1-1.466.087 1.587 1.587 0 0 1-.537-.406 1.666 1.666 0 0 1-.384-1.279l1.389-4.114M17 13h3V6.5A1.5 1.5 0 0 0 18.5 5v0A1.5 1.5 0 0 0 17 6.5V13Zm-6.5 1H5.585c-.286 0-.372-.014-.626-.15a1.797 1.797 0 0 1-.637-.572 1.873 1.873 0 0 1-.215-1.673l2.098-6.4C6.462 4.48 6.632 4 7.88 4c2.302 0 4.79.943 6.67 1.475"/></svg>"""
+    dislike_selected = """<svg class="w-6 h-6 text-blue-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M8.97 14.316H5.004c-.322 0-.64-.08-.925-.232a2.022 2.022 0 0 1-.717-.645 2.108 2.108 0 0 1-.242-1.883l2.36-7.201C5.769 3.54 5.96 3 7.365 3c2.072 0 4.276.678 6.156 1.256.473.145.925.284 1.35.404h.114v9.862a25.485 25.485 0 0 0-4.238 5.514c-.197.376-.516.67-.901.83a1.74 1.74 0 0 1-1.21.048 1.79 1.79 0 0 1-.96-.757 1.867 1.867 0 0 1-.269-1.211l1.562-4.63ZM19.822 14H17V6a2 2 0 1 1 4 0v6.823c0 .65-.527 1.177-1.177 1.177Z" clip-rule="evenodd"/></svg>"""
+
+    SVGS = {
+        "like_default": like_default,
+        "like_selected": like_selected,
+        "dislike_default": dislike_default,
+        "dislike_selected": dislike_selected,
+    }
+
+    state = FeedbackState()
+    # samotný řádek – je to sourozenec chatových zpráv uvnitř chat_stream
+    with parent:
+        row = ui.row().classes("feedback-row ml-12 gap-1 -mt-2 mb-2")
+        with row:
+            like_html, dislike_html = render_buttons(state, SVGS)
+            like_btn = ui.html(like_html)
+            dislike_btn = ui.html(dislike_html)
+
+            like_btn.on(
+                "click",
+                lambda e: on_like_click(
+                    like_btn,
+                    dislike_btn,
+                    state,
+                    SVGS,
+                    on_commit=(query, question),
+                ),
+            )
+            dislike_btn.on(
+                "click",
+                lambda e: on_dislike_click(
+                    like_btn,
+                    dislike_btn,
+                    state,
+                    SVGS,
+                    "dislike",
+                ),
+            )
+    return row
+
+
 @ui.page("/")
 async def index_page(request: Request):
 
@@ -410,12 +456,14 @@ async def index_page(request: Request):
         log_chat.info("User question received", extra={"len": len(question)})
 
         text.value = ""
-        with message_container:
+        with chat_stream:  # <<< sem
             ui.chat_message(
                 text=question,
                 name="You",
                 sent=True,
-            ).props("bg-color=primary text-color=white")
+            ).props(
+                "bg-color=primary text-color=white"
+            ).classes("ml-auto justify-end")
 
             thinking_message = ui.chat_message(
                 text="…",
@@ -453,7 +501,7 @@ async def index_page(request: Request):
             query = data["Query"]
             variables = data["Variables"]
             response = data["Response"]
-            response = [{"type": "md", "content": f"{data["Response"]}"}]
+            response = [{"type": "md", "content": f'{data["Response"]}'}]
 
         except json.JSONDecodeError as e:
             print(f"Chyba při parsování JSONu: {e}")
@@ -475,8 +523,16 @@ async def index_page(request: Request):
                 elif part["type"] == "md":
                     ui.markdown(part["content"])
 
+        if feedback_row:
+            try:
+                feedback_row.delete()
+            except Exception:
+                pass
+        with chat_stream:
+            feedback_row = add_feedback_row(chat_stream, query, question)
+
         if query:
-            with message_container:
+            with chat_stream:
                 GraphQLData(
                     gqlclient=gql_client,
                     query=query,
@@ -505,148 +561,71 @@ async def index_page(request: Request):
                 with ui.column().classes("mb-4 p-2 border-b border-gray-300"):
                     ui.markdown(f"**Q:** {q}")
                     ui.markdown(f"**A:** {a}")
-
-        with message_container:  # NEW
-            # if feedback_row:
-            #     feedback_row.delete()
-            # with ui.row().classes("ml-12 gap-1 -mt-4") as feedback_row:
-            # --- SVG ikony ---
-            like_default = """
-                <svg class="w-6 h-6 text-blue-700 dark:text-gray-200" xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" 
-                        d="M7 11c.889-.086 1.416-.543 2.156-1.057a22.323 22.323 0 0 0 
-                            3.958-5.084 1.6 1.6 0 0 1 .582-.628 1.549 1.549 0 0 1 
-                            1.466-.087c.205.095.388.233.537.406a1.64 1.64 0 0 1 
-                            .384 1.279l-1.388 4.114M7 11H4v6.5A1.5 1.5 0 0 0 
-                            5.5 19v0A1.5 1.5 0 0 0 7 17.5V11Zm6.5-1h4.915c.286 0 
-                            .372.014.626.15.254.135.472.332.637.572a1.874 1.874 
-                            0 0 1 .215 1.673l-2.098 6.4C17.538 19.52 17.368 20 
-                            16.12 20c-2.303 0-4.79-.943-6.67-1.475"/>
-                </svg>
-                """
-
-            like_selected = """
-                <svg class="w-6 h-6 text-blue-700 dark:text-gray-200" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" 
-                    width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                <path fill-rule="evenodd" d="M15.03 9.684h3.965c.322 0 .64.08.925.232.286.153.532.374.717.645a2.109 2.109 0 0 1 .242 1.883l-2.36 7.201c-.288.814-.48 1.355-1.884 1.355-2.072 0-4.276-.677-6.157-1.256-.472-.145-.924-.284-1.348-.404h-.115V9.478a25.485 25.485 0 0 0 4.238-5.514 1.8 1.8 0 0 1 .901-.83 1.74 1.74 0 0 1 1.21-.048c.396.13.736.397.96.757.225.36.32.788.269 1.211l-1.562 4.63ZM4.177 10H7v8a2 2 0 1 1-4 0v-6.823C3 10.527 3.527 10 4.176 10Z" clip-rule="evenodd"/>
-                </svg>
-                """
-
-            dislike_default = """
-                <svg class="w-6 h-6 text-blue-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" 
-                        d="M17 13c-.889.086-1.416.543-2.156 1.057a22.322 
-                            22.322 0 0 0-3.958 5.084 1.6 1.6 0 0 1-.582.628 
-                            1.549 1.549 0 0 1-1.466.087 1.587 1.587 0 0 1 
-                            -.537-.406 1.666 1.666 0 0 1-.384-1.279l1.389-4.114
-                            M17 13h3V6.5A1.5 1.5 0 0 0 18.5 5v0A1.5 1.5 0 0 0 
-                            17 6.5V13Zm-6.5 1H5.585c-.286 0-.372-.014-.626-.15
-                            a1.797 1.797 0 0 1-.637-.572 1.873 1.873 0 0 1 
-                            -.215-1.673l2.098-6.4C6.462 4.48 6.632 4 7.88 4c2.302 
-                            0 4.79.943 6.67 1.475"/>
-                </svg>
-                """
-
-            dislike_selected = """
-                <svg class="w-6 h-6 text-blue-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" 
-                    width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                <path fill-rule="evenodd" d="M8.97 14.316H5.004c-.322 0-.64-.08-.925-.232a2.022 2.022 0 0 1-.717-.645 2.108 2.108 0 0 1-.242-1.883l2.36-7.201C5.769 3.54 5.96 3 7.365 3c2.072 0 4.276.678 6.156 1.256.473.145.925.284 1.35.404h.114v9.862a25.485 25.485 0 0 0-4.238 5.514c-.197.376-.516.67-.901.83a1.74 1.74 0 0 1-1.21.048 1.79 1.79 0 0 1-.96-.757 1.867 1.867 0 0 1-.269-1.211l1.562-4.63ZM19.822 14H17V6a2 2 0 1 1 4 0v6.823c0 .65-.527 1.177-1.177 1.177Z" clip-rule="evenodd"/>
-                </svg>
-                """
-
-            SVGS = {
-                "like_default": like_default,
-                "like_selected": like_selected,
-                "dislike_default": dislike_default,
-                "dislike_selected": dislike_selected,
-            }
-
-            state = FeedbackState()
-
-            with ui.row().classes("ml-12 gap-1 -mt-4") as feedback_row:
-                # Inicialní render tlačítek
-                like_html, dislike_html = render_buttons(state, SVGS)
-
-                like_btn = ui.html(like_html)
-                dislike_btn = ui.html(dislike_html)
-
-                # Handlery – logika je v odděleném souboru
-                like_btn.on(
-                    "click",
-                    lambda e: on_like_click(
-                        like_btn,
-                        dislike_btn,
-                        state,
-                        SVGS,
-                        on_commit=(query, question),
-                    ),
-                )
-                dislike_btn.on(
-                    "click",
-                    lambda e: on_dislike_click(
-                        like_btn, dislike_btn, state, SVGS, "dislike"
-                    ),
-                )
-
-        ui.run_javascript("window.scrollTo(0, document.body.scrollHeight)")
+        ui.run_javascript(
+            "document.getElementById('chat-scroll')?.scrollTo({top: 1e9, behavior: 'smooth'});"
+        )
 
     ui.add_css(
         """
-        a:link, a:visited { color: inherit !important; text-decoration: none; font-weight: 500; }
-        # ::-webkit-scrollbar { display: none; }
-        # * { scrollbar-width: none; }
-        /* Wrapper vpravo dole */
-        .tooltip-item{
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        z-index: 9999;
+        #chat-scroll .q-message-name--sent {
+  text-align: left !important;   /* text vlevo */
+  display: block;                /* aby se text-align chytlo */
+  margin-left: 0 !important;
+  margin-right: auto !important; /* odlepit od pravého okraje */
+}
+
+        /* 1) Jednotná šířka zobáčku */
+        :root { --chat-tail: 6px; } /* klidně doladíš 10–14px podle Quasaru/tematu */
+
+        /* 2) Chat kontejner má rezervu na obou stranách,
+            takže špička může „zajet“ do paddingu bez overflow */
+        #chat-scroll {
+        padding-left: var(--chat-tail);
+        padding-right: var(--chat-tail);
+        overflow-x: hidden;        /* jistota bez horizontálního scrollu */
         }
 
-        /* Klikatelný avatar */
-        .avatar-cta{ pointer-events: auto; z-index: 10000; }
-
-        /* Bublina (jedna řádka) – posun doleva přes --x */
-        .tooltip-card{
-        --x: -90%;                       /* dolaď: -70%…-95% = více doleva */
-        position: absolute;
-        bottom: calc(100% + 8px);
-        left: 50%;
-        transform: translateX(var(--x)) scale(.95);
-        white-space: nowrap;
-        width: max-content;
-        pointer-events: auto;
-        z-index: 10001;
+        /* 3) Bubliny nesmí přetékat šířku (rezerva na zobáček) */
+        #chat-scroll .q-message-text {
+        max-width: calc(100% - var(--chat-tail));
+        position: relative;
         }
 
-        /* Viditelný stav – zachovej stejný posun */
-        .tooltip-card.opacity-100{
-        opacity: 1 !important;
-        visibility: visible !important;
-        transform: translateX(var(--x)) scale(1) !important;
+        /* 4) Zarovnání wrapperů (už posíláš sent doprava, received doleva) */
+        #chat-scroll .q-message.q-message-sent   { justify-content: flex-end;  }
+        #chat-scroll .q-message.q-message-received { justify-content: flex-start; }
+
+        /* 5) ŠPIČKA: posuň ji do vnitřního paddingu kontejneru,
+            takže končí přesně na kraji #chat-scroll */
+        #chat-scroll .q-message-text--received::before,
+        #chat-scroll .q-message-text--received::after {
+        left: calc(-1 * var(--chat-tail)) !important;    /* „do paddingu“ vlevo */
+        right: auto !important;
+        transform: none !important;
         }
 
-        /* Ocásek (dědí barvu pozadí bubliny) */
-        .tooltip-card .tooltip-arrow{
-        position: absolute;
-        bottom: -6px;
-        left: 90%;                        /* posun ocásku – klidně uprav */
-        transform: translateX(-50%) rotate(45deg);
-        width: 12px; height: 12px;
-        background: inherit;
-        border-radius: 2px;
+        #chat-scroll .q-message-text--sent::before,
+        #chat-scroll .q-message-text--sent::after {
+        right: calc(-1 * var(--chat-tail)) !important;   /* „do paddingu“ vpravo */
+        left: auto !important;
+        transform: none !important;
         }
+
+        /* 6) Pro jistotu: dlouhé řádky nerozbíjej scroll */
+        #chat-scroll .nicegui-markdown pre,
+        #chat-scroll .nicegui-markdown code {
+        white-space: pre-wrap;
+        word-break: break-word;
+        }
+
+        /* 7) Ať flex položky bublin nediktují min-width */
+        #chat-scroll .q-message { min-width: 0; }
     """
     )
 
     # the queries below are used to expand the content down to the footer (content can then use flex-grow to expand)
     ui.query(".q-page").classes("flex")
-    ui.query(".nicegui-content").classes("w-full")
+    ui.query(".nicegui-content").classes("w-full px-4 py-4")
 
     with ui.tabs().classes("w-full") as tabs:
         chat_tab = ui.tab("Chat")
@@ -655,16 +634,108 @@ async def index_page(request: Request):
         graphql_tab = ui.tab("GraphQL")
 
     with ui.tab_panels(tabs, value=chat_tab).classes(
-        "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800"
+        "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch"
     ):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:
-            ui.chat_message(
-                text="Noo, co potřebuješ?",
-                name="Tadeáš",
-                sent=False,
-                avatar="/assets/img/Tadeas.png",
-            ).props("bg-color=grey-2 text-color=dark")
+            # jeden řádek = dvě kolony: vlevo TABY s tabulkou, vpravo chat
+            with ui.row().classes("w-full gap-4 items-start"):
+                # ========== LEVÝ TABSET (samostatné taby pro tabulku) ==========
+                with ui.card().classes("w-80 shrink-0 rounded-2xl shadow-md"):
+                    # vertikální tabs kvůli úzké šířce; klidně smaž .props('vertical') pokud nechceš
+                    with ui.column().classes("w-full"):
+                        with ui.tabs().props("vertical").classes("w-full") as left_tabs:
+                            products_tab = ui.tab("Produkty")
+
+                        with ui.tab_panels(left_tabs, value=products_tab).classes(
+                            "w-full"
+                        ):
+                            with ui.tab_panel(products_tab):
+                                ui.label("Produkty").classes(
+                                    "text-sm font-semibold mb-2"
+                                )
+
+                                columns = [
+                                    {
+                                        "name": "product",
+                                        "label": "Product name",
+                                        "field": "product",
+                                        "required": True,
+                                        "align": "left",
+                                    }
+                                ]
+                                rows = [
+                                    {"product": 'Apple MacBook Pro 17"'},
+                                    {"product": "Microsoft Surface Pro"},
+                                    {"product": "Magic Mouse 2"},
+                                    {"product": "Logitech MX Master 3S"},
+                                    {"product": "Dell XPS 13"},
+                                    {"product": "Lenovo ThinkPad X1"},
+                                    {"product": "HP Spectre x360"},
+                                    {"product": 'iPad Pro 12.9"'},
+                                    {"product": "Samsung Galaxy Tab S9"},
+                                    {"product": "Asus ROG Zephyrus"},
+                                    {"product": "Razer Blade 15"},
+                                    {"product": "Acer Swift 5"},
+                                    {"product": "Google Pixelbook Go"},
+                                    {"product": "Microsoft Surface Laptop 5"},
+                                    {"product": "Apple Magic Keyboard"},
+                                    {"product": "Keychron K6"},
+                                    {"product": 'LG UltraFine 27"'},
+                                    {"product": "BenQ PD2705U"},
+                                    {"product": "Anker USB-C Hub"},
+                                    {"product": "SanDisk Extreme SSD 1TB"},
+                                ]
+
+                                # scroll pouze v obsahu tabu (cca 10 řádků viditelných)
+                                with ui.element("div").style(
+                                    "max-height: 320px; overflow-y: auto;"
+                                ):
+                                    ui.table(
+                                        columns=columns, rows=rows, row_key="product"
+                                    ).props(
+                                        'flat dense separator="horizontal" hide-bottom'
+                                    ).classes(
+                                        "w-full"
+                                    )
+
+                # PRAVÁ KARTA: CHAT
+                with ui.card().classes(
+                    "flex-1 min-w-0 rounded-2xl shadow-lg light:bg-white dark:bg-green-800 overflow-x-hidden"
+                ):
+                    with ui.column().classes("w-full min-w-0"):
+                        # scrollovací obal pro chat (zůstane uvnitř karty)
+                        chat_scroll = (
+                            ui.element("div")
+                            .props("id=chat-scroll")
+                            .classes("w-full")  # ← w-full přesunuto do class
+                            .style("max-height: 70vh; overflow-y: auto;")
+                        )
+                        with chat_scroll:
+                            # >>> TADY BUDEME VŽDY PŘIDÁVAT ZPRÁVY <<<
+                            chat_stream = ui.column().classes("w-full gap-2")
+
+                            # placeholder zpráva
+                            with chat_stream:
+                                ui.chat_message(
+                                    text="Noo, co potřebuješ?",
+                                    name="Tadeáš",
+                                    sent=False,
+                                    avatar="/assets/img/Tadeas.png",
+                                ).props("bg-color=green text-color=dark")
+        # with ui.tab_panels(tabs, value=chat_tab).classes(
+        #     "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-green-800"
+        # ):
+        #     message_container = ui.tab_panel(chat_tab).classes(
+        #         "items-stretch bg-color-green"
+        #     )
+        #     with message_container:
+        #         ui.chat_message(
+        #             text="Noo, co potřebuješ?",
+        #             name="Tadeáš",
+        #             sent=False,
+        #             avatar="/assets/img/Tadeas.png",
+        #         ).props("bg-color=green text-color=dark")
 
         #######################################################
         # * Logs tab
