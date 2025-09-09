@@ -29,11 +29,10 @@ class Orchestrator:
         self,
         builder_url="http://localhost:8001",
         runner_url="http://localhost:8002",
-        table_url="http://localhost:8003",
         gql_url="http://localhost:33001/api/gql",
     ):
         # MCP
-        self.client = MCPClient(builder_url, runner_url, table_url)
+        self.client = MCPClient(builder_url, runner_url)
         self.builder_url = builder_url
         self.runner_url = runner_url
         self.gql_url = gql_url
@@ -218,20 +217,27 @@ class Orchestrator:
                 log_orch.exception("IN_DOMAIN_FAILED", extra={"err": str(e)})
 
         # 3) fallback (out-of-domain)
-        from semantic_kernel.contents import ChatHistory
+        from semantic_kernel.contents import ChatHistoryTruncationReducer
+        from semantic_kernel.contents.utils.author_role import AuthorRole
 
-        history = ChatHistory()
-        history.add_system_message(
+        hist = ChatHistoryTruncationReducer(target_count=12)
+        hist.add_system_message(
             "You are a helpful assistant. Respond briefly and clearly."
         )
-        history.add_user_message(user_prompt)
+        hist.add_user_message(user_prompt)
         raw = await self.azure.get_chat_message_content(
-            chat_history=history,
+            chat_history=hist,
             settings=self.exec,
             kernel=None,
             arguments=None,
             result_type=str,
         )
+        await hist.reduce()
+        if not any(m.role == AuthorRole.SYSTEM for m in hist.messages):
+            hist.add_system_message(
+                "You are a helpful assistant. Respond briefly and clearly."
+            )
+
         return ChatResult(
             json.dumps(
                 {"Response": str(raw), "Query": "", "Variables": {}}, ensure_ascii=False

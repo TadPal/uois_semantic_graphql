@@ -1,5 +1,5 @@
 # mcp_servers/gql_builder_server.py
-# mcp_servers/gql_builder_server.py
+
 from fastapi import FastAPI, Body
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
@@ -111,7 +111,7 @@ _ALLOWED_OPS = {
     "_le",
     "_lt",
 }
-_PREFERRED_FIELD = "name"
+
 _SEARCHABLE_FIELDS_ORDER = [
     "name",
     "fullname",
@@ -289,36 +289,6 @@ def _to_like_value(op: str, val: str) -> str:
     return _wrap_like(sval)
 
 
-def _canonize_where_to_name_like(where: Optional[dict]) -> Optional[dict]:
-    """
-    Pokud LLM vrátí textové podmínky na některém z polí (name/fullname/…),
-    vrátí vždy jednoduchý tvar: {"name": {"_like": "%token%"}}.
-    Jinak vrátí původní `where` beze změny.
-    """
-    if not isinstance(where, dict) or not where:
-        return where
-
-    # 1) má už přímo name { _like/_startswith/_endswith/_eq } ?
-    name_cond = where.get("name")
-    if isinstance(name_cond, dict):
-        for op, val in name_cond.items():
-            if op in _ALLOWED_OPS and isinstance(val, (str, int, float)):
-                return {"name": {"_like": _to_like_value(op, str(val))}}
-
-    # 2) projdi celé where a najdi první vhodnou textovou podmínku v preferovaném pořadí
-    best = None
-    for fld, op, val in _iter_field_conditions(where):
-        if fld in _SEARCHABLE_FIELDS_ORDER and isinstance(val, (str, int, float)):
-            best = _to_like_value(op, str(val))
-            break
-
-    if best:
-        return {"name": {"_like": best}}
-
-    # nic textového → ponech beze změny (žádná heuristika)
-    return where
-
-
 async def _llm_json(system_prompt: str, user_payload: str) -> dict:
     """
     Vrátí čisté JSON (dict) z LLM. Preferuje lokální Azure klient,
@@ -328,9 +298,11 @@ async def _llm_json(system_prompt: str, user_payload: str) -> dict:
 
     # 1) Azure přímo (stabilní cesta)
     if azure_llm is not None:
-        from semantic_kernel.contents import ChatHistory
+        from semantic_kernel.contents import ChatHistoryTruncationReducer
+        from semantic_kernel.contents.utils.author_role import AuthorRole
 
-        hist = ChatHistory()
+        hist = ChatHistoryTruncationReducer(target_count=12)
+        # hist = ChatHistory()
         hist.add_system_message(system_prompt)
         hist.add_user_message(user_payload)
         raw = await azure_llm.get_chat_message_content(
@@ -340,6 +312,11 @@ async def _llm_json(system_prompt: str, user_payload: str) -> dict:
             arguments=None,
             result_type=str,
         )
+
+        await hist.reduce()
+        if not any(m.role == AuthorRole.SYSTEM for m in hist.messages):
+            hist.add_system_message(system_prompt)
+
         data = json.loads(str(raw))
         if not isinstance(data, dict):
             raise RuntimeError(f"Unexpected LLM JSON (azure): {data}")
@@ -363,26 +340,6 @@ async def _llm_json(system_prompt: str, user_payload: str) -> dict:
         if not isinstance(data, dict):
             raise RuntimeError(f"Unexpected LLM JSON (proxy): {data}")
         return data
-
-
-_FILTER_PROMPT = """
-You are a GraphQL filter extractor.
-Return ONLY a valid JSON object with keys: {"skip":Int,"limit":Int,"desc":Boolean|null,"where":Object|null}.
-
-STRICT RULES for "where":
-- Use nested operators under fields, e.g. {"name":{"_like":"%Zde%"}}; NEVER "name_like":"Zde".
-- Allowed ops: "_eq","_in","_like","_startswith","_endswith","_ge","_gt","_le","_lt".
-- Combine with {"_and":[...]} and {"_or":[...]}. When nesting, alternate: an "_or" contains a list of "_and" blocks and vice versa.
-- For "contains" semantics, always wrap the value with percent wildcards: "%text%".
-- When the user says “ve jménu / in the name”, prefer fields: name, surname, fullname, email.
-
-Pagination:
-- If the user gives a single number (e.g., "napiš mi 3 ..."), set "limit" to that value (clamped to bounds) and keep "skip" at its default unless the user explicitly says "skip / přeskoč".
-- "desc" may be null if not specified.
-
-Output:
-{"skip": <int>, "limit": <int>, "desc": true|false|null, "where": <object|null>}
-"""
 
 
 @app.post("/buildFilterVariables")
