@@ -29,6 +29,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from pathlib import Path
 import tempfile
 import time
+from Database.Embedding.find_simillar import find_similar_question
 
 # Store per user chat instances
 user_chats = {}
@@ -436,7 +437,15 @@ async def index_page(request: Request):
 
         animation_task = asyncio.create_task(animate_thinking(thinking_message))
 
-        # AI stuff
+        #######################################################
+        # * Compare promt embedding
+        #######################################################
+
+        # found_answer = find_similar_question(user_prompt=question, threshold=0.7)
+
+        #######################################################
+        # * AI stuff
+        #######################################################
         try:
             result = await chat_hook(question)
             log_chat.info("Chat hook answered", extra={"answer_len": len(str(result))})
@@ -446,8 +455,8 @@ async def index_page(request: Request):
 
         query = None
         variables = None
-        try:
 
+        try:
             data = json.loads(result.content)
 
             query = data["Query"]
@@ -459,6 +468,12 @@ async def index_page(request: Request):
             print(f"Chyba při parsování JSONu: {e}")
             data = result.content
             response = [{"type": "md", "content": f"{data}"}]
+
+        #######################################################
+        # * Datová pumpa do embeddingu
+        #######################################################
+        # from Database.Embedding.data_pump import ask_questions
+        # await ask_questions(chat_hook)
 
         animation_task.cancel()
         try:
@@ -580,7 +595,7 @@ async def index_page(request: Request):
                         dislike_btn,
                         state,
                         SVGS,
-                        on_commit=(query, question),
+                        on_commit=(query, question, variables),
                     ),
                 )
                 dislike_btn.on(

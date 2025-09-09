@@ -255,8 +255,6 @@ async def main():
     for plugin in kernel.plugins.values():
         skills.extend(plugin.functions.keys())
 
-    print(f"Loaded skills: {skills}")
-
     # for pname, plugin in kernel.plugins.items():
     #     print(f"Plugin: {pname}")
     #     print("  Functions:", list(plugin.functions))
