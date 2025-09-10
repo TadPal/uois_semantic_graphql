@@ -13,7 +13,11 @@ from SemanticKernel import (
 )
 from History.chatHistory import UserChatHistory
 from Database.Embedding.add_to_db import add_embedding_row
-
+from src.Utils.tab_history import (
+    get_user_sorted_sessions,
+    get_unique_sessions_by_user_id,
+    load_and_display_session,
+)
 
 from src.Utils.on_button_press import (
     FeedbackState,
@@ -540,10 +544,19 @@ async def index_page(request: Request):
                 )
 
         # 🔹 Uložení do historie
-        history.add_entry(question=question, answer=result)
+        # zkus získat čistý text z JSONu
+        try:
+            answer_text = json.loads(result.content)["Response"]
+        except Exception:
+            answer_text = str(result)
+
+        # ulož do historie v paměti
+        history.add_entry(question=question, answer=answer_text)
+
+        # ulož do DB jen čistý text
         add_chat_history(
             message=question,
-            answer=result,
+            answer=answer_text,
             user_id=user_id,
             session_id=history.get_history_id(),
         )
@@ -620,6 +633,24 @@ async def index_page(request: Request):
 
         /* 7) Ať flex položky bublin nediktují min-width */
         #chat-scroll .q-message { min-width: 0; }
+
+        /* 8) */
+        html, body {
+            overflow: hidden !important;  /* scroll zakázán */
+            height: 100% !important;
+        }
+
+        /* 9) Skrytí scroll baru v tabulce produktů (funkční scroll) */
+        #product-scroll {
+            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;  /* IE 10+ */
+        }
+
+        #product-scroll::-webkit-scrollbar {
+            width: 0px;  /* Chrome, Safari, Edge */
+            background: transparent;
+        }
+        
     """
     )
 
@@ -645,59 +676,36 @@ async def index_page(request: Request):
                     # vertikální tabs kvůli úzké šířce; klidně smaž .props('vertical') pokud nechceš
                     with ui.column().classes("w-full"):
                         with ui.tabs().props("vertical").classes("w-full") as left_tabs:
-                            products_tab = ui.tab("Produkty")
+                            products_tab = ui.tab("Chat history")
 
                         with ui.tab_panels(left_tabs, value=products_tab).classes(
                             "w-full"
                         ):
                             with ui.tab_panel(products_tab):
-                                ui.label("Produkty").classes(
+                                user_sessions = get_user_sorted_sessions(user_id)
+                                num_sessions = len(user_sessions)
+                                ui.label(f"Sessions ({num_sessions})").classes(
                                     "text-sm font-semibold mb-2"
                                 )
 
-                                columns = [
-                                    {
-                                        "name": "product",
-                                        "label": "Product name",
-                                        "field": "product",
-                                        "required": True,
-                                        "align": "left",
-                                    }
-                                ]
-                                rows = [
-                                    {"product": 'Apple MacBook Pro 17"'},
-                                    {"product": "Microsoft Surface Pro"},
-                                    {"product": "Magic Mouse 2"},
-                                    {"product": "Logitech MX Master 3S"},
-                                    {"product": "Dell XPS 13"},
-                                    {"product": "Lenovo ThinkPad X1"},
-                                    {"product": "HP Spectre x360"},
-                                    {"product": 'iPad Pro 12.9"'},
-                                    {"product": "Samsung Galaxy Tab S9"},
-                                    {"product": "Asus ROG Zephyrus"},
-                                    {"product": "Razer Blade 15"},
-                                    {"product": "Acer Swift 5"},
-                                    {"product": "Google Pixelbook Go"},
-                                    {"product": "Microsoft Surface Laptop 5"},
-                                    {"product": "Apple Magic Keyboard"},
-                                    {"product": "Keychron K6"},
-                                    {"product": 'LG UltraFine 27"'},
-                                    {"product": "BenQ PD2705U"},
-                                    {"product": "Anker USB-C Hub"},
-                                    {"product": "SanDisk Extreme SSD 1TB"},
-                                ]
+                                row_height_px = 32
+                                max_table_height = min(
+                                    num_sessions * row_height_px, 400
+                                )
 
-                                # scroll pouze v obsahu tabu (cca 10 řádků viditelných)
-                                with ui.element("div").style(
-                                    "max-height: 320px; overflow-y: auto;"
+                                with ui.element("div").props("id=product-scroll").style(
+                                    f"max-height: {max_table_height}px; overflow-y: auto;"
                                 ):
-                                    ui.table(
-                                        columns=columns, rows=rows, row_key="product"
-                                    ).props(
-                                        'flat dense separator="horizontal" hide-bottom'
-                                    ).classes(
-                                        "w-full"
-                                    )
+                                    user_sessions = get_user_sorted_sessions(user_id)
+                                    for sid in user_sessions:
+                                        ui.button(
+                                            sid,
+                                            on_click=lambda sid=sid: load_and_display_session(
+                                                sid, chat_stream, user_id
+                                            ),
+                                        ).props("flat dense").classes(
+                                            "w-full text-left"
+                                        )
 
                 # PRAVÁ KARTA: CHAT
                 with ui.card().classes(
@@ -710,6 +718,19 @@ async def index_page(request: Request):
                             .props("id=chat-scroll")
                             .classes("w-full")  # ← w-full přesunuto do class
                             .style("max-height: 70vh; overflow-y: auto;")
+                        )
+                        ui.add_css(
+                            """
+                        #chat-scroll {
+                            scrollbar-width: none;  /* Firefox */
+                            -ms-overflow-style: none;  /* IE 10+ */
+                        }
+
+                        #chat-scroll::-webkit-scrollbar {
+                            width: 0px;  /* Chrome, Safari, Edge */
+                            background: transparent;
+                        }
+                        """
                         )
                         with chat_scroll:
                             # >>> TADY BUDEME VŽDY PŘIDÁVAT ZPRÁVY <<<
