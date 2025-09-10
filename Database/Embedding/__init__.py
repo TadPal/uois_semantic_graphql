@@ -15,12 +15,3 @@ load_dotenv()
 conn = connect_to_postgres(os.environ)
 
 initialize_embedding_table(conn)
-conn.close()
-
-# # Testing
-# from add_to_db import add_embedding_row
-
-# answer_query = """query {userPage(where: {email: {_endswith: "%.com"}}, skip:0, limit:5){id  name  email} }"""
-# question = "Give me 5 users wich email ends with .com"
-
-# add_embedding_row(conn, question, answer_query)

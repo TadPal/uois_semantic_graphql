@@ -14,7 +14,8 @@ def initialize_embedding_table(conn):
     CREATE TABLE IF NOT EXISTS graphql_types (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         question TEXT UNIQUE,
-        answer TEXT,
+        query TEXT,
+        variables TEXT,
         embedding vector({embedding_dimension})
     );
 
@@ -31,7 +32,9 @@ def initialize_embedding_table(conn):
             conn.commit()
             cursor.close()
             print(f"Table available with {embedding_dimension} dimensions")
+            conn.close
 
         except psycopg2.Error as error:
             print(f"Error executing command: {error}")
             conn.rollback()
+            conn.close
