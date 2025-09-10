@@ -4,7 +4,7 @@ from Database.connection import connect_to_postgres
 import os
 
 
-def add_embedding_row(GQLquery, user_prompt, conn=None):
+def add_embedding_row(query, user_prompt, variables, conn=None):
 
     if not conn:
         conn = connect_to_postgres(os.environ)
@@ -13,8 +13,8 @@ def add_embedding_row(GQLquery, user_prompt, conn=None):
     Inserts a new row into the graphql_types table.
     """
     command = """
-    INSERT INTO graphql_types (question, answer, embedding)
-    VALUES (%s, %s, %s);
+    INSERT INTO graphql_types (question, query, variables, embedding)
+    VALUES (%s, %s, %s, %s);
     """
 
     # get embedding in float type
@@ -22,7 +22,7 @@ def add_embedding_row(GQLquery, user_prompt, conn=None):
     if conn:
         try:
             cursor = conn.cursor()
-            cursor.execute(command, (user_prompt, GQLquery, embedding))
+            cursor.execute(command, (user_prompt, query, variables, embedding))
             conn.commit()
             cursor.close()
             print("Row added successfully.")
