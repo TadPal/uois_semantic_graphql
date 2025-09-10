@@ -441,7 +441,7 @@ async def index_page(request: Request):
         # * Compare promt embedding
         #######################################################
 
-        # found_answer = find_similar_question(user_prompt=question, threshold=0.7)
+        found_answer = find_similar_question(user_prompt=question, threshold=0.7)
 
         #######################################################
         # * AI stuff
@@ -490,22 +490,74 @@ async def index_page(request: Request):
                 elif part["type"] == "md":
                     ui.markdown(part["content"])
 
+        # if query:
+        #     with message_container:
+        #         GraphQLData(
+        #             gqlclient=gql_client,
+        #             query=query,
+        #             variables=variables,
+        #         )
         if query:
             with message_container:
-                GraphQLData(
-                    gqlclient=gql_client,
-                    query=query,
-                    variables=variables,
-                )
 
-        # 🔹 Uložení do historie
-        history.add_entry(question=question, answer=result)
-        add_chat_history(
-            message=question,
-            answer=result,
-            user_id=user_id,
-            session_id=history.get_history_id(),
-        )
+                # helper: vykreslí tlačítko, které zaloguje pevný text do konzole
+                def make_console_button(log_text: str):
+                    def _handler():
+                        ui.run_javascript(f"console.log('{log_text}');")
+
+                    ui.button(
+                        f"Vypsat '{log_text}' do konzole",
+                        on_click=_handler,
+                    ).props("color=secondary outlined").classes("mt-2")
+
+                if found_answer:
+                    # Máme podobnou otázku → 2 tabulky
+
+                    try:
+                        db_query, db_variables = found_answer
+                    except Exception:
+                        db_query, db_variables = None, None
+
+                    if db_query:
+                        ui.markdown("**Výsledek z embedding DB**")
+                        GraphQLData(
+                            gqlclient=gql_client,
+                            query=db_query,
+                            variables=db_variables,
+                        )
+                        # tlačítko pro embedding
+                        make_console_button("Varianta A")
+
+                        ui.separator()
+
+                    ui.markdown("**Výsledek z chatbot instance**")
+                    GraphQLData(
+                        gqlclient=gql_client,
+                        query=query,
+                        variables=variables,
+                    )
+                    # tlačítko pro chatbot
+                    make_console_button("Varianta B")
+
+                else:
+                    # Není match → jen chatbot tabulka + tlačítko 'chatbot'
+                    ui.markdown("**Výsledek z chatbot instance**")
+                    GraphQLData(
+                        gqlclient=gql_client,
+                        query=query,
+                        variables=variables,
+                    )
+                    make_console_button("chatbot")
+
+                ##################################################################
+                # 🔹 Uložení do historie
+                history.add_entry(question=question, answer=result)
+                add_chat_history(
+                    message=question,
+                    answer=result,
+                    user_id=user_id,
+                    session_id=history.get_history_id(),
+                )
 
         prompt_count += 1
         if prompt_count == 2:
