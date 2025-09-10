@@ -598,24 +598,32 @@ async def index_page(request: Request):
         overflow-x: hidden;        /* jistota bez horizontálního scrollu */
         }
 
-        /* 3) Bubliny nesmí přetékat šířku (rezerva na zobáček) */
+        /* Ať mohou bubliny využít celou šířku kontejneru */
         #chat-scroll .q-message-text {
-        max-width: calc(100% - var(--chat-tail));
-        position: relative;
+        width: 100% !important;
+        max-width: 100% !important;   /* přepíše quasar ~70% */
+        min-width: 0 !important;
         }
 
-        /* 4) Zarovnání wrapperů (už posíláš sent doprava, received doleva) */
-        #chat-scroll .q-message.q-message-sent   { justify-content: flex-end;  }
+        /* Text se láme normálně až na konci řádku, ne uprostřed slov */
+        #chat-scroll .q-message-text .q-message-text-content,
+        #chat-scroll .q-message-text .nicegui-markdown {
+        white-space: normal !important;
+        word-break: normal !important;
+        overflow-wrap: anywhere; /* jen velmi dlouhá slova/URL se mohou zlomit */
+        }
+
+        /* Zarovnání bublin podle směru zprávy (pravá/levá) */
+        #chat-scroll .q-message.q-message-sent     { justify-content: flex-end; }
         #chat-scroll .q-message.q-message-received { justify-content: flex-start; }
 
-        /* 5) ŠPIČKA: posuň ji do vnitřního paddingu kontejneru,
-            takže končí přesně na kraji #chat-scroll */
+        /* „ocásek“ neřeže okraj a nepřidává horizontální scroll */
+        :root { --chat-tail: 6px; }
+        #chat-scroll { padding-left: var(--chat-tail); padding-right: var(--chat-tail); overflow-x: hidden; }
         #chat-scroll .q-message-text--received::before,
-        #chat-scroll .q-message-text--received::after {
-        left: calc(-1 * var(--chat-tail)) !important;    /* „do paddingu“ vlevo */
-        right: auto !important;
-        transform: none !important;
-        }
+        #chat-scroll .q-message-text--received::after { left: calc(-1 * var(--chat-tail)) !important; right: auto !important; }
+        #chat-scroll .q-message-text--sent::before,
+        #chat-scroll .q-message-text--sent::after { right: calc(-1 * var(--chat-tail)) !important; left: auto !important; }
 
         #chat-scroll .q-message-text--sent::before,
         #chat-scroll .q-message-text--sent::after {
@@ -701,7 +709,7 @@ async def index_page(request: Request):
                                         ui.button(
                                             sid,
                                             on_click=lambda sid=sid: load_and_display_session(
-                                                sid, chat_stream, user_id
+                                                sid, chat_stream, user_id, gql_client
                                             ),
                                         ).props("flat dense").classes(
                                             "w-full text-left"
