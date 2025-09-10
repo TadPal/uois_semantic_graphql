@@ -145,40 +145,6 @@ async def createGQLClient(
     return client
 
 
-async def BasicChaStreamImplementation(context: dict):
-    inQueue: asyncio.Queue = context["inQueue"]
-    outQueue: asyncio.Queue = context["outQueue"]
-    user: dict = context["User"]
-    userFullName: str = user["fullname"]
-    welcomeMessage = {
-        "__typename": "MessageGQLModel",
-        "prompt": f"Hello {userFullName}",
-    }
-    systemMessages = [
-        {
-            "role": "system",
-            "content": f"You are assistant for employee at university. Logged user's name is {userFullName}",
-        },
-    ]
-    await outQueue.put(welcomeMessage)
-
-    response = await inQueue.get()
-    stop = response["__typename"] == "StopGQLModel"
-    dialogMessages = []
-    while not stop:
-        dialogMessages.append({"role": "user", "content": response["message"]})
-
-        prompt = "\n".join(systemMessages)
-        prompt += "\n".join(dialogMessages)
-        result = await kernel.invoke_prompt(prompt=prompt.strip())
-        result_str = f"{result}"
-        dialogMessages.append({"role": "system", "content": result_str})
-        await outQueue.put(
-            {"__typename": "MessageGQLModel", "systemResponse": result_str}
-        )
-        response = await inQueue.get()
-
-
 async def openChat():
     gqlClient = None
     gqlClient = await createGQLClient(
@@ -193,23 +159,31 @@ async def openChat():
     history = CustomChatHistory(target_count=20)
 
     system_prompt = f"""
-    You are an assistant and your primary task is to help query databases using graphql.
-
-    You always response in JSON valid format, follow exactly this strucutre : {{"Response": "...", "Query": "...", "Variables": "..."}}
-
-    Response: str - Your natural language summary of the result
-    Query: str - Full built GQL query (give empty string if no query was used)
-    Varaibles: str - Variables to be used when calling the Query (give empty string if no query was used)
+    You are an assistant who's primary task is to help the user query a GraphQL endpoint using available functions.
     
-    Rules:
-        1. You respond in valid JSON object containing response, query and variables used to call GraphQL API. 
-            Example 1: {{"Response": "I have fetched the users for you!", "Query": "query userPage($skip: Int, $limit: Int, $where: UserInputWhereFilter) {{userPage(skip: $skip, limit: $limit, where: $where) {{id name memberships {{id group {{ id name }}}}}}}}", "Variables": {{{{"where": {{"name": {{"_startswith": "Z"}}}},"skip": 0,"limit": 100}}}}}}
-            Example 2: {{"Response": "PC is short for personal computer.", "Query": "", "Variables": ""}}
-        2. Build a new query before running it against the API.
-        3. You build the graphql queries only using available kernel_functions.
-        4. Always use detectGraphQLTypes function to get the graphql_types variable. This ensures the correct types are identified for the query.
-        5. After successfully retrieving data, your final response must be a valid JSON object. If a GraphQL query was used, the JSON must contain the retrieved data labeled as "Response" and the GraphQL query used labeled as "Query" also with . If no GraphQL query was used, the "Response" field contains your full response as a string, and the "Query" field must be an empty string.
-        6. Check for correct brackets in JSON response before replying.
+    RULES:
+        1. You respond in valid JSON object containing response, query and variables used to call GraphQL API.
+            You always respond in valid JSON format which follows this strucutre: 
+            [STRUCTURE]
+                {{"Response": String, "Query": String, "Variables": String}}
+            [END_STRUCTURE]
+
+            [EXPLANATION]
+                Response: Your natural language summary of the result
+                Query: Full built GQL query (give empty string if no query was used)
+                Varaibles: Variables to be used when calling the Query (give empty string if no query was used)
+            [END_EXPLANATION]
+
+            [EXAMPLE 1]
+                1: {{"Response": "I have fetched the users for you!", "Query": "query userPage($skip: Int, $limit: Int, $where: UserInputWhereFilter) {{userPage(skip: $skip, limit: $limit, where: $where) {{id name memberships {{id group {{ id name }}}}}}}}", "Variables": {{{{"where": {{"name": {{"_startswith": "Z"}}}},"skip": 0,"limit": 100}}}}}}
+            [END_EXAMPLE_1]
+            [EXAMPLE 2]
+                2: {{"Response": "PC is short for personal computer.", "Query": "", "Variables": ""}}
+            [END_EXAMPLE_2]
+
+        2. Before creating a query gql_types must be detected from users prompt and filter variables must be found for detected_types.
+        
+        3. After successfully retrieving data, your final response must be a valid JSON object. If a GraphQL query was used, the JSON must contain the retrieved data labeled as "Response" and the GraphQL query used labeled as "Query" also with . If no GraphQL query was used, the "Response" field contains your full response as a string, and the "Query" and "Variables" fields must be an empty string.
     """
 
     history.add_system_message(system_prompt)

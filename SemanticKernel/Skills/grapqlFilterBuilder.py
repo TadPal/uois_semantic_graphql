@@ -20,7 +20,6 @@ sys.path.insert(0, top_level)
 
 from semantic_kernel.functions import kernel_function
 from semantic_kernel.functions import KernelArguments
-from SemanticKernel.Skills.graphqlQueryBuilder import GraphQLQueryBuilder
 
 
 class GraphQLFilterQueryPlugin:
@@ -101,7 +100,7 @@ class GraphQLFilterQueryPlugin:
             return filters
 
         def get_filterable_fields_with_ops(
-            ast, adjacency, graphql_types, max_depth: int = 3
+            ast, adjacency, graphql_types
         ) -> dict[str, dict[str, list[str]]]:
             """
             Return fields and their supported filter operators, using SDL filter inputs.
@@ -117,12 +116,8 @@ class GraphQLFilterQueryPlugin:
             def find_all_filters(
                 graphql_types_filters: list,
                 filter_inputs: list = filter_inputs,
-                depth: int = 0,
             ):
-                if depth >= max_depth:
-                    return {"_stop_search_": True}
 
-                filter_tree = {}
                 for input_filter, filterables in filter_inputs.items():
                     if input_filter in seen_nodes:
                         continue
@@ -131,23 +126,21 @@ class GraphQLFilterQueryPlugin:
                     ):  # only process requested types
                         continue
 
-                    if "Input" in input_filter or "input" in input_filter:
-                        seen_nodes.add(input_filter)
+                    seen_nodes.add(input_filter)
 
                     for var in filterables:
-                        for v, f_type in var.items():
+                        for f_type in var.values():
                             if "Filter" in f_type or "filter" in f_type:
-                                filter_tree[v] = find_all_filters(
-                                    [f_type], filter_inputs, depth + 1
-                                )
+                                find_all_filters([f_type], filter_inputs)
                             else:
-                                filter_tree[input_filter] = var
+                                continue
 
-                return filter_tree
+                return True
 
-            return find_all_filters(
+            find_all_filters(
                 graphql_types_filters=graphql_types_filters, filter_inputs=filter_inputs
             )
+            return [{d: v} for d, v in filter_inputs.items() if d in seen_nodes]
 
         print(f"find_filter_variables(graphql_types={graphql_types})")
         from sdl.sdl_fetch import fetch_sdl
@@ -214,7 +207,3 @@ class GraphQLFilterQueryPlugin:
         _, entities = next(iter(data.items()))
 
         return json.dumps(entities, indent=2, ensure_ascii=False)
-
-
-query = GraphQLFilterQueryPlugin()
-query.find_filter_variables(["UserGQLModel"])
