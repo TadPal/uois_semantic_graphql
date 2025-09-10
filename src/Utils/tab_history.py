@@ -5,6 +5,9 @@ from src.Utils.graphQLdata import GraphQLData
 import json
 import typing
 
+import uuid
+from Database.ChatHistory.add_to_db import add_chat_history
+
 
 def get_user_sorted_sessions(user_id, conn=None):
     """
@@ -92,3 +95,56 @@ def load_and_display_session(session_id, chat_stream, user_id, gql_client):
                     metadata=None,
                     autoload=True,
                 )
+
+
+def create_new_session(user_id, gql_client, chat_stream=None, conn=None):
+    """
+    Pokud chat_stream je None, nebude se nic vykreslovat — jen logika pro DB.
+    """
+    session_id = str(uuid.uuid4())
+
+    add_chat_history(
+        message="",
+        answer="New session created.",
+        user_id=user_id,
+        session_id=session_id,
+        conn=conn,
+    )
+
+    # pokud je chat_stream předán (pravá karta), vyčisti a zobraz placeholder
+    if chat_stream:
+        chat_stream.clear()
+        with chat_stream:
+            ui.chat_message(
+                "Noo, co potřebuješ?",
+                name="Tadeáš",
+                sent=False,
+                avatar="/assets/img/Tadeas.png",
+            ).props("bg-color=green text-color=dark")
+
+        load_and_display_session(session_id, chat_stream, user_id, gql_client)
+
+    return session_id
+
+
+def render_sessions_list(user_id, chat_stream=None, gql_client=None):
+    user_sessions = get_user_sorted_sessions(user_id)
+    num_sessions = len(user_sessions)
+
+    ui.label(f"Sessions ({num_sessions})").classes("text-sm font-semibold mb-2")
+
+    row_height_px = 32
+    max_table_height = min(num_sessions * row_height_px, 400)
+
+    with ui.element("div").props("id=product-scroll").style(
+        f"max-height: {max_table_height}px; overflow-y: auto;"
+    ):
+        for sid in user_sessions:
+            ui.button(
+                sid,
+                on_click=lambda sid=sid: (
+                    load_and_display_session(sid, chat_stream, user_id, gql_client)
+                    if chat_stream
+                    else None
+                ),
+            ).props("flat dense").classes("w-full text-left")

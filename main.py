@@ -17,6 +17,8 @@ from src.Utils.tab_history import (
     get_user_sorted_sessions,
     get_unique_sessions_by_user_id,
     load_and_display_session,
+    create_new_session,
+    render_sessions_list,
 )
 
 from src.Utils.on_button_press import (
@@ -680,8 +682,44 @@ async def index_page(request: Request):
             # jeden řádek = dvě kolony: vlevo TABY s tabulkou, vpravo chat
             with ui.row().classes("w-full gap-4 items-start"):
                 # ========== LEVÝ TABSET (samostatné taby pro tabulku) ==========
+                # PRAVÁ KARTA: CHAT
+                with ui.card().classes(
+                    "flex-1 min-w-0 rounded-2xl shadow-lg light:bg-white dark:bg-green-800 overflow-x-hidden"
+                ):
+                    with ui.column().classes("w-full min-w-0"):
+                        chat_scroll = (
+                            ui.element("div")
+                            .props("id=chat-scroll")
+                            .classes("w-full")
+                            .style("max-height: 70vh; overflow-y: auto;")
+                        )
+                        ui.add_css(
+                            """
+                                #chat-scroll {
+                                    scrollbar-width: none;
+                                    -ms-overflow-style: none;
+                                }
+                                #chat-scroll::-webkit-scrollbar {
+                                    width: 0px;
+                                    background: transparent;
+                                }
+                                """
+                        )
+
+                        with chat_scroll:
+                            chat_stream = ui.column().classes("w-full gap-2")
+                            with chat_stream:
+                                # uvítací zpráva při startu
+                                ui.chat_message(
+                                    text="Noo, co potřebuješ?",
+                                    name="Tadeáš",
+                                    sent=False,
+                                    avatar="/assets/img/Tadeas.png",
+                                ).props("bg-color=green text-color=dark")
+
                 with ui.card().classes("w-80 shrink-0 rounded-2xl shadow-md"):
                     # vertikální tabs kvůli úzké šířce; klidně smaž .props('vertical') pokud nechceš
+
                     with ui.column().classes("w-full"):
                         with ui.tabs().props("vertical").classes("w-full") as left_tabs:
                             products_tab = ui.tab("Chat history")
@@ -690,68 +728,41 @@ async def index_page(request: Request):
                             "w-full"
                         ):
                             with ui.tab_panel(products_tab):
-                                user_sessions = get_user_sorted_sessions(user_id)
-                                num_sessions = len(user_sessions)
-                                ui.label(f"Sessions ({num_sessions})").classes(
-                                    "text-sm font-semibold mb-2"
+                                # refreshable kontejner pro seznam session
+                                @ui.refreshable
+                                def sessions_panel():
+                                    # clear container a vykresli všechny sessions
+                                    render_sessions_list(
+                                        user_id, chat_stream, gql_client
+                                    )
+
+                                # tlačítko New chat
+                                def on_new_chat():
+                                    # vytvoří novou session
+                                    create_new_session(user_id, gql_client)
+
+                                    # vymaž chat_stream a vlož uvítací zprávu
+                                    chat_stream.clear()
+                                    with chat_stream:
+                                        ui.chat_message(
+                                            text="Noo, co potřebuješ?",
+                                            name="Tadeáš",
+                                            sent=False,
+                                            avatar="/assets/img/Tadeas.png",
+                                        ).props("bg-color=green text-color=dark")
+
+                                    # aktualizuj seznam sessions vlevo
+                                    render_sessions_list(
+                                        user_id, chat_stream, gql_client
+                                    )
+
+                                # tlačítko New chat
+                                ui.button("New chat", on_click=on_new_chat).classes(
+                                    "w-full mb-2"
                                 )
 
-                                row_height_px = 32
-                                max_table_height = min(
-                                    num_sessions * row_height_px, 400
-                                )
-
-                                with ui.element("div").props("id=product-scroll").style(
-                                    f"max-height: {max_table_height}px; overflow-y: auto;"
-                                ):
-                                    user_sessions = get_user_sorted_sessions(user_id)
-                                    for sid in user_sessions:
-                                        ui.button(
-                                            sid,
-                                            on_click=lambda sid=sid: load_and_display_session(
-                                                sid, chat_stream, user_id, gql_client
-                                            ),
-                                        ).props("flat dense").classes(
-                                            "w-full text-left"
-                                        )
-
-                # PRAVÁ KARTA: CHAT
-                with ui.card().classes(
-                    "flex-1 min-w-0 rounded-2xl shadow-lg light:bg-white dark:bg-green-800 overflow-x-hidden"
-                ):
-                    with ui.column().classes("w-full min-w-0"):
-                        # scrollovací obal pro chat (zůstane uvnitř karty)
-                        chat_scroll = (
-                            ui.element("div")
-                            .props("id=chat-scroll")
-                            .classes("w-full")  # ← w-full přesunuto do class
-                            .style("max-height: 70vh; overflow-y: auto;")
-                        )
-                        ui.add_css(
-                            """
-                        #chat-scroll {
-                            scrollbar-width: none;  /* Firefox */
-                            -ms-overflow-style: none;  /* IE 10+ */
-                        }
-
-                        #chat-scroll::-webkit-scrollbar {
-                            width: 0px;  /* Chrome, Safari, Edge */
-                            background: transparent;
-                        }
-                        """
-                        )
-                        with chat_scroll:
-                            # >>> TADY BUDEME VŽDY PŘIDÁVAT ZPRÁVY <<<
-                            chat_stream = ui.column().classes("w-full gap-2")
-
-                            # placeholder zpráva
-                            with chat_stream:
-                                ui.chat_message(
-                                    text="Noo, co potřebuješ?",
-                                    name="Tadeáš",
-                                    sent=False,
-                                    avatar="/assets/img/Tadeas.png",
-                                ).props("bg-color=green text-color=dark")
+                                # seznam sessions
+                                render_sessions_list(user_id, chat_stream, gql_client)
         # with ui.tab_panels(tabs, value=chat_tab).classes(
         #     "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-green-800"
         # ):
