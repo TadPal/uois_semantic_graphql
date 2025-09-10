@@ -91,7 +91,7 @@ conn = connect_to_postgres(os.environ)
 
 from Database.Embedding.find_simillar import find_similar_question
 
-test_question = "Dej mi seznam uživatelů"
+test_question = "Dej mi pár uživatelů"
 
 found_answer = find_similar_question(test_question, threshold=0.7, conn=conn)
 

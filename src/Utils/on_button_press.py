@@ -72,7 +72,7 @@ def on_like_click(
         like_btn.set_content(_btn_html("like", state.like, svgs, disabled=False))
 
         if on_commit:
-            add_embedding_row(on_commit[0], on_commit[1])
+            add_embedding_row(on_commit[0], on_commit[1], on_commit[2])
         _disable_both(like_btn, dislike_btn, state, svgs)
 
 
