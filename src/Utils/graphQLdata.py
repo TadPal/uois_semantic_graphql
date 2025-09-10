@@ -80,9 +80,9 @@ def GraphQLData(
         state["ids"].clear()
         state["variables"]["skip"] = 0
         state["done"] = False
-        await load_page(skip=0)
+        await load_page(skip=0, add=False)
 
-    async def load_page(skip: typing.Optional[int] = None, more: int = 0):
+    async def load_page(skip: typing.Optional[int] = None, add: bool = False):
         if state["loading"]:
             return
         state["loading"] = True
@@ -91,8 +91,10 @@ def GraphQLData(
             vars_now = dict(state["variables"])
             if skip is not None:
                 vars_now["skip"] = skip
+            elif add:
+                vars_now["skip"] = 2 * vars_now.get("skip", 0)
             else:
-                vars_now["skip"] = vars_now.get("skip", 0) + more
+                vars_now["skip"] = vars_now.get("skip", 0)
             print(f"load_page.variables={vars_now}")
             response = await gqlclient(query, vars_now)
             errors = response.get("errors")
@@ -124,7 +126,11 @@ def GraphQLData(
 
     async def load_more():
         print(f"load_more")
-        await load_page(more=2)
+        await load_page(add=True)
+
+    async def load_first():
+        print(f"load_first")
+        await load_page(add=False)
 
     def getcolumns():
         rows = state["result"]
@@ -226,6 +232,6 @@ def GraphQLData(
     view()
     # optional first fetch
     if autoload and not state["result"]:
-        ui.timer(0, load_more, once=True)
+        ui.timer(0, load_first, once=True)
 
     return view

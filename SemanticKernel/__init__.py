@@ -15,7 +15,7 @@ sys.path.insert(0, parent_dir)
 
 # from semantic_kernel.contents.chat_history import ChatHistory
 from semantic_kernel import Kernel
-from semantic_kernel.contents import ChatHistoryTruncationReducer
+from SemanticKernel.HistoryReducer import CustomChatHistory
 from semantic_kernel.functions import KernelArguments, KernelPlugin
 from semantic_kernel.filters import FilterTypes, AutoFunctionInvocationContext
 from semantic_kernel.exceptions import PluginInitializationError
@@ -190,16 +190,16 @@ async def openChat():
         skills.extend(plugin.functions.keys())
     print(skills)
 
-    history = ChatHistoryTruncationReducer(target_count=20)
+    history = CustomChatHistory(target_count=20)
 
     system_prompt = f"""
     You are an assistant and your primary task is to help query databases using graphql.
 
     You always response in JSON valid format, follow exactly this strucutre : {{"Response": "...", "Query": "...", "Variables": "..."}}
 
-    Response: str -> Your natural language summary of the result
-    Query: str -> Full built GQL query (give empty string if no query was used)
-    Varaibles: str -> Variables to be used when calling the Query (give empty string if no query was used)
+    Response: str - Your natural language summary of the result
+    Query: str - Full built GQL query (give empty string if no query was used)
+    Varaibles: str - Variables to be used when calling the Query (give empty string if no query was used)
     
     Rules:
         1. You respond in valid JSON object containing response, query and variables used to call GraphQL API. 
@@ -237,9 +237,6 @@ async def openChat():
         )
         history.add_assistant_message(f"{result}")
         await history.reduce()
-        if not any(m.role == AuthorRole.SYSTEM for m in history.messages):
-            history.add_system_message(system_prompt)
-
         return result
 
     return hook

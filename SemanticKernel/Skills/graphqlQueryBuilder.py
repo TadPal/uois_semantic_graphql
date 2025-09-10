@@ -618,7 +618,7 @@ class GraphQLBuilderPlugin:
         # sdl = payload["sdl"]
         print(f"graphql_vetor_query_builder_skill(graphgql_types={graphql_types})")
         builder = GraphQLQueryBuilder(
-            disabled_fields=["createdby", "changedby", "memberOf", "groupId", "userId"]
+            disabled_fields=["createdby", "changedby", "memberOf"]
         )
         query = builder.build_query_vector(graphql_types)
         return builder.explain_graphql_query(query)
@@ -650,7 +650,7 @@ class GraphQLBuilderPlugin:
         # sdl = payload["sdl"]
         print(f"graphql_scalar_query_builder_skill(graphgql_types={graphql_types})")
         builder = GraphQLQueryBuilder(
-            disabled_fields=["createdby", "changedby", "memberOf", "groupId", "userId"]
+            disabled_fields=["createdby", "changedby", "memberOf"]
         )
         query = builder.build_query_scalar(graphql_types)
         return builder.explain_graphql_query(query)

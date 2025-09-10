@@ -37,7 +37,7 @@ class GraphQLFilterQueryPlugin:
             List[str],
             "The list of GraphQL types to be searched for available variables, e.g., ['UserGQLModel', 'RoleGQLModel']",
         ],
-        disabled_fields=["createdby", "changedby", "memberOf", "groupId", "userId"],
+        disabled_fields=["createdby", "changedby", "memberOf"],
         arguments: KernelArguments = None,
     ) -> str:
         """
@@ -90,41 +90,64 @@ class GraphQLFilterQueryPlugin:
                 if defn.kind == "input_object_type_definition":
                     input_name = defn.name.value
                     if "Filter" in input_name or "filter" in input_name:
-                        operators = [field.name.value for field in defn.fields]
+                        operators = []
+                        for field in defn.fields:
+                            if field.name.value in ["_or", "_and", "_in"]:
+                                continue
+                            else:
+                                field_type = field.type.name.value
+                            operators.append({field.name.value: field_type})
                         filters[input_name] = operators
             return filters
 
         def get_filterable_fields_with_ops(
-            ast, adjacency
+            ast, adjacency, graphql_types, max_depth: int = 3
         ) -> dict[str, dict[str, list[str]]]:
             """
             Return fields and their supported filter operators, using SDL filter inputs.
             """
             filter_inputs = extract_filter_inputs(ast)
 
-            SCALAR_TO_FILTER = {
-                "String": "StrFilter",
-                "UUID": "UuidFilter",
-                "Int": "IntFilter",
-                "DateTime": "DateTimeFilter",
-                "Boolean": "BoolFilter",
-            }
+            graphql_types_filters = [
+                f"{t.split("GQL")[0] + "InputWhereFilter"}" for t in graphql_types
+            ]
 
-            result: dict[str, dict[str, list[str]]] = {}
+            seen_nodes = set()
 
-            for type_name, fields in adjacency.items():
-                if type_name not in graphql_types:  # only process requested types
-                    continue
+            def find_all_filters(
+                graphql_types_filters: list,
+                filter_inputs: list = filter_inputs,
+                depth: int = 0,
+            ):
+                if depth >= max_depth:
+                    return {"_stop_search_": True}
 
-                for field_name, field_type in fields:
-                    if field_type in SCALAR_TO_FILTER:
-                        filter_type = SCALAR_TO_FILTER[field_type]
-                        if filter_type in filter_inputs:
-                            result.setdefault(type_name, {})[field_name] = (
-                                filter_inputs[filter_type]
-                            )
+                filter_tree = {}
+                for input_filter, filterables in filter_inputs.items():
+                    if input_filter in seen_nodes:
+                        continue
+                    if (
+                        input_filter not in graphql_types_filters
+                    ):  # only process requested types
+                        continue
 
-            return result
+                    if "Input" in input_filter or "input" in input_filter:
+                        seen_nodes.add(input_filter)
+
+                    for var in filterables:
+                        for v, f_type in var.items():
+                            if "Filter" in f_type or "filter" in f_type:
+                                filter_tree[v] = find_all_filters(
+                                    [f_type], filter_inputs, depth + 1
+                                )
+                            else:
+                                filter_tree[input_filter] = var
+
+                return filter_tree
+
+            return find_all_filters(
+                graphql_types_filters=graphql_types_filters, filter_inputs=filter_inputs
+            )
 
         print(f"find_filter_variables(graphql_types={graphql_types})")
         from sdl.sdl_fetch import fetch_sdl
@@ -134,7 +157,9 @@ class GraphQLFilterQueryPlugin:
         ast = parse(sdl)
         adjacency = build_adjacency(ast=ast, disabled_fields=disabled_fields)
 
-        result = get_filterable_fields_with_ops(ast, adjacency)
+        result = get_filterable_fields_with_ops(
+            ast, adjacency, graphql_types=graphql_types
+        )
         return result
 
     @kernel_function(
@@ -189,3 +214,7 @@ class GraphQLFilterQueryPlugin:
         _, entities = next(iter(data.items()))
 
         return json.dumps(entities, indent=2, ensure_ascii=False)
+
+
+query = GraphQLFilterQueryPlugin()
+query.find_filter_variables(["UserGQLModel"])
