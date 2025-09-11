@@ -29,7 +29,6 @@ from src.Components.footer import build_chat_footer
 
 from src.Pages.LogView import build_logs_ui
 from src.Pages.GraphQLView import build_graphql_ui
-from src.Pages.HistoryView import build_history_ui, rebuild_history_container
 from src.Utils.graphQLdata import GraphQLData
 
 import logging, uuid, contextvars
@@ -239,8 +238,6 @@ async def index_page(request: Request):
 
         log_chat.info("User question received", extra={"len": len(question)})
 
-        if history_container is not None:
-            rebuild_history_container(history_container, history)
         ui.run_javascript(
             "document.getElementById('chat-scroll')?.scrollTo({top: 1e9, behavior: 'smooth'});"
         )
@@ -347,16 +344,13 @@ async def index_page(request: Request):
             session_id=history.get_history_id(),
         )
 
-
         try:
             render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
         except Exception:
             # nechceme, aby případná chyba refreshu rozbila chat flow
             log_chat.exception("Failed to refresh sessions list after message")
 
-
         # 🔹 Aktualizace log panelu
-        rebuild_history_container(history_container, history)
         ui.run_javascript(
             "document.getElementById('chat-scroll')?.scrollTo({top: 1e9, behavior: 'smooth'});"
         )
@@ -368,7 +362,6 @@ async def index_page(request: Request):
     with ui.tabs().classes("w-full") as tabs:
         chat_tab = ui.tab("Chat")
         logs_tab = ui.tab("Logs")
-        history_tab = ui.tab("History")
         graphql_tab = ui.tab("GraphQL")
 
     with ui.tab_panels(tabs, value=chat_tab).classes(
@@ -381,7 +374,7 @@ async def index_page(request: Request):
                 # ========== LEVÝ TABSET (samostatné taby pro tabulku) ==========
                 # PRAVÁ KARTA: CHAT
                 with ui.card().classes(
-                    "flex-1 min-w-0 rounded-2xl shadow-lg light:bg-white dark:bg-green-800 overflow-x-hidden"
+                    "flex-1 min-w-0 rounded-2xl shadow-lg light:bg-white dark:bg-neutral-900 overflow-x-hidden"
                 ):
                     with ui.column().classes("w-full min-w-0"):
                         chat_scroll = (
@@ -408,23 +401,23 @@ async def index_page(request: Request):
                             with chat_stream:
                                 # uvítací zpráva při startu
                                 ui.chat_message(
-                                    text="Noo, co potřebuješ?",
+                                    text="Něco, možná trošku, lepšího?",
                                     name="Tadeáš",
                                     sent=False,
                                     avatar="/assets/img/Tadeas.png",
-                                ).props("bg-color=green text-color=dark")
+                                ).props("bg-color=grey-2 text-color=dark")
 
                 with ui.card().classes("w-80 shrink-0 rounded-2xl shadow-md"):
                     # vertikální tabs kvůli úzké šířce; klidně smaž .props('vertical') pokud nechceš
 
                     with ui.column().classes("w-full"):
                         with ui.tabs().props("vertical").classes("w-full") as left_tabs:
-                            products_tab = ui.tab("Chat history")
+                            sessions_tab = ui.tab("Chat history")
 
-                        with ui.tab_panels(left_tabs, value=products_tab).classes(
+                        with ui.tab_panels(left_tabs, value=sessions_tab).classes(
                             "w-full"
                         ):
-                            with ui.tab_panel(products_tab):
+                            with ui.tab_panel(sessions_tab):
                                 # refreshable kontejner pro seznam session
                                 @ui.refreshable
                                 def sessions_panel():
@@ -451,7 +444,7 @@ async def index_page(request: Request):
                                             name="Tadeáš",
                                             sent=False,
                                             avatar="/assets/img/Tadeas.png",
-                                        ).props("bg-color=green text-color=dark")
+                                        ).props("bg-color=grey-2 text-color=dark")
 
                                     # aktualizuj seznam sessions vlevo
                                     render_sessions_list(
@@ -469,8 +462,6 @@ async def index_page(request: Request):
                                     user_id, chat_stream, gql_client, sessions_container
                                 )
 
-
-
         #######################################################
         # * Logs tab
         #######################################################
@@ -478,13 +469,6 @@ async def index_page(request: Request):
         with ui.tab_panel(logs_tab) as logs_container:
             ui.label("Conversation Log").classes("font-bold mb-2")
             build_logs_ui(logs_container)
-
-        #######################################################
-        # * History tab
-        #######################################################
-
-        with ui.tab_panel(history_tab) as history_container:
-            build_history_ui(history_container, history)
 
         #######################################################
         # * GraphQL tab
