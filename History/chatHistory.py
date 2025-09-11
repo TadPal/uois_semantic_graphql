@@ -25,3 +25,7 @@ class UserChatHistory:
 
     def get_history_id(self):
         return self.uuid
+
+    def set_history_id(self, new_uuid):
+        """Update the current session UUID to a new one."""
+        self.uuid = new_uuid
