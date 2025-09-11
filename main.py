@@ -347,6 +347,14 @@ async def index_page(request: Request):
             session_id=history.get_history_id(),
         )
 
+
+        try:
+            render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
+        except Exception:
+            # nechceme, aby případná chyba refreshu rozbila chat flow
+            log_chat.exception("Failed to refresh sessions list after message")
+
+
         # 🔹 Aktualizace log panelu
         rebuild_history_container(history_container, history)
         ui.run_javascript(
@@ -427,8 +435,13 @@ async def index_page(request: Request):
 
                                 # tlačítko New chat
                                 def on_new_chat():
-                                    # vytvoří novou session
-                                    create_new_session(user_id, gql_client)
+                                    # vytvoří novou session a hned aktualizuje chat_stream i seznam vlevo
+                                    create_new_session(
+                                        user_id,
+                                        gql_client,
+                                        chat_stream,
+                                        sessions_container,
+                                    )
 
                                     # vymaž chat_stream a vlož uvítací zprávu
                                     chat_stream.clear()
@@ -449,9 +462,14 @@ async def index_page(request: Request):
                                 ui.button("New chat", on_click=on_new_chat).classes(
                                     "w-full mb-2"
                                 )
+                                # vytvoříme kontejner pro sessions
+                                sessions_container = ui.column().classes("w-full")
 
-                                # seznam sessions
-                                render_sessions_list(user_id, chat_stream, gql_client)
+                                render_sessions_list(
+                                    user_id, chat_stream, gql_client, sessions_container
+                                )
+
+
 
         #######################################################
         # * Logs tab
