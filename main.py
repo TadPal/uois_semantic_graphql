@@ -377,7 +377,7 @@ async def index_page(request: Request):
         graphql_tab = ui.tab("GraphQL")
 
     with ui.tab_panels(tabs, value=chat_tab).classes(
-        "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch"
+        "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch light:bg-white dark:bg-neutral-900"
     ):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:
@@ -386,7 +386,7 @@ async def index_page(request: Request):
                 # ========== LEVÝ TABSET (samostatné taby pro tabulku) ==========
                 # PRAVÁ KARTA: CHAT
                 with ui.card().classes(
-                    "flex-1 min-w-0 rounded-2xl shadow-lg light:bg-white dark:bg-neutral-900 overflow-x-hidden"
+                    "flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800 overflow-x-hidden"
                 ):
                     with ui.column().classes("w-full min-w-0"):
                         chat_scroll = (
@@ -419,7 +419,9 @@ async def index_page(request: Request):
                                     avatar="/assets/img/Tadeas.png",
                                 ).props("bg-color=grey-2 text-color=dark")
 
-                with ui.card().classes("w-80 shrink-0 rounded-2xl shadow-md"):
+                with ui.card().classes(
+                    "w-80 shrink-0 rounded-2xl shadow-md light:bg-white dark:bg-neutral-800"
+                ):
                     # vertikální tabs kvůli úzké šířce; klidně smaž .props('vertical') pokud nechceš
 
                     with ui.column().classes("w-full"):
@@ -439,7 +441,7 @@ async def index_page(request: Request):
                             )
 
                         with ui.tab_panels(left_tabs, value=sessions_tab).classes(
-                            "w-full"
+                            "w-full light:bg-white dark:bg-neutral-800"
                         ):
                             with ui.tab_panel(sessions_tab):
                                 # refreshable kontejner pro seznam session

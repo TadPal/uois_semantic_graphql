@@ -49,7 +49,6 @@ def load_and_display_session(session_id, chat_stream, user_id, gql_client):
 
     # DB často vrací DESC (nejnovější první); zachováme pořadí z DB.
     chat_history = load_chat_history(user_id, session_id)
-    print(f"{chat_history=}")
 
     with chat_stream:
         for row in reversed(
@@ -160,9 +159,9 @@ def render_sessions_list(
         row_height_px = 50
         max_table_height = min(num_sessions * row_height_px, 400)
 
-        with ui.element("div").props("id=product-scroll").style(
-            f"max-height: {max_table_height}px; overflow-y: auto;"
-        ):
+        with ui.element("div").props("id=product-scroll").classes(
+            "light:bg-white dark:bg-neutral-800"
+        ).style(f"max-height: {max_table_height}px; overflow-y: auto;"):
 
             from main import history
             from History.chatHistory import UserChatHistory

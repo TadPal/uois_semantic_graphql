@@ -51,9 +51,6 @@ def find_similar_question(
 
         if result:
             db_question, db_query, db_variables, distance = result
-
-            print(f"Found closest question: '{db_question}' with distance {distance}")
-
             if distance <= threshold:
                 print("Match is very similar. Returning answer.")
                 return (db_query, db_variables)
@@ -89,13 +86,13 @@ load_dotenv()
 conn = connect_to_postgres(os.environ)
 
 
-from Database.Embedding.find_simillar import find_similar_question
+# from Database.Embedding.find_simillar import find_similar_question
 
-test_question = "Dej mi pár uživatelů"
+# test_question = "Dej mi pár uživatelů"
 
-found_answer = find_similar_question(test_question, threshold=0.7, conn=conn)
+# found_answer = find_similar_question(test_question, threshold=0.7, conn=conn)
 
-if found_answer:
-    print(f"\nAnswer from DB: {found_answer}")
-else:
-    print(f"\nNo sufficiently similar question found in the database.")
+# if found_answer:
+#     print(f"\nAnswer from DB: {found_answer}")
+# else:
+#     print(f"\nNo sufficiently similar question found in the database.")
