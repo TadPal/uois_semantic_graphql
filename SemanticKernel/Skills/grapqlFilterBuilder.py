@@ -92,7 +92,7 @@ class GraphQLFilterQueryPlugin:
                         operators = []
                         for field in defn.fields:
                             if field.name.value in ["_or", "_and", "_in"]:
-                                continue
+                                field_type = field.type.type.type.name.value
                             else:
                                 field_type = field.type.name.value
                             operators.append({field.name.value: field_type})
@@ -117,30 +117,34 @@ class GraphQLFilterQueryPlugin:
                 graphql_types_filters: list,
                 filter_inputs: list = filter_inputs,
             ):
+                try:
+                    for input_filter, filterables in filter_inputs.items():
+                        if input_filter in seen_nodes:
+                            continue
+                        if (
+                            input_filter not in graphql_types_filters
+                        ):  # only process requested types
+                            continue
 
-                for input_filter, filterables in filter_inputs.items():
-                    if input_filter in seen_nodes:
-                        continue
-                    if (
-                        input_filter not in graphql_types_filters
-                    ):  # only process requested types
-                        continue
+                        seen_nodes.add(input_filter)
 
-                    seen_nodes.add(input_filter)
-
-                    for var in filterables:
-                        for f_type in var.values():
-                            if "Filter" in f_type or "filter" in f_type:
-                                find_all_filters([f_type], filter_inputs)
-                            else:
-                                continue
+                        for var in filterables:
+                            for f_type in var.values():
+                                if "Filter" in f_type or "filter" in f_type:
+                                    find_all_filters([f_type], filter_inputs)
+                                else:
+                                    continue
+                except:
+                    return False
 
                 return True
 
-            find_all_filters(
+            if find_all_filters(
                 graphql_types_filters=graphql_types_filters, filter_inputs=filter_inputs
-            )
-            return [{d: v} for d, v in filter_inputs.items() if d in seen_nodes]
+            ):
+                return [{d: v} for d, v in filter_inputs.items() if d in seen_nodes]
+
+            return []
 
         print(f"find_filter_variables(graphql_types={graphql_types})")
         from sdl.sdl_fetch import fetch_sdl
