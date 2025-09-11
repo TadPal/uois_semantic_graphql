@@ -1,0 +1,87 @@
+# Bacha klíče
+
+explainer - kdyz je qury a aby se mohla analyzovat plus comments popisu 
+
+vysvetleni dotazu - popis fieldu 
+
+sdl ma i directivy - popis napr pro uzivatele s nejakym pravem
+
+
+nechazi chyby pri neopravnenem pristupu - silence ffail. Prazdny list, 
+
+Query - by id nebo list. Filter - pro hledani vysledku
+
+
+
+vice nez name a description? soudeni nodes? Takze i s filtrem
+
+Filter - hasura, json structura, sqlalchemy 
+
+
+ShemanticKernel - init.py a build.py
+Skill - graphquerybuilder - 
+
+
+ukoly
+zprovoznit chat spolu s kernelem
+
+izolovoat
+
+tabulky - jak vizualizovat vystup
+
+filtr - pripravit promt - omezeni atd.. 
+
+
+query {userPage(where: {email: {_like: "%.com"}})
+  {id
+  name
+  email} }
+
+
+
+# 3.9.
+
+mutace 
+chyba v explain - nema variance mutace 
+
+filter neni
+silenct chyba a vyjimka -
+
+
+explain funguje - z prvniho promtu - defoinovat filtre pro explain? - 
+rozvetvena struktura - ze pro page jsou mozno tyto filtry ----- atd... .
+
+
+po zavolani LLM a vybrnai objektu tak pote znova vratit filter 
+
+
+chat completition a history - serializace - oseknuti 
+
+
+DB embedingu
+
+
+dej mi uzivatele a dej to ddo sloupcoveho grafu
+
+
+# 8.9.
+
+chat history
+
+NextChat - container - vidaa/chatgpt-next-web
+Dive AI - propojeni s MCP serverem na 
+  
+azure proxy-1  - v kontejneru je mozne poskytnout pripojeni k LLM, 
+
+
+few shots - a rotace
+
+v pátek další shůzka
+
+
+mcp bez samplingu, funcke v 
+
+
+mcp.py 1007 llmresponse = await ctx.sample(msg
+
+
