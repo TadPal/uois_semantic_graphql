@@ -411,8 +411,20 @@ async def index_page(request: Request):
                     # vertikální tabs kvůli úzké šířce; klidně smaž .props('vertical') pokud nechceš
 
                     with ui.column().classes("w-full"):
+                        ui.add_css(
+                            """
+                        /* Zneškodnění interakce a hoveru na horním tabu "Chat history" */
+                        .q-tab.tab--locked { pointer-events: none; }
+                        .q-tab.tab--locked .q-focus-helper { display: none !important; }
+                        .q-tab.tab--locked:hover { background: transparent !important; }
+                        """
+                        )
                         with ui.tabs().props("vertical").classes("w-full") as left_tabs:
-                            sessions_tab = ui.tab("Chat history")
+                            sessions_tab = (
+                                ui.tab("Chat history")
+                                .props("disable ripple=false")
+                                .classes("tab--locked")
+                            )
 
                         with ui.tab_panels(left_tabs, value=sessions_tab).classes(
                             "w-full"
