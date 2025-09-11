@@ -12,11 +12,8 @@ from SemanticKernel import (
     openChat,
 )
 from History.chatHistory import UserChatHistory
-from Database.Embedding.add_to_db import add_embedding_row
+
 from src.Utils.tab_history import (
-    get_user_sorted_sessions,
-    get_unique_sessions_by_user_id,
-    load_and_display_session,
     create_new_session,
     render_sessions_list,
 )
