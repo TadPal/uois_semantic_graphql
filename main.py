@@ -441,7 +441,7 @@ async def index_page(request: Request):
         # * Compare promt embedding
         #######################################################
 
-        found_answer = find_similar_question(user_prompt=question, threshold=0.7)
+        found_answer = find_similar_question(user_prompt=question, threshold=0.25)
 
         #######################################################
         # * AI stuff
