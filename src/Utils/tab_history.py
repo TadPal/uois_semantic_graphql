@@ -51,9 +51,7 @@ def load_and_display_session(session_id, chat_stream, user_id, gql_client):
     chat_history = load_chat_history(user_id, session_id)
 
     with chat_stream:
-        for (
-            row
-        ) in (
+        for row in reversed(
             chat_history
         ):  # pokud chceš chronologicky, dej: for row in reversed(chat_history):
             user_msg = row.get("messages", "")
@@ -97,19 +95,32 @@ def load_and_display_session(session_id, chat_stream, user_id, gql_client):
                 )
 
 
-def create_new_session(user_id, gql_client, chat_stream=None, conn=None):
+def create_new_session(
+    user_id, gql_client, chat_stream=None, sessions_container=None, conn=None
+):
     """
     Pokud chat_stream je None, nebude se nic vykreslovat — jen logika pro DB.
     """
     session_id = str(uuid.uuid4())
 
-    add_chat_history(
-        message="",
-        answer="New session created.",
-        user_id=user_id,
-        session_id=session_id,
-        conn=conn,
-    )
+    # add_chat_history(
+    #     message="",
+    #     answer="New session created.",
+    #     user_id=user_id,
+    #     session_id=session_id,
+    #     conn=conn,
+    # )
+
+    # získáme historii uživatele
+    from History.chatHistory import UserChatHistory
+    from main import history  # dictionary user_id -> UserChatHistory
+
+    if user_id not in history:
+        history[user_id] = UserChatHistory()
+    user_history = history[user_id]
+
+    # nastav aktuální session na novou
+    user_history.set_history_id(session_id)
 
     # pokud je chat_stream předán (pravá karta), vyčisti a zobraz placeholder
     if chat_stream:
@@ -124,27 +135,53 @@ def create_new_session(user_id, gql_client, chat_stream=None, conn=None):
 
         load_and_display_session(session_id, chat_stream, user_id, gql_client)
 
+        # refresh seznamu vlevo
+    if sessions_container:
+        render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
+
     return session_id
 
 
-def render_sessions_list(user_id, chat_stream=None, gql_client=None):
+def render_sessions_list(
+    user_id, chat_stream=None, gql_client=None, sessions_container=None
+):
+    if not sessions_container:
+        return  # když není, nic nedělej
+
+    sessions_container.clear()  # smaže starý obsah
+
     user_sessions = get_user_sorted_sessions(user_id)
     num_sessions = len(user_sessions)
 
-    ui.label(f"Sessions ({num_sessions})").classes("text-sm font-semibold mb-2")
+    with sessions_container:  # teď už to není None, ale UI column
+        ui.label(f"Sessions ({num_sessions})").classes("text-sm font-semibold mb-2")
 
-    row_height_px = 32
-    max_table_height = min(num_sessions * row_height_px, 400)
+        row_height_px = 32
+        max_table_height = min(num_sessions * row_height_px, 400)
 
-    with ui.element("div").props("id=product-scroll").style(
-        f"max-height: {max_table_height}px; overflow-y: auto;"
-    ):
-        for sid in user_sessions:
-            ui.button(
-                sid,
-                on_click=lambda sid=sid: (
-                    load_and_display_session(sid, chat_stream, user_id, gql_client)
-                    if chat_stream
-                    else None
-                ),
-            ).props("flat dense").classes("w-full text-left")
+        with ui.element("div").props("id=product-scroll").style(
+            f"max-height: {max_table_height}px; overflow-y: auto;"
+        ):
+
+            from main import history
+            from History.chatHistory import UserChatHistory
+
+            for sid in user_sessions:
+
+                def on_click_session(sid=sid):
+                    # 1) načti chat do pravého panelu
+                    if chat_stream:
+                        load_and_display_session(sid, chat_stream, user_id, gql_client)
+
+                    # 2) aktualizuj UserChatHistory na tuto session
+                    if user_id in history:
+                        user_history: UserChatHistory = history[user_id]
+                        user_history.set_history_id(sid)
+                    else:
+                        # pokud historie ještě není, vytvoř ji
+                        history[user_id] = UserChatHistory()
+                        history[user_id].set_history_id(sid)
+
+                ui.button(sid, on_click=on_click_session).props("flat dense").classes(
+                    "w-full text-left"
+                )

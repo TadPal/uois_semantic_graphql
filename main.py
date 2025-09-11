@@ -738,8 +738,13 @@ async def index_page(request: Request):
 
                                 # tlačítko New chat
                                 def on_new_chat():
-                                    # vytvoří novou session
-                                    create_new_session(user_id, gql_client)
+                                    # vytvoří novou session a hned aktualizuje chat_stream i seznam vlevo
+                                    create_new_session(
+                                        user_id,
+                                        gql_client,
+                                        chat_stream,
+                                        sessions_container,
+                                    )
 
                                     # vymaž chat_stream a vlož uvítací zprávu
                                     chat_stream.clear()
@@ -760,9 +765,13 @@ async def index_page(request: Request):
                                 ui.button("New chat", on_click=on_new_chat).classes(
                                     "w-full mb-2"
                                 )
+                                # vytvoříme kontejner pro sessions
+                                sessions_container = ui.column().classes("w-full")
 
-                                # seznam sessions
-                                render_sessions_list(user_id, chat_stream, gql_client)
+                                # poprvé naplníme
+                                render_sessions_list(
+                                    user_id, chat_stream, gql_client, sessions_container
+                                )
         # with ui.tab_panels(tabs, value=chat_tab).classes(
         #     "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-green-800"
         # ):
