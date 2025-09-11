@@ -49,6 +49,7 @@ def load_and_display_session(session_id, chat_stream, user_id, gql_client):
 
     # DB často vrací DESC (nejnovější první); zachováme pořadí z DB.
     chat_history = load_chat_history(user_id, session_id)
+    print(f"{chat_history=}")
 
     with chat_stream:
         for row in reversed(

@@ -558,10 +558,16 @@ async def index_page(request: Request):
         # ulož do DB jen čistý text
         add_chat_history(
             message=question,
-            answer=answer_text,
+            answer=data,
             user_id=user_id,
             session_id=history.get_history_id(),
         )
+
+        try:
+            render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
+        except Exception:
+            # nechceme, aby případná chyba refreshu rozbila chat flow
+            log_chat.exception("Failed to refresh sessions list after message")
 
         prompt_count += 1
         if prompt_count == 2:
