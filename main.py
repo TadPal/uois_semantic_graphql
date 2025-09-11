@@ -342,7 +342,7 @@ async def index_page(request: Request):
         # ulož do DB jen čistý text
         add_chat_history(
             message=question,
-            answer=answer_text,
+            answer=data,
             user_id=user_id,
             session_id=history.get_history_id(),
         )
