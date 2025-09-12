@@ -371,32 +371,73 @@ async def index_page(request: Request):
     ui.query(".q-page").classes("flex")
     ui.query(".nicegui-content").classes("w-full px-4 py-4")
 
-    with ui.tabs().classes("w-full") as tabs:
-        chat_tab = ui.tab("Chat")
-        logs_tab = ui.tab("Logs")
-        graphql_tab = ui.tab("GraphQL")
+    chat_stream = ui.column().classes("w-full gap-2")
+
+    @ui.refreshable
+    def sessions_panel():
+        # clear container a vykresli všechny sessions
+        render_sessions_list(user_id, chat_stream, gql_client)
+
+    # tlačítko New chat
+    def on_new_chat():
+        # vytvoří novou session a hned aktualizuje chat_stream i seznam vlevo
+        create_new_session(
+            user_id,
+            gql_client,
+            chat_stream,
+            sessions_container,
+        )
+
+        # vymaž chat_stream a vlož uvítací zprávu
+        chat_stream.clear()
+        with chat_stream:
+            ui.chat_message(
+                text="Noo, co potřebuješ?",
+                name="Tadeáš",
+                sent=False,
+                avatar="/assets/img/Tadeas.png",
+            ).props("bg-color=grey-2 text-color=dark")
+
+        # aktualizuj seznam sessions vlevo
+        render_sessions_list(user_id, chat_stream, gql_client)
+
+    with ui.header().classes("light:bg-white dark:bg-neutral-950 shadow-md"):
+        with ui.row().classes("items-center w-full justify-between"):
+            ui.label("TedGPT").classes("text-lg font-bold ml-4")
+            with ui.tabs().classes("shrink-0") as tabs:
+                chat_tab = ui.tab("Chat")
+                logs_tab = ui.tab("Logs")
+                graphql_tab = ui.tab("GraphQL")
+
+    with ui.drawer(side="left", value=True).classes(
+        "h-screen p-4 rounded-r-2xl shadow-lg"
+    ) as drawer:
+        ui.label("Chat history").classes("text-md font-bold mb-2")
+
+        # tlačítko New chat
+        ui.button("New chat", on_click=on_new_chat).classes("w-full mb-2")
+        # vytvoříme kontejner pro sessions
+        sessions_container = ui.column().classes("w-full")
+
+        render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
 
     with ui.tab_panels(tabs, value=chat_tab).classes(
         "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch light:bg-white dark:bg-neutral-900"
     ):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:
-            # jeden řádek = dvě kolony: vlevo TABY s tabulkou, vpravo chat
-            with ui.row().classes("w-full gap-4 items-start"):
-                # ========== LEVÝ TABSET (samostatné taby pro tabulku) ==========
-                # PRAVÁ KARTA: CHAT
-                with ui.card().classes(
-                    "flex-grow items-stretch rounded-2xl shadow-lg light:bg-white dark:bg-neutral-800 overflow-x-hidden"
-                ):
-                    with ui.column().classes("w-full min-w-0"):
-                        chat_scroll = (
-                            ui.element("div")
-                            .props("id=chat-scroll")
-                            .classes("w-full")
-                            .style("max-height: 70vh; overflow-y: auto;")
-                        )
-                        ui.add_css(
-                            """
+            with ui.card().classes(
+                "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg"
+            ):
+                with ui.column().classes("w-full min-w-0"):
+                    chat_scroll = (
+                        ui.element("div")
+                        .props("id=chat-scroll")
+                        .classes("w-full")
+                        .style("max-height: 70vh; overflow-y: auto;")
+                    )
+                    ui.add_css(
+                        """
                                 #chat-scroll {
                                     scrollbar-width: none;
                                     -ms-overflow-style: none;
@@ -406,87 +447,17 @@ async def index_page(request: Request):
                                     background: transparent;
                                 }
                                 """
-                        )
+                    )
 
-                        with chat_scroll:
-                            chat_stream = ui.column().classes("w-full gap-2")
-                            with chat_stream:
-                                # uvítací zpráva při startu
-                                ui.chat_message(
-                                    text="Něco, možná trošku, lepšího?",
-                                    name="Tadeáš",
-                                    sent=False,
-                                    avatar="/assets/img/Tadeas.png",
-                                ).props("bg-color=grey-2 text-color=dark")
-
-                with ui.card().classes(
-                    "w-80 shrink-0 rounded-2xl shadow-md light:bg-white dark:bg-neutral-800"
-                ):
-                    # vertikální tabs kvůli úzké šířce; klidně smaž .props('vertical') pokud nechceš
-
-                    with ui.column().classes("w-full"):
-                        ui.add_css(
-                            """
-                        /* Zneškodnění interakce a hoveru na horním tabu "Chat history" */
-                        .q-tab.tab--locked { pointer-events: none; }
-                        .q-tab.tab--locked .q-focus-helper { display: none !important; }
-                        .q-tab.tab--locked:hover { background: transparent !important; }
-                        """
-                        )
-                        with ui.tabs().props("vertical").classes("w-full") as left_tabs:
-                            sessions_tab = (
-                                ui.tab("Chat history")
-                                .props("disable ripple=false")
-                                .classes("tab--locked")
-                            )
-
-                        with ui.tab_panels(left_tabs, value=sessions_tab).classes(
-                            "w-full light:bg-white dark:bg-neutral-800"
-                        ):
-                            with ui.tab_panel(sessions_tab):
-                                # refreshable kontejner pro seznam session
-                                @ui.refreshable
-                                def sessions_panel():
-                                    # clear container a vykresli všechny sessions
-                                    render_sessions_list(
-                                        user_id, chat_stream, gql_client
-                                    )
-
-                                # tlačítko New chat
-                                def on_new_chat():
-                                    # vytvoří novou session a hned aktualizuje chat_stream i seznam vlevo
-                                    create_new_session(
-                                        user_id,
-                                        gql_client,
-                                        chat_stream,
-                                        sessions_container,
-                                    )
-
-                                    # vymaž chat_stream a vlož uvítací zprávu
-                                    chat_stream.clear()
-                                    with chat_stream:
-                                        ui.chat_message(
-                                            text="Noo, co potřebuješ?",
-                                            name="Tadeáš",
-                                            sent=False,
-                                            avatar="/assets/img/Tadeas.png",
-                                        ).props("bg-color=grey-2 text-color=dark")
-
-                                    # aktualizuj seznam sessions vlevo
-                                    render_sessions_list(
-                                        user_id, chat_stream, gql_client
-                                    )
-
-                                # tlačítko New chat
-                                ui.button("New chat", on_click=on_new_chat).classes(
-                                    "w-full mb-2"
-                                )
-                                # vytvoříme kontejner pro sessions
-                                sessions_container = ui.column().classes("w-full")
-
-                                render_sessions_list(
-                                    user_id, chat_stream, gql_client, sessions_container
-                                )
+                    with chat_scroll:
+                        with chat_stream:
+                            # uvítací zpráva při startu
+                            ui.chat_message(
+                                text="Něco, možná trošku, lepšího?",
+                                name="Tadeáš",
+                                sent=False,
+                                avatar="/assets/img/Tadeas.png",
+                            ).props("bg-color=grey-2 text-color=dark")
 
         #######################################################
         # * Logs tab
