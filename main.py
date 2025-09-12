@@ -409,20 +409,21 @@ async def index_page(request: Request):
                 logs_tab = ui.tab("Logs")
                 graphql_tab = ui.tab("GraphQL")
 
-    with ui.drawer(side="left", value=True).classes(
-        "h-screen p-4 rounded-r-2xl shadow-lg"
+    with ui.drawer(side="left", value=True).style(
+        "overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; background: transparent; box-shadow: none"
     ) as drawer:
         ui.label("Chat history").classes("text-md font-bold mb-2")
 
         # tlačítko New chat
         ui.button("New chat", on_click=on_new_chat).classes("w-full mb-2")
         # vytvoříme kontejner pro sessions
-        sessions_container = ui.column().classes("w-full")
-
+        sessions_container = ui.column().classes(
+            "w-full max-h-80 p-2 rounded-2xl shadow-lg dark:bg-neutral-800 light:bg-white"
+        )
         render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
 
     with ui.tab_panels(tabs, value=chat_tab).classes(
-        "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch light:bg-white dark:bg-neutral-900"
+        "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch light:bg-transparent dark:bg-transparent"
     ):
         message_container = ui.tab_panel(chat_tab).classes("items-stretch")
         with message_container:

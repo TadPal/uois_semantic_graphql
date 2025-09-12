@@ -159,9 +159,9 @@ def render_sessions_list(
         row_height_px = 50
         max_table_height = min(num_sessions * row_height_px, 400)
 
-        with ui.element("div").props("id=product-scroll").classes(
-            "light:bg-white dark:bg-neutral-900"
-        ).style(f"max-height: {max_table_height}px; overflow-y: auto;"):
+        with ui.element("div").props("id=product-scroll").style(
+            f"max-height: {max_table_height}px; overflow-y: auto;"
+        ):
 
             from main import history
             from History.chatHistory import UserChatHistory
