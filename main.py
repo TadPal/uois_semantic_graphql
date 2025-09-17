@@ -419,8 +419,11 @@ async def index_page(request: Request):
         "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch light:bg-transparent dark:bg-transparent"
     ):
         with ui.tab_panel(chat_tab).classes("flex flex-col h-full"):
-            message_container = ui.column().classes(
-                "flex-grow overflow-y-auto w-full max-w-3xl mx-auto p-2"
+            message_container = (
+                ui.column()
+                .props("id=message-container")
+                .classes("flex-grow overflow-y-auto w-full max-w-3xl mx-auto p-2")
+                .style("max-height: 70vh;")
             )
             with message_container:
                 with ui.card().classes(
@@ -433,13 +436,16 @@ async def index_page(request: Request):
                     )
                     ui.add_css(
                         """
+                        #message-container,
                         #chat-scroll {
-                            scrollbar-width: none;
-                            -ms-overflow-style: none;
+                            overflow-y: scroll;        /* keep scrolling enabled */
+                            scrollbar-width: none;      /* Firefox */
+                            -ms-overflow-style: none;   /* IE 10+ */
                         }
+
+                        #message-container::-webkit-scrollbar,
                         #chat-scroll::-webkit-scrollbar {
-                            width: 0px;
-                            background: transparent;
+                            display: none;              /* Chrome, Safari, Edge */
                         }
                         """
                     )
