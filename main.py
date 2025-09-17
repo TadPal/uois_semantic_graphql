@@ -22,7 +22,7 @@ from src.Utils.log_bus import setup_logging
 
 
 from src.Components.likeDislikeButton import add_feedback_row
-from src.Components.footer import build_chat_footer
+from src.Components.input import build_chat_input
 
 from src.Pages.LogView import build_logs_ui
 from src.Pages.GraphQLView import build_graphql_ui
@@ -58,8 +58,6 @@ class ContextFilter(logging.Filter):
 
 
 def get_user_history(user_id: str):
-    import uuid
-
     if user_id not in history:
         history[user_id] = UserChatHistory()
     return history[user_id]
@@ -199,7 +197,7 @@ async def index_page(request: Request):
 
             /* 8) */
             html, body {
-                overflow: hidden !important;  /* scroll zakázán */
+                overflow: hidden !important;
                 height: 100% !important;
             }
 
@@ -223,11 +221,12 @@ async def index_page(request: Request):
 
     chat_hook = await get_user_chat_hook(user_id)
     history = get_user_history(user_id)
+
     feedback_row = None
-    history_container = None
+    chat_stream = None
 
     async def send() -> None:
-        nonlocal feedback_row
+        nonlocal feedback_row, chat_stream
         question = text.value.strip()
         current_req.set(uuid.uuid4().hex[:8])
 
@@ -241,7 +240,7 @@ async def index_page(request: Request):
         )
 
         text.value = ""
-        with chat_stream:  # <<< sem
+        with chat_stream:
             ui.chat_message(
                 text=question,
                 name="You",
@@ -371,16 +370,9 @@ async def index_page(request: Request):
     ui.query(".q-page").classes("flex")
     ui.query(".nicegui-content").classes("w-full px-4 py-4")
 
-    chat_stream = ui.column().classes("w-full gap-2")
-
-    @ui.refreshable
-    def sessions_panel():
-        # clear container a vykresli všechny sessions
-        render_sessions_list(user_id, chat_stream, gql_client)
-
     # tlačítko New chat
     def on_new_chat():
-        # vytvoří novou session a hned aktualizuje chat_stream i seznam vlevo
+        nonlocal chat_stream
         create_new_session(
             user_id,
             gql_client,
@@ -388,7 +380,6 @@ async def index_page(request: Request):
             sessions_container,
         )
 
-        # vymaž chat_stream a vlož uvítací zprávu
         chat_stream.clear()
         with chat_stream:
             ui.chat_message(
@@ -399,17 +390,19 @@ async def index_page(request: Request):
             ).props("bg-color=grey-2 text-color=dark")
 
         # aktualizuj seznam sessions vlevo
-        render_sessions_list(user_id, chat_stream, gql_client)
+        render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
 
     with ui.header().classes("light:bg-white dark:bg-neutral-950 shadow-md"):
         with ui.row().classes("items-center w-full justify-between"):
-            ui.label("TedGPT").classes("text-lg font-bold ml-4")
+            with ui.row().classes("items-center"):
+                toggle_button = ui.button(icon="menu").classes("ml-2")
+                ui.label("TedGPT").classes("text-lg font-bold ml-4")
             with ui.tabs().classes("shrink-0") as tabs:
                 chat_tab = ui.tab("Chat")
                 logs_tab = ui.tab("Logs")
                 graphql_tab = ui.tab("GraphQL")
 
-    with ui.drawer(side="left", value=True).style(
+    with ui.drawer(side="left", value=False).style(
         "overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; background: transparent; box-shadow: none"
     ) as drawer:
         ui.label("Chat history").classes("text-md font-bold mb-2")
@@ -418,47 +411,58 @@ async def index_page(request: Request):
         ui.button("New chat", on_click=on_new_chat).classes("w-full mb-2")
         # vytvoříme kontejner pro sessions
         sessions_container = ui.column().classes(
-            "w-full max-h-80 p-2 rounded-2xl shadow-lg dark:bg-neutral-800 light:bg-white"
+            "w-full max-h-80 mt-10 p-2 rounded-2xl shadow-lg dark:bg-neutral-800 light:bg-white"
         )
-        render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
+    toggle_button.on("click", lambda: drawer.toggle())
 
     with ui.tab_panels(tabs, value=chat_tab).classes(
         "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch light:bg-transparent dark:bg-transparent"
     ):
-        message_container = ui.tab_panel(chat_tab).classes("items-stretch")
-        with message_container:
-            with ui.card().classes(
-                "w-full max-w-3xl mx-auto flex-grow items-stretch rounded-2xl shadow-lg"
-            ):
-                with ui.column().classes("w-full min-w-0"):
+        with ui.tab_panel(chat_tab).classes("flex flex-col h-full"):
+            message_container = ui.column().classes(
+                "flex-grow overflow-y-auto w-full max-w-3xl mx-auto p-2"
+            )
+            with message_container:
+                with ui.card().classes(
+                    "w-full max-w-3xl mx-auto flex flex-col flex-grow rounded-2xl shadow-lg"
+                ):
                     chat_scroll = (
                         ui.element("div")
                         .props("id=chat-scroll")
-                        .classes("w-full")
-                        .style("max-height: 70vh; overflow-y: auto;")
+                        .classes("w-full flex-grow overflow-y-auto")
                     )
                     ui.add_css(
                         """
-                                #chat-scroll {
-                                    scrollbar-width: none;
-                                    -ms-overflow-style: none;
-                                }
-                                #chat-scroll::-webkit-scrollbar {
-                                    width: 0px;
-                                    background: transparent;
-                                }
-                                """
+                        #chat-scroll {
+                            scrollbar-width: none;
+                            -ms-overflow-style: none;
+                        }
+                        #chat-scroll::-webkit-scrollbar {
+                            width: 0px;
+                            background: transparent;
+                        }
+                        """
                     )
 
                     with chat_scroll:
+                        chat_stream = ui.column().classes("w-full gap-2 items-start")
+
                         with chat_stream:
                             # uvítací zpráva při startu
                             ui.chat_message(
-                                text="Něco, možná trošku, lepšího?",
+                                text="Ahoj, s čím Vám mohu pomoci?",
                                 name="Tadeáš",
                                 sent=False,
                                 avatar="/assets/img/Tadeas.png",
                             ).props("bg-color=grey-2 text-color=dark")
+                    render_sessions_list(
+                        user_id, chat_stream, gql_client, sessions_container
+                    )
+
+            with ui.row().classes("w-full max-w-3xl mx-auto p-2 shrink-0").style(
+                "position:fixed; bottom:16px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--base-100); width:calc(100% - 32px); max-width:900px; border-radius:12px;"
+            ):
+                text = build_chat_input(on_send=send, placeholder="Type a message...")
 
         #######################################################
         # * Logs tab
@@ -476,11 +480,6 @@ async def index_page(request: Request):
             build_graphql_ui(
                 parent=ui.column().classes("w-full"), gql_client=gql_client
             )
-
-    #######################################################
-    # * Footer
-    #######################################################
-    text = build_chat_footer(on_send=send, placeholder="Type a message...")
 
 
 ui.run_with(

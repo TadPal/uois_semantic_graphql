@@ -157,7 +157,7 @@ def render_sessions_list(
         ui.label(f"Sessions ({num_sessions})").classes("text-sm font-semibold mb-2")
 
         row_height_px = 50
-        max_table_height = min(num_sessions * row_height_px, 400)
+        max_table_height = min(num_sessions * row_height_px, 600)
 
         with ui.element("div").props("id=product-scroll").style(
             f"max-height: {max_table_height}px; overflow-y: auto;"
