@@ -39,7 +39,7 @@ def _instant_js_dislike(like_id: str, dislike_id: str) -> str:
     }})();"""
 
 
-def add_feedback_row(parent, query, question):
+def add_feedback_row(parent, query, question, variables):
     """Like/Dislike: 1) okamžitý client-side swap, 2) backend commit, 3) případný revert při chybě."""
     state = FeedbackState()
     uid = uuid.uuid4().hex[:8]
@@ -80,7 +80,7 @@ def add_feedback_row(parent, query, question):
                             "dislike_default": DISLIKE_DEFAULT,
                             "dislike_selected": DISLIKE_SELECTED,
                         },
-                        on_commit=(query, question),
+                        on_commit=(query, question, variables),
                     )
                     # 2b) synchronizace serverového stavu (aby se DOM = server)
                     like_btn.content = f'<button id="{like_id}" style="background:none;border:none;padding:2px;cursor:pointer;display:inline-flex;align-items:center;">{LIKE_SELECTED}</button>'
