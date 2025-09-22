@@ -1,5 +1,6 @@
 from nicegui import ui
 from Database.ChatHistory.get_sessions import get_unique_sessions_by_user_id
+from Database.ChatHistory.get_session_title import get_session_title
 from Database.ChatHistory.get_from_db import load_chat_history
 from src.Utils.graphQLdata import GraphQLData
 import json
@@ -52,11 +53,11 @@ def load_and_display_session(session_id, chat_stream, user_id, gql_client):
     chat_history = load_chat_history(user_id, session_id)
 
     with chat_stream:
-        for row in reversed(
-            chat_history
-        ):  # pokud chceš chronologicky, dej: for row in reversed(chat_history):
+        for row in reversed(chat_history):
             user_msg = row.get("messages", "")
+            
             # answer je JSON string -> vytáhneme Response / Query / Variables
+
             answer_json = row.get("answer", "")
             query = None
             variables = {}
@@ -184,6 +185,7 @@ def render_sessions_list(
                         # pokud historie ještě není, vytvoř ji
                         history[user_id] = UserChatHistory()
                         history[user_id].set_history_id(sid)
+
 
                 ui.button(session[2][:20], on_click=on_click_session).props(
                     "flat dense"
