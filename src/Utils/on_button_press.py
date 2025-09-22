@@ -59,7 +59,6 @@ def on_like_click(
     like_btn, dislike_btn, state: FeedbackState, svgs: dict, on_commit=None
 ):
     #! safeguard
-    print(on_commit)
     if state.locked:
         return
 
