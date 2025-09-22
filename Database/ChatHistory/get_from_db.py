@@ -14,7 +14,8 @@ def load_chat_history(user_id, session_id, conn=None):
         session_id (str): The UUID of the session.
 
     Returns:
-        list of dicts: A list of chat history records, where each record is a dictionary.
+        list of list: A list of chat history records, where each record is a dictionary.
+        {'Response': '', 'Query': '', 'Variables': ''}
     """
 
     if not conn:
