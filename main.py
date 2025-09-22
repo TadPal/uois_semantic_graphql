@@ -164,6 +164,8 @@ nicegui_app.add_static_files("/assets", "./assets")
 # * Main tab
 ######################################################
 
+response = None
+
 
 @ui.page("/")
 async def index_page(request: Request):
@@ -178,8 +180,10 @@ async def index_page(request: Request):
 
     feedback_row = None
     chat_stream = None
+    response = None
 
     async def send() -> None:
+        global response
         nonlocal feedback_row, chat_stream
         question = text.value.strip()
         current_req.set(uuid.uuid4().hex[:8])
@@ -228,31 +232,82 @@ async def index_page(request: Request):
 
         found_answer = find_similar_question(user_prompt=question, threshold=0.25)
 
-        #######################################################
-        # * AI stuff
-        #######################################################
-        try:
-            result = await chat_hook(question)
-            log_chat.info("Chat hook answered", extra={"answer_len": len(str(result))})
-        except Exception:
-            log_chat.exception("Chat hook failed")
-            raise
-
         query = None
         variables = None
 
-        try:
-            data = json.loads(result.content)
+        if found_answer:
+            try:
+                with ui.column().classes("p-2 bg-gray-100 rounded") as answer_block:
+                    data = json.loads(found_answer)
+                    from src.Utils.fetch_graphQLdata import fetch_graphql_data
 
-            query = data["Query"]
-            variables = data["Variables"]
-            response = data["Response"]
-            response = [{"type": "md", "content": f'{data["Response"]}'}]
+                    query = data["Query"]
+                    variables = data["Variables"]
 
-        except json.JSONDecodeError as e:
-            print(f"Chyba při parsování JSONu: {e}")
-            data = result.content
-            response = [{"type": "md", "content": f"{data}"}]
+                    data["Response"] = await fetch_graphql_data(
+                        gqlclient=gql_client, query=query, variables=variables
+                    )
+                    print("TZPE", type(data))
+                    ui.chat_message(
+                        text=f" I can answer to this question: '{data['Question']}' is it simillar enought?",
+                        name="Tadeáš",
+                        sent=False,
+                        avatar="/assets/img/Tadeas.png",
+                    ).props("bg-color=yellow-2 text-color=dark")
+
+            except:
+                global response
+                response = [{"type": "md", "content": f"{data}"}]
+
+            with ui.row().classes("gap-2 mt-2"):
+                like_button = ui.button("👍 Like")
+                dislike_button = ui.button("👎 Dislike")
+
+                async def on_like():
+                    # smažeme celý blok
+                    answer_block.delete()
+                    # provedeme GraphQL query a zobrazíme výsledky
+                    global response
+                    response = [{"type": "md", "content": f'{data["Response"]}'}]
+
+                # DISLIKE klik
+                async def on_dislike():
+                    # smažeme celý blok
+                    answer_block.delete()
+                    global response
+                    response = "PP"
+
+                like_button.on_click(on_like)
+                dislike_button.on_click(on_dislike)
+
+        #######################################################
+        # * AI stuff
+        #######################################################
+
+        print("\n RESPONSE:", response)
+        if response == "PP":
+
+            try:
+                result = await chat_hook(question)
+                log_chat.info(
+                    "Chat hook answered", extra={"answer_len": len(str(result))}
+                )
+            except Exception:
+                log_chat.exception("Chat hook failed")
+                raise
+
+            try:
+                data = json.loads(result.content)
+                print("data", data)
+                query = data["Query"]
+                variables = data["Variables"]
+                response = data["Response"]
+                response = [{"type": "md", "content": f'{data["Response"]}'}]
+
+            except json.JSONDecodeError as e:
+                print(f"Chyba při parsování JSONu: {e}")
+                data = result.content
+                response = [{"type": "md", "content": f"{data}"}]
 
         #######################################################
         # * Datová pumpa do embeddingu
@@ -261,6 +316,7 @@ async def index_page(request: Request):
         # await ask_questions(chat_hook)
 
         animation_task.cancel()
+
         try:
             await animation_task
         except asyncio.CancelledError:
@@ -296,7 +352,7 @@ async def index_page(request: Request):
         # 🔹 Uložení do historie
         # zkus získat čistý text z JSONu
         try:
-            answer_text = json.loads(result.content)["Response"]
+            answer_text = response["Response"]
         except Exception:
             answer_text = str(result)
 
