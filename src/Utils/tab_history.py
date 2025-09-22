@@ -7,6 +7,7 @@ import typing
 
 import uuid
 from Database.ChatHistory.add_to_db import add_chat_history
+import ast
 
 
 def get_user_sorted_sessions(user_id, conn=None):
@@ -58,14 +59,17 @@ def load_and_display_session(session_id, chat_stream, user_id, gql_client):
 
             # answer je JSON string -> vytáhneme Response / Query / Variables
             answer_json = row.get("answer", "")
+            print(answer_json)
             query = None
             variables = {}
             try:
-                answer_dict = json.loads(answer_json)
+                answer_dict = ast.literal_eval(answer_json)
+
                 answer_text = answer_dict.get("Response", answer_json)
                 query = answer_dict.get("Query")
                 variables = _parse_variables(answer_dict.get("Variables"))
-            except Exception:
+            except Exception as e:
+                print(e)
                 answer_text = answer_json  # fallback, když answer není JSON
 
             # uživatel vpravo
