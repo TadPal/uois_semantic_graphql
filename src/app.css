@@ -97,3 +97,13 @@ body {
   width: 0px; /* Chrome, Safari, Edge */
   background: transparent;
 }
+
+#chat-center {
+  transform: translateX(calc(-1 * var(--drawer-shift)));
+  transition: transform 200ms ease;
+}
+
+.chat-input-fixed {
+  left: calc(50% - var(--drawer-shift));
+  transition: left 200ms ease;
+}

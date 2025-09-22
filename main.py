@@ -358,9 +358,10 @@ async def index_page(request: Request):
                 logs_tab = ui.tab("Logs")
                 graphql_tab = ui.tab("GraphQL")
 
-    with ui.drawer(side="left", value=False).style(
+    with ui.drawer(side="left", value=False).props("overlay width=320").style(
         "overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; background: transparent; box-shadow: none"
     ) as drawer:
+        drawer.props("id=left-drawer")
         ui.label("Chat history").classes("text-md font-bold mb-2")
 
         # tlačítko New chat
@@ -371,77 +372,84 @@ async def index_page(request: Request):
         )
     toggle_button.on("click", lambda: drawer.toggle())
 
-    with ui.tab_panels(tabs, value=chat_tab).classes(
-        "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch light:bg-transparent dark:bg-transparent"
-    ):
-        with ui.tab_panel(chat_tab).classes("flex flex-col h-full"):
-            message_container = (
-                ui.column()
-                .props("id=message-container")
-                .classes("flex-grow overflow-y-auto w-full max-w-3xl mx-auto p-2")
-                .style("max-height: 70vh;")
-            )
-            with message_container:
-                with ui.card().classes(
-                    "w-full max-w-3xl mx-auto flex flex-col flex-grow rounded-2xl shadow-lg"
+    chat_center = ui.element("div").props("id=chat-center").classes("w-full h-full")
+
+    with chat_center:
+        with ui.tab_panels(tabs, value=chat_tab).classes(
+            "fullscreen-tabs w-full h-screen max-w-none mx-0 p-0 items-stretch light:bg-transparent dark:bg-transparent"
+        ):
+            with ui.tab_panel(chat_tab).classes("flex flex-col h-full"):
+                message_container = (
+                    ui.column()
+                    .props("id=message-container")
+                    .classes("flex-grow overflow-y-auto w-full max-w-3xl mx-auto p-2")
+                    .style("max-height: 70vh;")
+                )
+                with message_container:
+                    with ui.card().classes(
+                        "w-full max-w-3xl mx-auto flex flex-col flex-grow rounded-2xl shadow-lg"
+                    ):
+                        chat_scroll = (
+                            ui.element("div")
+                            .props("id=chat-scroll")
+                            .classes("w-full flex-grow overflow-y-auto")
+                        )
+                        ui.add_css(
+                            """
+                            #message-container,
+                            #chat-scroll {
+                                overflow-y: scroll;        /* keep scrolling enabled */
+                                scrollbar-width: none;      /* Firefox */
+                                -ms-overflow-style: none;   /* IE 10+ */
+                            }
+
+                            #message-container::-webkit-scrollbar,
+                            #chat-scroll::-webkit-scrollbar {
+                                display: none;              /* Chrome, Safari, Edge */
+                            }
+                            """
+                        )
+
+                        with chat_scroll:
+                            chat_stream = ui.column().classes(
+                                "w-full gap-2 items-start"
+                            )
+
+                            with chat_stream:
+                                # uvítací zpráva při startu
+                                ui.chat_message(
+                                    text="Ahoj, s čím Vám mohu pomoci?",
+                                    name="Tadeáš",
+                                    sent=False,
+                                    avatar="/assets/img/Tadeas.png",
+                                ).props("bg-color=grey-2 text-color=dark")
+                        render_sessions_list(
+                            user_id, chat_stream, gql_client, sessions_container
+                        )
+
+                with ui.row().classes("w-full max-w-3xl mx-auto p-2 shrink-0").style(
+                    "position:fixed; bottom:16px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--base-100); width:calc(100% - 32px); max-width:900px; border-radius:12px;"
                 ):
-                    chat_scroll = (
-                        ui.element("div")
-                        .props("id=chat-scroll")
-                        .classes("w-full flex-grow overflow-y-auto")
-                    )
-                    ui.add_css(
-                        """
-                        #message-container,
-                        #chat-scroll {
-                            overflow-y: scroll;        /* keep scrolling enabled */
-                            scrollbar-width: none;      /* Firefox */
-                            -ms-overflow-style: none;   /* IE 10+ */
-                        }
-
-                        #message-container::-webkit-scrollbar,
-                        #chat-scroll::-webkit-scrollbar {
-                            display: none;              /* Chrome, Safari, Edge */
-                        }
-                        """
+                    text = build_chat_input(
+                        on_send=send, placeholder="Type a message..."
                     )
 
-                    with chat_scroll:
-                        chat_stream = ui.column().classes("w-full gap-2 items-start")
+            #######################################################
+            # * Logs tab
+            #######################################################
 
-                        with chat_stream:
-                            # uvítací zpráva při startu
-                            ui.chat_message(
-                                text="Ahoj, s čím Vám mohu pomoci?",
-                                name="Tadeáš",
-                                sent=False,
-                                avatar="/assets/img/Tadeas.png",
-                            ).props("bg-color=grey-2 text-color=dark")
-                    render_sessions_list(
-                        user_id, chat_stream, gql_client, sessions_container
-                    )
+            with ui.tab_panel(logs_tab) as logs_container:
+                ui.label("Conversation Log").classes("font-bold mb-2")
+                build_logs_ui(logs_container)
 
-            with ui.row().classes("w-full max-w-3xl mx-auto p-2 shrink-0").style(
-                "position:fixed; bottom:16px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--base-100); width:calc(100% - 32px); max-width:900px; border-radius:12px;"
-            ):
-                text = build_chat_input(on_send=send, placeholder="Type a message...")
+            #######################################################
+            # * GraphQL tab
+            #######################################################
 
-        #######################################################
-        # * Logs tab
-        #######################################################
-
-        with ui.tab_panel(logs_tab) as logs_container:
-            ui.label("Conversation Log").classes("font-bold mb-2")
-            build_logs_ui(logs_container)
-
-        #######################################################
-        # * GraphQL tab
-        #######################################################
-
-        with ui.tab_panel(graphql_tab).classes("items-stretch"):
-            build_graphql_ui(
-                parent=ui.column().classes("w-full"), gql_client=gql_client
-            )
+            with ui.tab_panel(graphql_tab).classes("items-stretch"):
+                build_graphql_ui(
+                    parent=ui.column().classes("w-full"), gql_client=gql_client
+                )
 
 
 ui.run_with(
