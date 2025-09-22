@@ -15,7 +15,7 @@ def get_user_sorted_sessions(user_id, conn=None):
     Vrátí seznam session_id pro uživatele seřazený od nejnovějšího (index 0).
     """
     sessions = get_unique_sessions_by_user_id(user_id, conn)
-    return [s[0] for s in sessions]
+    return sessions
 
 
 def load_session_chat(user_id, session_id, conn=None):
@@ -56,10 +56,8 @@ def load_and_display_session(session_id, chat_stream, user_id, gql_client):
             chat_history
         ):  # pokud chceš chronologicky, dej: for row in reversed(chat_history):
             user_msg = row.get("messages", "")
-
             # answer je JSON string -> vytáhneme Response / Query / Variables
             answer_json = row.get("answer", "")
-            print(answer_json)
             query = None
             variables = {}
             try:
@@ -170,7 +168,8 @@ def render_sessions_list(
             from main import history
             from History.chatHistory import UserChatHistory
 
-            for sid in user_sessions:
+            for session in user_sessions:
+                sid = session[0]
 
                 def on_click_session(sid=sid):
                     # 1) načti chat do pravého panelu
@@ -186,6 +185,6 @@ def render_sessions_list(
                         history[user_id] = UserChatHistory()
                         history[user_id].set_history_id(sid)
 
-                ui.button(sid, on_click=on_click_session).props("flat dense").classes(
-                    "w-full text-left"
-                )
+                ui.button(session[2][:20], on_click=on_click_session).props(
+                    "flat dense"
+                ).classes("w-full text-left")

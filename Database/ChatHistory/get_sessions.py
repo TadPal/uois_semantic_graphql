@@ -30,11 +30,10 @@ def get_unique_sessions_by_user_id(user_id, conn=None):
         cursor.execute(
             sql.SQL(
                 """
-                SELECT session_id, MAX(created_at)
+                SELECT DISTINCT ON (session_id) session_id, created_at, messages
                 FROM chat_history
                 WHERE user_id = %s
-                GROUP BY session_id
-                ORDER BY MAX(created_at) DESC;
+                ORDER BY session_id, created_at ASC;
                 """
             ),
             (str(user_id),),
@@ -42,9 +41,6 @@ def get_unique_sessions_by_user_id(user_id, conn=None):
 
         # Fetch all the rows returned by the query.
         sessions = cursor.fetchall()
-        print(
-            f"Successfully retrieved {len(sessions)} unique sessions for user ID: {user_id}."
-        )
 
     except psycopg2.Error as error:
         print(f"Error retrieving unique sessions: {error}")
