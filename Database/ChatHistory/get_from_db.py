@@ -25,7 +25,7 @@ def load_chat_history(user_id, session_id, conn=None):
         cursor = conn.cursor()
 
         query = sql.SQL(
-            "SELECT id, user_id, session_id, messages, answer, created_at FROM chat_history WHERE user_id = %s AND session_id = %s ORDER BY created_at DESC"
+            "SELECT * FROM chat_history WHERE user_id = %s AND session_id = %s ORDER BY created_at DESC"
         )
 
         cursor.execute(

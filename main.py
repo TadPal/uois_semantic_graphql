@@ -94,7 +94,11 @@ async def startup_gql_client():
 
 
 from nicegui import core
-import nicegui
+from dotenv import load_dotenv
+
+load_dotenv()
+
+import os
 
 
 class LogContextMiddleware(BaseHTTPMiddleware):
@@ -108,8 +112,40 @@ class LogContextMiddleware(BaseHTTPMiddleware):
 
 
 app = FastAPI(on_startup=[startup_gql_client])
-
 app.add_middleware(LogContextMiddleware)
+
+from Auth.easyauth import (
+    EntraEasyAuthMiddleware,
+    EntraIDClient,
+    require,
+    create_entra_router,
+)
+
+AZURE_TENANT_ID = os.getenv("AZURE_ENTRA_TENANT_ID")
+AZURE_CLIENT_ID = os.getenv("AZURE_ENTRA_CLIENT_ID")
+AZURE_CLIENT_SECRET = os.getenv("AZURE_ENTRA_CLIENT_SECRET")
+
+entra_router = create_entra_router(
+    tenant_id=AZURE_TENANT_ID,
+    client_id=AZURE_CLIENT_ID,
+    client_secret=AZURE_CLIENT_SECRET,
+    login_path="/login",
+    callback_path="/auth",
+)
+
+entra_client = EntraIDClient(tenant_id=AZURE_TENANT_ID, audience=None)
+
+app.add_middleware(
+    EntraEasyAuthMiddleware,
+    entra_client=entra_client,
+    pass_through=("/public", "/health", "/login", "/auth", "/login/", "/auth/"),
+    login_path="/login",  # nebo jméno route, pokud používáš url_for("entra_login")
+    # external_base_url="https://app.example.com",  # za reverse proxy
+    redirect_on_unauth=True,
+)
+
+app.include_router(entra_router)
+
 log_chat = logging.getLogger("chat")
 log_gql = logging.getLogger("graphql")
 log_auth = logging.getLogger("auth")
