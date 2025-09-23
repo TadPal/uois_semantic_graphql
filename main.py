@@ -253,13 +253,13 @@ async def index_page(request: Request):
                     except:
                         responsePreview = "Já sám nevím co vím"
 
-                    ## reference to msg
+                    # reference to msg
                     suggestion_msg = ui.chat_message(
                         text=f" I know this answer: '{responsePreview}' is it similar enough?",
                         name="Tadeáš",
                         sent=False,
                         avatar="/assets/img/Tadeas.png",
-                    ).props("bg-color=yellow-2 text-color=dark")
+                    ).props("bg-color=grey-2 text-color=dark")
 
             except:
                 data["Response"] = found_answer
