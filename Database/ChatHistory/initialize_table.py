@@ -31,7 +31,6 @@ def initialize_chathistory_table(conn):
             cursor.execute(command)
             conn.commit()
             cursor.close()
-            print("Chat history table 'chat_history' checked and created if needed.")
         except psycopg2.Error as error:
             print(f"Error executing command: {error}")
             conn.rollback()

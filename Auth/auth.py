@@ -13,7 +13,6 @@ def authorize_user(request: Request):
             decoded_token = jwt.decode(
                 authorization_cookie, options={"verify_signature": False}
             )
-            print(decoded_token)
             user_id = decoded_token["oid"]
         except:
             print("Cannot decode token")

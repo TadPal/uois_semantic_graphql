@@ -25,7 +25,6 @@ def add_embedding_row(query, user_prompt, variables, conn=None):
             cursor.execute(command, (user_prompt, query, variables, embedding))
             conn.commit()
             cursor.close()
-            print("Row added successfully.")
         except psycopg2.Error as error:
             print(f"Error adding row: {error}")
             conn.rollback()

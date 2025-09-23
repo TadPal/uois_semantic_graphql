@@ -163,7 +163,7 @@ async def openChat():
     
     RULES:
         1. You respond in valid JSON object containing response, query and variables used to call GraphQL API.
-            You always respond in valid JSON format which follows this strucutre: 
+            You always respond in bare valid JSON format which follows this strucutre: 
             [STRUCTURE]
                 {{"Response": String, "Query": String, "Variables": String}}
             [END_STRUCTURE]
@@ -198,7 +198,6 @@ async def openChat():
         await next(context)
 
     kernel.add_filter(FilterTypes.AUTO_FUNCTION_INVOCATION, inject_gql_client)
-    import json
 
     async def hook(user_input):
         history.add_user_message(user_input)

@@ -110,10 +110,6 @@ async def ask_questions(chat_hook):
                 add_embedding_row(
                     user_prompt=question, query=query, variables=variables
                 )
-            else:
-                print(f"\nQuestion je NOT ok: {question}")
-                print(f"Query je NOT ok: {query}")
-                print(f"Variables je NOT ok: {variables}")
+
         except:
-            print(f"\n\nSTALO SE INVALID JSON!")
-            print(f"Question: {question}\n")
+            print(f"Exception - Question: {question}\n")

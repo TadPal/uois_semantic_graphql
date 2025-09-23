@@ -31,7 +31,6 @@ def search_index(conn=None):
             (embedding,),
         )
         matches = cur.fetchall()
-        print(matches)
 
     except psycopg2.Error as error:
         print(f"Error executing command: {error}")
