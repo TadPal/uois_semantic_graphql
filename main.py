@@ -339,7 +339,7 @@ async def index_page(request: Request):
         chat_stream.clear()
         with chat_stream:
             ui.chat_message(
-                text="Noo, co potřebuješ?",
+                text="Jak Vám mohu pomoci?",
                 name="Tadeáš",
                 sent=False,
                 avatar="/assets/img/Tadeas.png",
