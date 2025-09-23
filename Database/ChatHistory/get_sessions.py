@@ -30,10 +30,14 @@ def get_unique_sessions_by_user_id(user_id, conn=None):
         cursor.execute(
             sql.SQL(
                 """
-                SELECT DISTINCT ON (session_id) session_id, created_at, messages
-                FROM chat_history
-                WHERE user_id = %s
-                ORDER BY session_id, created_at ASC;
+                SELECT session_id, created_at, messages
+                FROM (
+                    SELECT DISTINCT ON (session_id) session_id, created_at, messages
+                    FROM chat_history
+                    WHERE user_id = %s
+                    ORDER BY session_id, created_at ASC   -- pick earliest per session
+                ) sub
+                ORDER BY created_at DESC;
                 """
             ),
             (str(user_id),),
