@@ -58,17 +58,12 @@ def find_similar_question(
 
                 return json.dumps(
                     {
-                        "Question": db_question,
+                        "Response": "fetched",
                         "Query": db_query,
                         "Variables": db_variables,
                     },
                     ensure_ascii=False,
                 )
-
-            else:
-                print("Closest match is not similar enough. No answer returned.")
-        else:
-            print("No results found in the database.")
 
         cursor.close()
         return None
