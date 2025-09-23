@@ -13,9 +13,11 @@
 /* 2) Chat kontejner má rezervu na obou stranách,
     takže špička může „zajet“ do paddingu bez overflow */
 #chat-scroll {
+
   padding-left: var(--chat-tail);
   padding-right: var(--chat-tail);
   overflow-x: hidden; /* jistota bez horizontálního scrollu */
+
 }
 
 /* Ať mohou bubliny využít celou šířku kontejneru */

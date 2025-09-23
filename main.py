@@ -20,8 +20,6 @@ from src.Utils.tab_history import (
 
 from src.Utils.log_bus import setup_logging
 
-
-from src.Components.likeDislikeButton import add_feedback_row
 from src.Components.input import build_chat_input
 
 from src.Pages.LogView import build_logs_ui
@@ -34,6 +32,12 @@ from pathlib import Path
 import tempfile
 import time
 from Database.Embedding.find_simillar import find_similar_question
+from src.Utils.fetch_graphQLdata import fetch_graphql_data
+from src.Utils.graphQLdata import GraphQLData
+from src.Components.likeDislikeButton import add_feedback_row
+from Database.ChatHistory.add_to_db import add_chat_history
+
+from src.Utils.chat_hook import run_chat_hook_flow
 
 # Store per user chat instances
 user_chats = {}
@@ -153,8 +157,6 @@ log_auth = logging.getLogger("auth")
 from nicegui import ui, app as nicegui_app, storage, core
 from starlette.middleware.sessions import SessionMiddleware
 
-from Database.ChatHistory.add_to_db import add_chat_history
-
 nicegui_app.add_middleware(storage.RequestTrackingMiddleware)
 nicegui_app.add_middleware(SessionMiddleware, secret_key="SUPER-SECRET")
 nicegui_app.add_static_files("/assets", "./assets")
@@ -228,89 +230,151 @@ async def index_page(request: Request):
 
         found_answer = find_similar_question(user_prompt=question, threshold=0.25)
 
-        #######################################################
-        # * AI stuff
-        #######################################################
-        try:
-            result = await chat_hook(question)
-            log_chat.info("Chat hook answered", extra={"answer_len": len(str(result))})
-        except Exception:
-            log_chat.exception("Chat hook failed")
-            raise
-
         query = None
         variables = None
 
-        try:
-            data = json.loads(result.content)
-
-            query = data["Query"]
-            variables = data["Variables"]
-            response = data["Response"]
-            response = [{"type": "md", "content": f'{data["Response"]}'}]
-
-        except json.JSONDecodeError as e:
-            print(f"Chyba při parsování JSONu: {e}")
-            data = result.content
-            response = [{"type": "md", "content": f"{data}"}]
-
-        #######################################################
-        # * Datová pumpa do embeddingu
-        #######################################################
-        # from Database.Embedding.data_pump import ask_questions
-        # await ask_questions(chat_hook)
-
-        animation_task.cancel()
-        try:
-            await animation_task
-        except asyncio.CancelledError:
-            pass
-
-        for part in response:
-            await asyncio.sleep(1)
-            thinking_message.clear()
-            with thinking_message:
-                if part["type"] == "text":
-                    ui.html(part["content"])
-                elif part["type"] == "md":
-                    ui.markdown(part["content"])
-
-        if feedback_row:
+        if found_answer:
             try:
-                feedback_row.delete()
-            except Exception:
-                pass
-        with chat_stream:
-            feedback_row = add_feedback_row(
-                chat_stream, query=query, question=question, variables=variables
+                with ui.column().classes("p-2 bg-gray-100 rounded") as answer_block:
+
+                    data = json.loads(found_answer)
+                    from src.Utils.fetch_graphQLdata import fetch_graphql_data
+
+                    query = data["Query"]
+                    variables = data["Variables"]
+
+                    data["Response"] = await fetch_graphql_data(
+                        gqlclient=gql_client, query=query, variables=variables
+                    )
+
+                    try:
+                        responsePreview = str(data["Response"])[:50]
+
+                    except:
+                        responsePreview = "Já sám nevím co vím"
+
+                    # reference to msg
+                    suggestion_msg = ui.chat_message(
+                        text=f" I know this answer: '{responsePreview}' is it similar enough?",
+                        name="Tadeáš",
+                        sent=False,
+                        avatar="/assets/img/Tadeas.png",
+                    ).props("bg-color=grey-2 text-color=dark")
+
+            except:
+                data["Response"] = found_answer
+
+            with ui.row().classes("gap-2 mt-2") as button_row:
+                like_button = ui.button("👍 Like")
+                dislike_button = ui.button("👎 Dislike")
+
+                async def clear_suggestion():
+                    """helper to delete ui element"""
+                    for elem in (answer_block, suggestion_msg, button_row):
+                        try:
+                            elem.delete()
+                        except Exception:
+                            pass
+
+                async def on_like():
+                    nonlocal feedback_row
+                    await clear_suggestion()
+                    response = [
+                        {"type": "md", "content": "Zde máš obdobně pokládáný dotaz"}
+                    ]
+
+                    animation_task.cancel()
+                    print("\n Response from database", response)
+
+                    try:
+                        await animation_task
+                    except asyncio.CancelledError:
+                        pass
+
+                    for part in response:
+                        await asyncio.sleep(1)
+                        thinking_message.clear()
+                        with thinking_message:
+                            if part["type"] == "text":
+                                ui.html(part["content"])
+                            elif part["type"] == "md":
+                                ui.markdown(part["content"])
+
+                    if feedback_row:
+                        try:
+                            feedback_row.delete()
+                        except Exception:
+                            pass
+                    with chat_stream:
+                        feedback_row = add_feedback_row(
+                            chat_stream,
+                            query=query,
+                            question=question,
+                            variables=variables,
+                        )
+
+                    if query:
+                        with chat_stream:
+                            GraphQLData(
+                                gqlclient=gql_client,
+                                query=query,
+                                variables=variables,
+                            )
+
+                    try:
+                        answer_text = data["Response"]
+                    except Exception:
+                        answer_text = data
+
+                    # ulož do historie v paměti
+                    history.add_entry(question=question, answer=answer_text)
+
+                    # ulož do DB jen čistý text
+                    add_chat_history(
+                        message=question,
+                        answer=data,
+                        user_id=user_id,
+                        session_id=history.get_history_id(),
+                    )
+
+                # DISLIKE klik
+                async def on_dislike():
+                    nonlocal feedback_row
+                    await clear_suggestion()
+
+                    await run_chat_hook_flow(
+                        question=question,
+                        chat_hook=chat_hook,
+                        log_chat=log_chat,
+                        thinking_message=thinking_message,
+                        animation_task=animation_task,
+                        feedback_row=feedback_row,
+                        chat_stream=chat_stream,
+                        gql_client=gql_client,
+                        history=history,
+                        user_id=user_id,
+                    )
+
+                like_button.on_click(on_like)
+                dislike_button.on_click(on_dislike)
+        else:
+            response = await run_chat_hook_flow(
+                question=question,
+                chat_hook=chat_hook,
+                log_chat=log_chat,
+                thinking_message=thinking_message,
+                animation_task=animation_task,
+                feedback_row=feedback_row,
+                chat_stream=chat_stream,
+                gql_client=gql_client,
+                history=history,
+                user_id=user_id,
             )
 
-        if query:
-            with chat_stream:
-                GraphQLData(
-                    gqlclient=gql_client,
-                    query=query,
-                    variables=variables,
-                )
-
-        # 🔹 Uložení do historie
-        # zkus získat čistý text z JSONu
-        try:
-            answer_text = json.loads(result.content)["Response"]
-        except Exception:
-            answer_text = str(result)
-
-        # ulož do historie v paměti
-        history.add_entry(question=question, answer=answer_text)
-
-        # ulož do DB jen čistý text
-        add_chat_history(
-            message=question,
-            answer=data,
-            user_id=user_id,
-            session_id=history.get_history_id(),
-        )
-
+        #######################################################
+        # * AI stuff
+        #######################################################
+        
         try:
             render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
         except Exception:
