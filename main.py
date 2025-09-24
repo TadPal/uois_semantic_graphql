@@ -235,7 +235,9 @@ async def index_page(request: Request):
 
         if found_answer:
             try:
-                with ui.column().classes("p-2 bg-gray-100 rounded") as answer_block:
+                with ui.column().classes(
+                    "p-2 bg-gray-100 rounded light:bg-transparent dark:bg-transparent"
+                ) as answer_block:
 
                     data = json.loads(found_answer)
                     from src.Utils.fetch_graphQLdata import fetch_graphql_data
@@ -259,7 +261,7 @@ async def index_page(request: Request):
                         name="Tadeáš",
                         sent=False,
                         avatar="/assets/img/Tadeas.png",
-                    ).props("bg-color=grey-2 text-color=dark")
+                    ).props("bg-gray-2 text-color=dark")
 
             except:
                 data["Response"] = found_answer
@@ -284,7 +286,6 @@ async def index_page(request: Request):
                     ]
 
                     animation_task.cancel()
-                    print("\n Response from database", response)
 
                     try:
                         await animation_task
@@ -374,7 +375,7 @@ async def index_page(request: Request):
         #######################################################
         # * AI stuff
         #######################################################
-        
+
         try:
             render_sessions_list(user_id, chat_stream, gql_client, sessions_container)
         except Exception:
