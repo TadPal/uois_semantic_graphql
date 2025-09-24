@@ -180,6 +180,82 @@ async def index_page(request: Request):
 
     feedback_row = None
     chat_stream = None
+    # --- Similarity popup (persistent) ---
+    similarity_dialog: ui.dialog
+    similarity_title: ui.label
+    similarity_text: ui.label
+    popup_future: asyncio.Future | None = None
+
+    with ui.dialog() as similarity_dialog:
+        similarity_dialog.props("persistent")  # nelze zavřít mimo ani Esc
+
+        with ui.card().classes("p-0 bg-transparent shadow-none"):
+            with ui.element("div").classes(
+                "relative p-4 md:p-8 light:bg-white dark:bg-neutral-950 rounded-lg shadow max-w-lg"
+            ):
+                similarity_title = ui.label("").classes(
+                    "text-2xl font-bold mb-3 text-gray-900 dark:text-white"
+                )
+                similarity_text = ui.label("").classes(
+                    "text-sm font-light text-gray-900 dark:text-white"
+                )
+
+                with ui.row().classes("justify-end gap-4 mt-6"):
+                    # === ZOBRAZIT (původní Like) ===
+                    def on_show():
+                        if not popup_future.done():
+                            popup_future.set_result("show")
+                        similarity_dialog.close()
+
+                    with ui.button(on_click=on_show).classes(
+                        "flex items-center gap-2 bg-primary-700 hover:bg-primary-800 "
+                        "text-white font-medium py-2 px-4 rounded-lg"
+                    ):
+                        ui.html(
+                            """
+                            <svg class="w-6 h-6 text-white" aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2"
+                                    d="M4.248 19C3.22 15.77 5.275 8.232 12.466 8.232V6.079a1.025 1.025 0 0 1 1.644-.862l5.479 4.307a1.108 1.108 0 0 1 0 1.723l-5.48 4.307a1.026 1.026 0 0 1-1.643-.861v-2.154C5.275 13.616 4.248 19 4.248 19Z"/>
+                            </svg>
+                        """
+                        )
+                        ui.label("Zobrazit")
+
+                    # === OPAKOVAT (původní Dislike) ===
+                    def on_repeat():
+                        if not popup_future.done():
+                            popup_future.set_result("repeat")
+                        similarity_dialog.close()
+
+                    with ui.button(on_click=on_repeat).classes(
+                        "flex items-center gap-2 bg-gray-200 hover:bg-gray-300 "
+                        "text-gray-800 font-medium py-2 px-4 rounded-lg "
+                        "dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white"
+                    ):
+                        ui.html(
+                            """
+                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2"
+                                    d="m16 10 3-3m0 0-3-3m3 3H5v3m3 4-3 3m0 0 3 3m-3-3h14v-3"/>
+                            </svg>
+                        """
+                        )
+                        ui.label("Opakovat")
+
+    async def ask_similarity_popup(title: str, text: str) -> str:
+        """Otevře popup a vrátí 'show' nebo 'repeat'."""
+        nonlocal popup_future
+        popup_future = asyncio.get_event_loop().create_future()
+        similarity_title.text = title
+        similarity_text.text = text
+        similarity_dialog.open()
+        return await popup_future
 
     async def send() -> None:
         nonlocal feedback_row, chat_stream
@@ -233,69 +309,154 @@ async def index_page(request: Request):
         query = None
         variables = None
 
+        # if found_answer:
+        #     try:
+        #         with ui.column().classes(
+        #             "p-2 bg-gray-100 rounded light:bg-transparent dark:bg-transparent"
+        #         ) as answer_block:
+
+        #             data = json.loads(found_answer)
+        #             from src.Utils.fetch_graphQLdata import fetch_graphql_data
+
+        #             query = data["Query"]
+        #             variables = data["Variables"]
+
+        #             try:
+        #                 responsePreview = str(data["Question"])[:50]
+
+        #             except:
+        #                 responsePreview = "Já sám nevím co vím"
+
+        #             # reference to msg
+        #             suggestion_msg = ui.chat_message(
+        #                 text=f"I know the answer for this question: '{responsePreview}' Is it similar enough?",
+        #                 name="Tadeáš",
+        #                 sent=False,
+        #                 avatar="/assets/img/Tadeas.png",
+        #             ).props("bg-gray-2 text-color=dark")
+
+        #     except:
+        #         print("Cannot fetch similar data!")
+
+        #     with ui.row().classes("gap-2 mt-2") as button_row:
+        #         like_button = ui.button("👍 Like")
+        #         dislike_button = ui.button("👎 Dislike")
+
+        #         async def clear_suggestion():
+        #             """helper to delete ui element"""
+        #             for elem in (answer_block, suggestion_msg, button_row):
+        #                 try:
+        #                     elem.delete()
+        #                 except Exception:
+        #                     pass
+
+        #         async def on_like():
+        #             nonlocal feedback_row
+        #             await clear_suggestion()
+        #             response = [
+        #                 {"type": "md", "content": "Zde máš obdobně pokládáný dotaz"}
+        #             ]
+
+        #             animation_task.cancel()
+
+        #             try:
+        #                 await animation_task
+        #             except asyncio.CancelledError:
+        #                 pass
+
+        #             for part in response:
+        #                 await asyncio.sleep(1)
+        #                 thinking_message.clear()
+        #                 with thinking_message:
+        #                     if part["type"] == "text":
+        #                         ui.html(part["content"])
+        #                     elif part["type"] == "md":
+        #                         ui.markdown(part["content"])
+
+        #             if feedback_row:
+        #                 try:
+        #                     feedback_row.delete()
+        #                 except Exception:
+        #                     pass
+        #             with chat_stream:
+        #                 feedback_row = add_feedback_row(
+        #                     chat_stream,
+        #                     query=query,
+        #                     question=question,
+        #                     variables=variables,
+        #                 )
+
+        #             if query:
+        #                 with chat_stream:
+        #                     GraphQLData(
+        #                         gqlclient=gql_client,
+        #                         query=query,
+        #                         variables=variables,
+        #                     )
+
+        #             try:
+        #                 answer_text = await fetch_graphql_data(
+        #                     gqlclient=gql_client, query=query, variables=variables
+        #                 )
+        #             except Exception:
+        #                 answer_text = data
+
+        #             # ulož do historie v paměti
+        #             history.add_entry(question=question, answer=answer_text)
+
+        #             # ulož do DB jen čistý text
+        #             add_chat_history(
+        #                 message=question,
+        #                 answer=data,
+        #                 user_id=user_id,
+        #                 session_id=history.get_history_id(),
+        #             )
+
+        #         # DISLIKE klik
+        #         async def on_dislike():
+        #             nonlocal feedback_row
+        #             await clear_suggestion()
+
+        #             await run_chat_hook_flow(
+        #                 question=question,
+        #                 chat_hook=chat_hook,
+        #                 log_chat=log_chat,
+        #                 thinking_message=thinking_message,
+        #                 animation_task=animation_task,
+        #                 feedback_row=feedback_row,
+        #                 chat_stream=chat_stream,
+        #                 gql_client=gql_client,
+        #                 history=history,
+        #                 user_id=user_id,
+        #             )
+
+        #         like_button.on_click(on_like)
+        #         dislike_button.on_click(on_dislike)
         if found_answer:
             try:
-                with ui.column().classes(
-                    "p-2 bg-gray-100 rounded light:bg-transparent dark:bg-transparent"
-                ) as answer_block:
+                data = json.loads(found_answer)
+                query = data["Query"]
+                variables = data["Variables"]
 
-                    data = json.loads(found_answer)
-                    from src.Utils.fetch_graphQLdata import fetch_graphql_data
+                responsePreview = str(data.get("Question", "Já sám nevím co vím"))[:50]
 
-                    query = data["Query"]
-                    variables = data["Variables"]
+                # otevři popup
+                choice = await ask_similarity_popup(
+                    "Podobná otázka nalezena",
+                    f"I know the answer for this question: '{responsePreview}'. Is it similar enough?",
+                )
 
-                    try:
-                        responsePreview = str(data["Question"])[:50]
-
-                    except:
-                        responsePreview = "Já sám nevím co vím"
-
-                    # reference to msg
-                    suggestion_msg = ui.chat_message(
-                        text=f"I know the answer for this question: '{responsePreview}' Is it similar enough?",
-                        name="Tadeáš",
-                        sent=False,
-                        avatar="/assets/img/Tadeas.png",
-                    ).props("bg-gray-2 text-color=dark")
-
-            except:
-                print("Cannot fetch similar data!")
-
-            with ui.row().classes("gap-2 mt-2") as button_row:
-                like_button = ui.button("👍 Like")
-                dislike_button = ui.button("👎 Dislike")
-
-                async def clear_suggestion():
-                    """helper to delete ui element"""
-                    for elem in (answer_block, suggestion_msg, button_row):
-                        try:
-                            elem.delete()
-                        except Exception:
-                            pass
-
-                async def on_like():
+                if choice == "show":
                     nonlocal feedback_row
-                    await clear_suggestion()
-                    response = [
-                        {"type": "md", "content": "Zde máš obdobně pokládáný dotaz"}
-                    ]
-
                     animation_task.cancel()
-
                     try:
                         await animation_task
                     except asyncio.CancelledError:
                         pass
 
-                    for part in response:
-                        await asyncio.sleep(1)
-                        thinking_message.clear()
-                        with thinking_message:
-                            if part["type"] == "text":
-                                ui.html(part["content"])
-                            elif part["type"] == "md":
-                                ui.markdown(part["content"])
+                    thinking_message.clear()
+                    with thinking_message:
+                        ui.markdown("**Zde máš obdobně pokládaný dotaz**")
 
                     if feedback_row:
                         try:
@@ -325,10 +486,8 @@ async def index_page(request: Request):
                     except Exception:
                         answer_text = data
 
-                    # ulož do historie v paměti
+                    # ulož do historie a DB
                     history.add_entry(question=question, answer=answer_text)
-
-                    # ulož do DB jen čistý text
                     add_chat_history(
                         message=question,
                         answer=data,
@@ -336,11 +495,7 @@ async def index_page(request: Request):
                         session_id=history.get_history_id(),
                     )
 
-                # DISLIKE klik
-                async def on_dislike():
-                    nonlocal feedback_row
-                    await clear_suggestion()
-
+                elif choice == "repeat":
                     await run_chat_hook_flow(
                         question=question,
                         chat_hook=chat_hook,
@@ -354,8 +509,21 @@ async def index_page(request: Request):
                         user_id=user_id,
                     )
 
-                like_button.on_click(on_like)
-                dislike_button.on_click(on_dislike)
+            except Exception:
+                log_chat.exception("Cannot process similar data!")
+                await run_chat_hook_flow(
+                    question=question,
+                    chat_hook=chat_hook,
+                    log_chat=log_chat,
+                    thinking_message=thinking_message,
+                    animation_task=animation_task,
+                    feedback_row=feedback_row,
+                    chat_stream=chat_stream,
+                    gql_client=gql_client,
+                    history=history,
+                    user_id=user_id,
+                )
+
         else:
             response = await run_chat_hook_flow(
                 question=question,
