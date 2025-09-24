@@ -245,26 +245,22 @@ async def index_page(request: Request):
                     query = data["Query"]
                     variables = data["Variables"]
 
-                    data["Response"] = await fetch_graphql_data(
-                        gqlclient=gql_client, query=query, variables=variables
-                    )
-
                     try:
-                        responsePreview = str(data["Response"])[:50]
+                        responsePreview = str(data["Question"])[:50]
 
                     except:
                         responsePreview = "Já sám nevím co vím"
 
                     # reference to msg
                     suggestion_msg = ui.chat_message(
-                        text=f" I know this answer: '{responsePreview}' is it similar enough?",
+                        text=f"I know the answer for this question: '{responsePreview}' Is it similar enough?",
                         name="Tadeáš",
                         sent=False,
                         avatar="/assets/img/Tadeas.png",
                     ).props("bg-gray-2 text-color=dark")
 
             except:
-                data["Response"] = found_answer
+                print("Cannot fetch similar data!")
 
             with ui.row().classes("gap-2 mt-2") as button_row:
                 like_button = ui.button("👍 Like")
@@ -323,7 +319,9 @@ async def index_page(request: Request):
                             )
 
                     try:
-                        answer_text = data["Response"]
+                        answer_text = await fetch_graphql_data(
+                            gqlclient=gql_client, query=query, variables=variables
+                        )
                     except Exception:
                         answer_text = data
 
