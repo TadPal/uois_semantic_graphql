@@ -58,9 +58,9 @@ def find_similar_question(
 
                 return json.dumps(
                     {
-                        "Response": "fetched",
                         "Query": db_query,
                         "Variables": db_variables,
+                        "Question": db_question,
                     },
                     ensure_ascii=False,
                 )

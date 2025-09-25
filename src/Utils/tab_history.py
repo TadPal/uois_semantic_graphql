@@ -129,7 +129,7 @@ def create_new_session(
         chat_stream.clear()
         with chat_stream:
             ui.chat_message(
-                "Noo, co potřebuješ?",
+                "Jak Vám mohu pomoci?",
                 name="Tadeáš",
                 sent=False,
                 avatar="/assets/img/Tadeas.png",

@@ -15,8 +15,6 @@ def connect_to_postgres(env):
             password=env["DBPASS"],
             port=env["DBPORT"],
         )
-
-        print("Successfully connected to database")
         return connection
 
     except psycopg2.Error as error:

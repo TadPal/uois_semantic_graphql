@@ -87,3 +87,7 @@ LIMIT 5; (embedding,)
 ```bash
 uvicorn main:app
 ```
+
+## Bugs
+
+- projects, finances query builder not working

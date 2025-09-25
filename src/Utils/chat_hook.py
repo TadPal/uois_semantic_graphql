@@ -32,7 +32,6 @@ async def run_chat_hook_flow(
 
     try:
         data = json.loads(result.content)
-        print("data", data)
         query = data["Query"]
         variables = data["Variables"]
         response = data["Response"]
@@ -44,7 +43,6 @@ async def run_chat_hook_flow(
         response = [{"type": "md", "content": f"{data}"}]
 
     animation_task.cancel()
-    print("\n Response from chat hook", response)
 
     try:
         await animation_task

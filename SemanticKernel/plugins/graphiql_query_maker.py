@@ -89,20 +89,3 @@ class GraphQLQueryPlugin:
           {root_block}
         }}"""
         return query
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    plugin = GraphQLQueryPlugin()
-    q = asyncio.run(
-        plugin.build_vector_query(
-            [
-                "EventGQLModel",
-                "UserGQLModel",
-                "PresenceGQLModel",
-                "PresenceTypeGQLModel",
-            ]
-        )
-    )
-    print("\n[RETURNED]:\n", q)

@@ -33,7 +33,6 @@ def add_chat_history(message, answer, user_id, session_id, conn=None):
         )
 
         conn.commit()
-        print(f"Message successfully added to chat history for user ID: {user_id}.")
 
     except psycopg2.Error as error:
         print(f"Error adding chat history: {error}")
